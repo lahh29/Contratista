@@ -30,7 +30,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         const items = snapshot.docs.map((doc) => ({
           ...doc.data(),
           id: doc.id,
-        }));
+        } as T & { id: string }));
         setData(items);
         setLoading(false);
         setError(null);
@@ -38,7 +38,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
       async (serverError: FirestoreError) => {
         let queryPath = 'unknown_collection';
         try {
-          // Intentar extraer la ruta de la colección para un error más descriptivo
+          // Extraer la ruta de la colección de forma segura para el error contextual
           // @ts-ignore
           queryPath = query._query?.path?.segments?.join('/') || 'query';
         } catch (e) {
@@ -50,7 +50,9 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           operation: 'list',
         });
         
+        // Emitir el error para el listener global
         errorEmitter.emit('permission-error', permissionError);
+        
         setError(serverError);
         setLoading(false);
       }

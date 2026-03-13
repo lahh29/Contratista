@@ -36,19 +36,21 @@ const COLORS = ['#2166AB', '#6E26D9', '#10B981', '#F59E0B', '#6366F1'];
 
 export default function DashboardPage() {
   const db = useFirestore()
-  const { user } = useUser()
+  const { user, loading: authLoading } = useUser()
   
   const activeVisitsQuery = React.useMemo(() => {
-    // Solo ejecutamos la consulta si hay un usuario autenticado y la DB está lista
-    if (!db || !user) return null
+    // Esperar a que el usuario esté autenticado y la DB lista
+    if (!db || !user || authLoading) return null
+    
+    // Consulta simplificada para evitar problemas de índices en el primer inicio
     return query(
       collection(db, "visits"), 
-      where("status", "==", "Active"), 
+      where("status", "==", "Active"),
       orderBy("entryTime", "desc")
     )
-  }, [db, user])
+  }, [db, user, authLoading])
 
-  const { data: activeVisits, loading } = useCollection(activeVisitsQuery)
+  const { data: activeVisits, loading: dataLoading } = useCollection(activeVisitsQuery)
 
   const handleFinishVisit = (visitId: string) => {
     if (!db) return
@@ -69,7 +71,7 @@ export default function DashboardPage() {
       })
   }
 
-  const activePeople = activeVisits?.reduce((acc, v) => acc + (v.personnelCount || 0), 0) || 0
+  const activePeople = activeVisits?.reduce((acc, v) => acc + (Number(v.personnelCount) || 0), 0) || 0
 
   const areaData = [
     { name: "Mantenimiento", value: 12 },
@@ -97,7 +99,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <NewVisitModal trigger={
-            <Button className="bg-primary text-white gap-2">
+            <Button className="bg-primary text-white gap-2 shadow-lg shadow-primary/20">
               <Plus className="w-4 h-4" /> Nueva Visita
             </Button>
           } />
@@ -107,9 +109,9 @@ export default function DashboardPage() {
       <DashboardStats activePeople={activePeople} activeVisits={activeVisits?.length || 0} />
 
       <div className="grid gap-6 lg:grid-cols-7">
-        <Card className="lg:col-span-4 border-none shadow-sm">
+        <Card className="lg:col-span-4 border-none shadow-sm overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-lg">Ingresos por Hora</CardTitle>
+            <CardTitle className="text-lg font-bold">Ingresos por Hora</CardTitle>
             <CardDescription>Flujo de personal en el transcurso del día.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -117,16 +119,18 @@ export default function DashboardPage() {
               <LineChart data={hourlyData}>
                 <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="entries" stroke="#2166AB" strokeWidth={3} dot={{ fill: '#2166AB' }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Line type="monotone" dataKey="entries" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ fill: 'hsl(var(--primary))', r: 4 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 border-none shadow-sm">
+        <Card className="lg:col-span-3 border-none shadow-sm overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-lg">Distribución por Áreas</CardTitle>
+            <CardTitle className="text-lg font-bold">Distribución por Áreas</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -144,27 +148,29 @@ export default function DashboardPage() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Contratistas Activos</CardTitle>
             <CardDescription>Personal trabajando actualmente en sitio.</CardDescription>
           </div>
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1">
             {activeVisits?.length || 0} Empresas trabajando
           </Badge>
         </CardHeader>
         <CardContent>
           <VisitsTable 
             visits={activeVisits} 
-            loading={loading} 
+            loading={dataLoading || authLoading} 
             onFinishVisit={handleFinishVisit} 
           />
         </CardContent>

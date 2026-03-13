@@ -9,11 +9,13 @@ export const FirebaseErrorListener = () => {
 
   useEffect(() => {
     const handleError = (error: any) => {
-      console.error('Firebase Error:', error);
+      console.error('Firebase Permission Error:', error);
+      
+      // Mostrar toast informativo del error de permisos
       toast({
         variant: 'destructive',
-        title: 'Error de Permisos',
-        description: 'No tienes permisos suficientes para realizar esta acción en la base de datos.',
+        title: 'Error de Acceso',
+        description: 'No tienes permisos suficientes para ver o modificar esta información. Asegúrate de haber iniciado sesión correctamente.',
       });
     };
 
