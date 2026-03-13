@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -43,7 +42,8 @@ import {
   MapPin, 
   UserCog,
   ShieldCheck,
-  Truck
+  Truck,
+  ClipboardCheck
 } from "lucide-react"
 
 const visitSchema = z.object({
