@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -13,6 +14,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { signOut } from "firebase/auth"
+import { useAuth } from "@/firebase"
 
 import {
   Sidebar,
@@ -46,6 +49,17 @@ const navigation = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const auth = useAuth()
+
+  const handleLogout = async () => {
+    if (auth) {
+      try {
+        await signOut(auth)
+      } catch (error) {
+        console.error("Error signing out:", error)
+      }
+    }
+  }
 
   return (
     <Sidebar className="border-r-0 shadow-xl">
@@ -94,7 +108,10 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 mt-auto border-t border-white/10">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="hover:bg-destructive/10 hover:text-destructive text-white/80">
+            <SidebarMenuButton 
+              className="hover:bg-destructive/10 hover:text-destructive text-white/80"
+              onClick={handleLogout}
+            >
               <LogOut className="w-4 h-4" />
               <span>Log out</span>
             </SidebarMenuButton>
