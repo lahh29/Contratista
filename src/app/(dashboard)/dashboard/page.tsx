@@ -1,16 +1,8 @@
-
 "use client"
 
 import * as React from "react"
 import { 
-  Users, 
-  Building2, 
-  ClipboardCheck, 
-  AlertCircle, 
-  ArrowUpRight,
-  LogOut,
-  Plus,
-  MoreHorizontal
+  Plus 
 } from "lucide-react"
 import {
   Card,
@@ -19,14 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
@@ -41,10 +25,10 @@ import {
   Line
 } from "recharts"
 import { NewVisitModal } from "@/components/visits/NewVisitModal"
+import { DashboardStats } from "@/components/admin/DashboardStats"
+import { VisitsTable } from "@/components/admin/VisitsTable"
 import { useFirestore, useCollection } from "@/firebase"
 import { collection, query, where, orderBy, updateDoc, doc, serverTimestamp } from "firebase/firestore"
-import { formatDistanceToNow } from "date-fns"
-import { es } from "date-fns/locale"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
 
@@ -79,6 +63,8 @@ export default function DashboardPage() {
       })
   }
 
+  const activePeople = activeVisits?.reduce((acc, v) => acc + (v.personnelCount || 0), 0) || 0
+
   const areaData = [
     { name: "Mantenimiento", value: 12 },
     { name: "Eléctrico", value: 8 },
@@ -112,53 +98,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-none shadow-sm bg-blue-50/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-blue-600">Empresas Activas</CardTitle>
-            <Building2 className="w-4 h-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">12</div>
-            <p className="text-xs text-blue-600/70 mt-1 font-medium flex items-center gap-1">
-              <ArrowUpRight className="w-3 h-3" /> +20% hoy
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-purple-50/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-purple-600">Personas en Sitio</CardTitle>
-            <Users className="w-4 h-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">{activeVisits?.reduce((acc, v) => acc + (v.personnelCount || 0), 0) || 0}</div>
-            <p className="text-xs text-purple-600/70 mt-1 font-medium">Tiempo real</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-green-50/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-green-600">Cumplimiento OK</CardTitle>
-            <ClipboardCheck className="w-4 h-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">87%</div>
-            <p className="text-xs text-green-600/70 mt-1 font-medium">Sistemas verificados</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-orange-50/50 border-l-4 border-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase text-orange-600">Alertas</CardTitle>
-            <AlertCircle className="w-4 h-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black">3</div>
-            <p className="text-xs text-orange-600/70 mt-1 font-medium">Requieren atención</p>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardStats activePeople={activePeople} activeVisits={activeVisits?.length || 0} />
 
       <div className="grid gap-6 lg:grid-cols-7">
         <Card className="lg:col-span-4 border-none shadow-sm">
@@ -216,69 +156,11 @@ export default function DashboardPage() {
           </Badge>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Empresa</TableHead>
-                <TableHead>Responsable</TableHead>
-                <TableHead>Personal</TableHead>
-                <TableHead>Área</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Permanencia</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">Cargando...</TableCell>
-                </TableRow>
-              ) : activeVisits && activeVisits.length > 0 ? (
-                activeVisits.map((visit) => (
-                  <TableRow key={visit.id}>
-                    <TableCell className="font-bold">{visit.companyName}</TableCell>
-                    <TableCell>{visit.supervisorId}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="font-mono">
-                        {visit.personnelCount || 1}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{visit.areaName}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-xs font-semibold">ACTIVO</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {visit.entryTime ? formatDistanceToNow(new Date(visit.entryTime.toDate()), { locale: es }) : '...'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleFinishVisit(visit.id)}
-                        >
-                          <LogOut className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                    No hay contratistas activos en este momento.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <VisitsTable 
+            visits={activeVisits} 
+            loading={loading} 
+            onFinishVisit={handleFinishVisit} 
+          />
         </CardContent>
       </Card>
     </div>
