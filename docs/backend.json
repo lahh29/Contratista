@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "Contractor": {
+      "title": "Contractor",
+      "description": "Details of a contractor and their compliance status.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the contractor" },
+        "company": { "type": "string", "description": "Company the contractor belongs to" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "suaStatus": { 
+          "type": "string", 
+          "enum": ["Active", "Expired", "Pending"],
+          "description": "Current status of the SUA insurance"
+        },
+        "suaExpiration": { "type": "string", "format": "date", "description": "Expiration date of the SUA" },
+        "policyNumber": { "type": "string", "description": "Insurance policy number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "company", "suaStatus"]
+    },
+    "AccessLog": {
+      "title": "Access Log",
+      "description": "A record of an entry or exit event.",
+      "type": "object",
+      "properties": {
+        "contractorId": { "type": "string", "description": "Reference to the contractor ID" },
+        "contractorName": { "type": "string", "description": "Name of the contractor at the time of scan" },
+        "action": { "type": "string", "enum": ["ENTRY", "EXIT"], "description": "Type of access event" },
+        "area": { "type": "string", "description": "Area where access was recorded" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["VERIFIED", "DENIED"], "description": "Compliance status at access time" }
+      },
+      "required": ["contractorId", "action", "timestamp", "status"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/contractors/{contractorId}": {
+      "schema": "Contractor",
+      "description": "Collection of registered contractors."
+    },
+    "/accessLogs/{logId}": {
+      "schema": "AccessLog",
+      "description": "Historical log of access events."
+    }
+  }
+}
