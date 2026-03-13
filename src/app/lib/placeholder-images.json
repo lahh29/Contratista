@@ -1,0 +1,16 @@
+{
+  "placeholderImages": [
+    {
+      "id": "avatar-contractor",
+      "description": "Professional profile picture",
+      "imageUrl": "https://picsum.photos/seed/contractor1/200/200",
+      "imageHint": "contractor profile"
+    },
+    {
+      "id": "document-preview",
+      "description": "Document verification preview",
+      "imageUrl": "https://picsum.photos/seed/doc1/600/400",
+      "imageHint": "document paper"
+    }
+  ]
+}
