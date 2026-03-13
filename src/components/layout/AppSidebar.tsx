@@ -31,23 +31,15 @@ const navigation = [
   {
     title: "Overview",
     items: [
-      { name: "Dashboard", href: "/", icon: LayoutDashboard },
-      { name: "Live Logs", href: "/logs", icon: FileText },
-    ],
-  },
-  {
-    title: "Management",
-    items: [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
       { name: "Contractors", href: "/contractors", icon: Users },
-      { name: "Access Scanner", href: "/scanner", icon: QrCode },
-      { name: "Verification", href: "/verification", icon: ShieldCheck },
     ],
   },
   {
-    title: "Analytics",
+    title: "Operations",
     items: [
+      { name: "Access Scanner", href: "/scanner", icon: QrCode },
       { name: "Reports", href: "/reports", icon: FileText },
-      { name: "System Settings", href: "/settings", icon: Settings },
     ],
   },
 ]

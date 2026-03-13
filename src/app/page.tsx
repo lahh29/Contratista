@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 
 export default function RootPage() {
-  redirect("/")
+  // Redirect to the dashboard sub-route to avoid infinite loop on the root
+  redirect("/dashboard")
 }
