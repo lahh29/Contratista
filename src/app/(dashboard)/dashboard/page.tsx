@@ -1,14 +1,17 @@
+
 "use client"
 
 import * as React from "react"
 import { 
   Users, 
-  UserCheck, 
-  AlertTriangle, 
-  MapPin, 
+  Building2, 
+  ClipboardCheck, 
+  AlertCircle, 
   ArrowUpRight,
   Clock,
-  ExternalLink
+  MoreHorizontal,
+  LogOut,
+  Plus
 } from "lucide-react"
 import {
   Card,
@@ -36,136 +39,149 @@ import {
   Tooltip,
   Cell,
   PieChart,
-  Pie
+  Pie,
+  LineChart,
+  Line
 } from "recharts"
+import { NewVisitModal } from "@/components/visits/NewVisitModal"
+import { useFirestore, useCollection } from "@/firebase"
+import { collection, query, where, orderBy, updateDoc, doc, serverTimestamp } from "firebase/firestore"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
 
-const stats = [
-  {
-    title: "Active Contractors",
-    value: "128",
-    change: "+12% from yesterday",
-    icon: Users,
-    color: "bg-blue-500",
-  },
-  {
-    title: "Currently On-site",
-    value: "42",
-    change: "Current occupancy",
-    icon: UserCheck,
-    color: "bg-green-500",
-  },
-  {
-    title: "Pending Verifications",
-    value: "7",
-    change: "Requires action",
-    icon: AlertTriangle,
-    color: "bg-orange-500",
-  },
-  {
-    title: "Total Areas Active",
-    value: "12",
-    change: "Coverage 100%",
-    icon: MapPin,
-    color: "bg-purple-500",
-  },
-]
-
-const areaData = [
-  { name: "Lobby", value: 5 },
-  { name: "Floor 1", value: 12 },
-  { name: "Floor 2", value: 8 },
-  { name: "Warehouse", value: 15 },
-  { name: "Parking", value: 2 },
-]
-
-const recentLogs = [
-  { id: 1, name: "Carlos Mendoza", action: "ENTRY", area: "Warehouse", time: "10:24 AM", status: "VERIFIED" },
-  { id: 2, name: "Ana Sofia Ruiz", action: "EXIT", area: "Lobby", time: "10:15 AM", status: "VERIFIED" },
-  { id: 3, name: "Jorge Silva", action: "ENTRY", area: "Floor 2", time: "09:42 AM", status: "VERIFIED" },
-  { id: 4, name: "Lucia Fernandez", action: "ENTRY", area: "Floor 1", time: "09:30 AM", status: "EXPIRED SUA" },
-]
-
-const COLORS = ['#235CB3', '#6E26D9', '#10B981', '#F59E0B', '#6366F1'];
+const COLORS = ['#2166AB', '#6E26D9', '#10B981', '#F59E0B', '#6366F1'];
 
 export default function DashboardPage() {
+  const db = useFirestore()
+  
+  // Real-time Queries
+  const activeVisitsQuery = React.useMemo(() => {
+    if (!db) return null
+    return query(collection(db, "visits"), where("status", "==", "Active"), orderBy("entryTime", "desc"))
+  }, [db])
+
+  const { data: activeVisits, loading } = useCollection(activeVisitsQuery)
+
+  const handleFinishVisit = async (visitId: string) => {
+    if (!db) return
+    const visitRef = doc(db, "visits", visitId)
+    await updateDoc(visitRef, {
+      status: "Finished",
+      exitTime: serverTimestamp()
+    })
+  }
+
+  // Mock charts data (would be aggregated from logs in a full implementation)
+  const areaData = [
+    { name: "Mantenimiento", value: 12 },
+    { name: "Eléctrico", value: 8 },
+    { name: "IT", value: 5 },
+    { name: "Limpieza", value: 15 },
+    { name: "Seguridad", value: 4 },
+  ]
+
+  const hourlyData = [
+    { hour: '08:00', entries: 4 },
+    { hour: '09:00', entries: 12 },
+    { hour: '10:00', entries: 8 },
+    { hour: '11:00', entries: 15 },
+    { hour: '12:00', entries: 20 },
+    { hour: '13:00', entries: 10 },
+  ]
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-          <p className="text-muted-foreground mt-1">Real-time monitoring of personnel access and compliance.</p>
+          <h2 className="text-3xl font-bold tracking-tight">Panel de Control</h2>
+          <p className="text-muted-foreground mt-1">Monitoreo en tiempo real de accesos y cumplimiento.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Clock className="w-4 h-4" /> Last 24h
-          </Button>
-          <Button size="sm" className="bg-primary text-white gap-2">
-            <ExternalLink className="w-4 h-4" /> Export Report
-          </Button>
+          <NewVisitModal trigger={
+            <Button className="bg-primary text-white gap-2">
+              <Plus className="w-4 h-4" /> Nueva Visita
+            </Button>
+          } />
         </div>
       </div>
 
+      {/* Métricas Principales */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="border-none shadow-sm hover:shadow-md transition-shadow group">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                {stat.title}
-              </CardTitle>
-              <div className={`${stat.color} p-2 rounded-md bg-opacity-10 group-hover:scale-110 transition-transform`}>
-                <stat.icon className={`w-4 h-4 ${stat.color.replace('bg-', 'text-')}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3 text-green-500" />
-                {stat.change}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        <Card className="border-none shadow-sm bg-blue-50/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-bold uppercase text-blue-600">Empresas Activas</CardTitle>
+            <Building2 className="w-4 h-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black">12</div>
+            <p className="text-xs text-blue-600/70 mt-1 font-medium flex items-center gap-1">
+              <ArrowUpRight className="w-3 h-3" /> +20% hoy
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-purple-50/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-bold uppercase text-purple-600">Personas en Sitio</CardTitle>
+            <Users className="w-4 h-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black">47</div>
+            <p className="text-xs text-purple-600/70 mt-1 font-medium">3h promedio de estadía</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-green-50/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-bold uppercase text-green-600">Cumplimiento OK</CardTitle>
+            <ClipboardCheck className="w-4 h-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black">87%</div>
+            <p className="text-xs text-green-600/70 mt-1 font-medium">Sistemas verificados</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-orange-50/50 border-l-4 border-orange-500">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-bold uppercase text-orange-600">Alertas</CardTitle>
+            <AlertCircle className="w-4 h-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black">3</div>
+            <p className="text-xs text-orange-600/70 mt-1 font-medium">Requieren atención inmediata</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+      {/* Gráficas */}
+      <div className="grid gap-6 lg:grid-cols-7">
         <Card className="lg:col-span-4 border-none shadow-sm">
           <CardHeader>
-            <CardTitle>Personnel by Area</CardTitle>
-            <CardDescription>Live distribution across controlled zones.</CardDescription>
+            <CardTitle className="text-lg">Ingresos por Hora</CardTitle>
+            <CardDescription>Flujo de personal en el transcurso del día.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={areaData}>
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                <Tooltip 
-                  cursor={{fill: 'transparent'}}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {areaData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
+              <LineChart data={hourlyData}>
+                <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip />
+                <Line type="monotone" dataKey="entries" stroke="#2166AB" strokeWidth={3} dot={{ fill: '#2166AB' }} />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card className="lg:col-span-3 border-none shadow-sm">
           <CardHeader>
-            <CardTitle>Compliance Status</CardTitle>
-            <CardDescription>Overall SUA verification health.</CardDescription>
+            <CardTitle className="text-lg">Distribución por Áreas</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
-             <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={[
-                    { name: 'Active', value: 85 },
-                    { name: 'Pending', value: 10 },
-                    { name: 'Expired', value: 5 },
-                  ]}
+                  data={areaData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -173,9 +189,9 @@ export default function DashboardPage() {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  <Cell fill="#10B981" />
-                  <Cell fill="#F59E0B" />
-                  <Cell fill="#EF4444" />
+                  {areaData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
@@ -184,50 +200,89 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden">
+      {/* Tabla de Contratistas Activos */}
+      <Card className="border-none shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Recent Entry/Exit Logs</CardTitle>
-            <CardDescription>Live timestamped activity across all access points.</CardDescription>
+            <CardTitle>Contratistas Activos</CardTitle>
+            <CardDescription>Personal trabajando actualmente en sitio.</CardDescription>
           </div>
-          <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">View All Logs</Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              {activeVisits?.length || 0} Trabajando
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="font-semibold">Contractor</TableHead>
-                <TableHead className="font-semibold">Action</TableHead>
-                <TableHead className="font-semibold">Area</TableHead>
-                <TableHead className="font-semibold">Time</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="text-right font-semibold">Action</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>Responsable</TableHead>
+                <TableHead>Personal</TableHead>
+                <TableHead>SUA</TableHead>
+                <TableHead>Área</TableHead>
+                <TableHead>Encargado</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Tiempo</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentLogs.map((log) => (
-                <TableRow key={log.id} className="group cursor-pointer">
-                  <TableCell className="font-medium">{log.name}</TableCell>
-                  <TableCell>
-                    <Badge variant={log.action === "ENTRY" ? "default" : "secondary"} className="rounded-md">
-                      {log.action}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{log.area}</TableCell>
-                  <TableCell className="text-muted-foreground">{log.time}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${log.status === 'VERIFIED' ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
-                      <span className="text-sm">{log.status}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      Details
-                    </Button>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">Cargando...</TableCell>
+                </TableRow>
+              ) : activeVisits && activeVisits.length > 0 ? (
+                activeVisits.map((visit) => (
+                  <TableRow key={visit.id}>
+                    <TableCell className="font-bold">{visit.company}</TableCell>
+                    <TableCell>{visit.responsible}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="font-mono">
+                        {visit.personnelCount || 1}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] font-bold">
+                        {visit.suaCode || 'N/A'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{visit.area}</TableCell>
+                    <TableCell className="text-muted-foreground">{visit.manager}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-xs font-semibold">ACTIVO</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {visit.entryTime ? formatDistanceToNow(new Date(visit.entryTime.toDate()), { locale: es }) : '...'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleFinishVisit(visit.id)}
+                        >
+                          <LogOut className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+                    No hay contratistas activos en este momento.
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

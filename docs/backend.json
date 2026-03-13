@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Contractor": {
@@ -19,17 +20,38 @@
       },
       "required": ["name", "company", "suaStatus"]
     },
+    "Visit": {
+      "title": "Visit",
+      "description": "A record of a work visit on-site.",
+      "type": "object",
+      "properties": {
+        "company": { "type": "string" },
+        "responsible": { "type": "string" },
+        "phone": { "type": "string" },
+        "suaCode": { "type": "string" },
+        "personnelCount": { "type": "number" },
+        "personnelList": { "type": "string" },
+        "area": { "type": "string" },
+        "manager": { "type": "string" },
+        "activity": { "type": "string" },
+        "vehicle": { "type": "string" },
+        "entryTime": { "type": "string", "format": "date-time" },
+        "exitTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Active", "Finished", "Pending"] }
+      },
+      "required": ["company", "responsible", "area", "status"]
+    },
     "AccessLog": {
       "title": "Access Log",
       "description": "A record of an entry or exit event.",
       "type": "object",
       "properties": {
-        "contractorId": { "type": "string", "description": "Reference to the contractor ID" },
-        "contractorName": { "type": "string", "description": "Name of the contractor at the time of scan" },
-        "action": { "type": "string", "enum": ["ENTRY", "EXIT"], "description": "Type of access event" },
-        "area": { "type": "string", "description": "Area where access was recorded" },
+        "contractorId": { "type": "string" },
+        "contractorName": { "type": "string" },
+        "action": { "type": "string", "enum": ["ENTRY", "EXIT"] },
+        "area": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["VERIFIED", "DENIED"], "description": "Compliance status at access time" }
+        "status": { "type": "string", "enum": ["VERIFIED", "DENIED"] }
       },
       "required": ["contractorId", "action", "timestamp", "status"]
     }
@@ -41,6 +63,10 @@
     "/contractors/{contractorId}": {
       "schema": "Contractor",
       "description": "Collection of registered contractors."
+    },
+    "/visits/{visitId}": {
+      "schema": "Visit",
+      "description": "Records of on-site visits."
     },
     "/accessLogs/{logId}": {
       "schema": "AccessLog",
