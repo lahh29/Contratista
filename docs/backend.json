@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "Company": {
@@ -67,6 +66,20 @@
         "exitTime": { "type": "string", "format": "date-time" }
       },
       "required": ["visitId", "name", "status"]
+    },
+    "AccessLog": {
+      "title": "Access Log",
+      "description": "Security logs for entry and exit events.",
+      "type": "object",
+      "properties": {
+        "contractorId": { "type": "string" },
+        "contractorName": { "type": "string" },
+        "action": { "type": "string", "enum": ["ENTRY", "EXIT"] },
+        "area": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" }
+      },
+      "required": ["contractorId", "action", "timestamp"]
     }
   },
   "auth": {
@@ -88,6 +101,10 @@
     "/visits/{visitId}/personnel_entries/{entryId}": {
       "schema": "PersonnelEntry",
       "description": "Individual access events per visit."
+    },
+    "/accessLogs/{logId}": {
+      "schema": "AccessLog",
+      "description": "Security access history logs."
     }
   }
 }

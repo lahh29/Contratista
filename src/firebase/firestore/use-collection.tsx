@@ -35,10 +35,20 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setLoading(false);
       },
       async (serverError: FirestoreError) => {
+        // Intentamos obtener una representación legible de la ruta del query
+        let queryPath = 'unknown_path';
+        try {
+          // @ts-ignore - Acceso interno para debugging en desarrollo
+          queryPath = query._query?.path?.toString() || 'query';
+        } catch (e) {
+          queryPath = 'complex_query';
+        }
+
         const permissionError = new FirestorePermissionError({
-          path: query.toString(),
+          path: queryPath,
           operation: 'list',
         });
+        
         errorEmitter.emit('permission-error', permissionError);
         setError(serverError);
         setLoading(false);
