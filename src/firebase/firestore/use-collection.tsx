@@ -33,13 +33,14 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         }));
         setData(items);
         setLoading(false);
+        setError(null);
       },
       async (serverError: FirestoreError) => {
-        // Intentamos obtener una representación legible de la ruta del query
-        let queryPath = 'unknown_path';
+        let queryPath = 'unknown_collection';
         try {
-          // @ts-ignore - Acceso interno para debugging en desarrollo
-          queryPath = query._query?.path?.toString() || 'query';
+          // Intentar extraer la ruta de la colección para un error más descriptivo
+          // @ts-ignore
+          queryPath = query._query?.path?.segments?.join('/') || 'query';
         } catch (e) {
           queryPath = 'complex_query';
         }

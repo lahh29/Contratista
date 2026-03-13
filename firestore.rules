@@ -1,17 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Reglas para la colección de Empresas
+    // Regla global para desarrollo: Permitir todo a usuarios autenticados
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Reglas explícitas para mayor claridad y seguridad futura
     match /companies/{companyId} {
       allow read, write: if request.auth != null;
     }
     
-    // Reglas para la colección de Áreas
     match /areas/{areaId} {
       allow read, write: if request.auth != null;
     }
     
-    // Reglas para la colección de Visitas y sus subcolecciones
     match /visits/{visitId} {
       allow read, write: if request.auth != null;
       
@@ -20,13 +23,7 @@ service cloud.firestore {
       }
     }
     
-    // Reglas para la colección de Logs de Acceso
     match /accessLogs/{logId} {
-      allow read, write: if request.auth != null;
-    }
-
-    // Regla global por defecto para evitar errores en otras colecciones durante el desarrollo
-    match /{document=**} {
       allow read, write: if request.auth != null;
     }
   }

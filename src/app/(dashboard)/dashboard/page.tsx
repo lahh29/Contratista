@@ -27,7 +27,7 @@ import {
 import { NewVisitModal } from "@/components/visits/NewVisitModal"
 import { DashboardStats } from "@/components/admin/DashboardStats"
 import { VisitsTable } from "@/components/admin/VisitsTable"
-import { useFirestore, useCollection } from "@/firebase"
+import { useFirestore, useCollection, useUser } from "@/firebase"
 import { collection, query, where, orderBy, updateDoc, doc, serverTimestamp } from "firebase/firestore"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
@@ -36,11 +36,17 @@ const COLORS = ['#2166AB', '#6E26D9', '#10B981', '#F59E0B', '#6366F1'];
 
 export default function DashboardPage() {
   const db = useFirestore()
+  const { user } = useUser()
   
   const activeVisitsQuery = React.useMemo(() => {
-    if (!db) return null
-    return query(collection(db, "visits"), where("status", "==", "Active"), orderBy("entryTime", "desc"))
-  }, [db])
+    // Solo ejecutamos la consulta si hay un usuario autenticado y la DB está lista
+    if (!db || !user) return null
+    return query(
+      collection(db, "visits"), 
+      where("status", "==", "Active"), 
+      orderBy("entryTime", "desc")
+    )
+  }, [db, user])
 
   const { data: activeVisits, loading } = useCollection(activeVisitsQuery)
 
