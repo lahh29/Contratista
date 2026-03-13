@@ -1,12 +1,38 @@
+
+"use client"
+
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { Separator } from "@/components/ui/separator"
+import { useUser } from "@/firebase"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { user, loading } = useUser()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login")
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!user) return null
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -21,7 +47,7 @@ export default function DashboardLayout({
           </div>
           <div className="flex items-center gap-4">
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-accent/20 ring-offset-2 ring-offset-background cursor-pointer hover:scale-110 transition-transform">
-              AD
+              {user.email?.slice(0, 2).toUpperCase()}
             </div>
           </div>
         </header>

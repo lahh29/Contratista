@@ -8,10 +8,9 @@ import {
   ClipboardCheck, 
   AlertCircle, 
   ArrowUpRight,
-  Clock,
-  MoreHorizontal,
   LogOut,
-  Plus
+  Plus,
+  MoreHorizontal
 } from "lucide-react"
 import {
   Card,
@@ -31,8 +30,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
-  Bar, 
-  BarChart, 
   ResponsiveContainer, 
   XAxis, 
   YAxis, 
@@ -48,13 +45,14 @@ import { useFirestore, useCollection } from "@/firebase"
 import { collection, query, where, orderBy, updateDoc, doc, serverTimestamp } from "firebase/firestore"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { errorEmitter } from '@/firebase/error-emitter'
+import { FirestorePermissionError } from '@/firebase/errors'
 
 const COLORS = ['#2166AB', '#6E26D9', '#10B981', '#F59E0B', '#6366F1'];
 
 export default function DashboardPage() {
   const db = useFirestore()
   
-  // Real-time Queries
   const activeVisitsQuery = React.useMemo(() => {
     if (!db) return null
     return query(collection(db, "visits"), where("status", "==", "Active"), orderBy("entryTime", "desc"))
@@ -62,16 +60,25 @@ export default function DashboardPage() {
 
   const { data: activeVisits, loading } = useCollection(activeVisitsQuery)
 
-  const handleFinishVisit = async (visitId: string) => {
+  const handleFinishVisit = (visitId: string) => {
     if (!db) return
     const visitRef = doc(db, "visits", visitId)
-    await updateDoc(visitRef, {
-      status: "Finished",
+    const updateData = {
+      status: "Completed",
       exitTime: serverTimestamp()
-    })
+    }
+
+    updateDoc(visitRef, updateData)
+      .catch(async () => {
+        const permissionError = new FirestorePermissionError({
+          path: visitRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        })
+        errorEmitter.emit('permission-error', permissionError)
+      })
   }
 
-  // Mock charts data (would be aggregated from logs in a full implementation)
   const areaData = [
     { name: "Mantenimiento", value: 12 },
     { name: "Eléctrico", value: 8 },
@@ -105,7 +112,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Métricas Principales */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-none shadow-sm bg-blue-50/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -126,8 +132,8 @@ export default function DashboardPage() {
             <Users className="w-4 h-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black">47</div>
-            <p className="text-xs text-purple-600/70 mt-1 font-medium">3h promedio de estadía</p>
+            <div className="text-3xl font-black">{activeVisits?.reduce((acc, v) => acc + (v.personnelCount || 0), 0) || 0}</div>
+            <p className="text-xs text-purple-600/70 mt-1 font-medium">Tiempo real</p>
           </CardContent>
         </Card>
 
@@ -149,12 +155,11 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black">3</div>
-            <p className="text-xs text-orange-600/70 mt-1 font-medium">Requieren atención inmediata</p>
+            <p className="text-xs text-orange-600/70 mt-1 font-medium">Requieren atención</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficas */}
       <div className="grid gap-6 lg:grid-cols-7">
         <Card className="lg:col-span-4 border-none shadow-sm">
           <CardHeader>
@@ -200,18 +205,15 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Tabla de Contratistas Activos */}
       <Card className="border-none shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Contratistas Activos</CardTitle>
             <CardDescription>Personal trabajando actualmente en sitio.</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              {activeVisits?.length || 0} Trabajando
-            </Badge>
-          </div>
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            {activeVisits?.length || 0} Empresas trabajando
+          </Badge>
         </CardHeader>
         <CardContent>
           <Table>
@@ -220,36 +222,28 @@ export default function DashboardPage() {
                 <TableHead>Empresa</TableHead>
                 <TableHead>Responsable</TableHead>
                 <TableHead>Personal</TableHead>
-                <TableHead>SUA</TableHead>
                 <TableHead>Área</TableHead>
-                <TableHead>Encargado</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Tiempo</TableHead>
+                <TableHead>Permanencia</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">Cargando...</TableCell>
+                  <TableCell colSpan={7} className="text-center py-8">Cargando...</TableCell>
                 </TableRow>
               ) : activeVisits && activeVisits.length > 0 ? (
                 activeVisits.map((visit) => (
                   <TableRow key={visit.id}>
-                    <TableCell className="font-bold">{visit.company}</TableCell>
-                    <TableCell>{visit.responsible}</TableCell>
+                    <TableCell className="font-bold">{visit.companyName}</TableCell>
+                    <TableCell>{visit.supervisorId}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="font-mono">
                         {visit.personnelCount || 1}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-bold">
-                        {visit.suaCode || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{visit.area}</TableCell>
-                    <TableCell className="text-muted-foreground">{visit.manager}</TableCell>
+                    <TableCell>{visit.areaName}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -278,7 +272,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                     No hay contratistas activos en este momento.
                   </TableCell>
                 </TableRow>
