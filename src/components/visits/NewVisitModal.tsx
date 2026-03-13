@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -30,8 +31,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select"
-import { useFirestore } from "@/firebase"
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { useFirestore, useCollection } from "@/firebase"
+import { collection, addDoc, serverTimestamp, query, where } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { 
   QrCode, 
@@ -43,18 +44,15 @@ import {
   UserCog,
   ShieldCheck,
   Truck,
-  ClipboardCheck
+  ClipboardCheck,
+  Loader2
 } from "lucide-react"
 
 const visitSchema = z.object({
-  company: z.string().min(1, "Empresa requerida"),
-  responsible: z.string().min(1, "Responsable requerido"),
-  phone: z.string().min(1, "Teléfono requerido"),
-  suaCode: z.string().min(1, "Código SUA requerido"),
+  companyId: z.string().min(1, "Empresa requerida"),
+  areaId: z.string().min(1, "Área requerida"),
+  supervisorId: z.string().min(1, "Encargado requerido"),
   personnelCount: z.coerce.number().min(1, "Mínimo 1 persona"),
-  personnelList: z.string().optional(),
-  area: z.string().min(1, "Área requerida"),
-  manager: z.string().min(1, "Encargado requerido"),
   activity: z.string().min(1, "Actividad requerida"),
   vehicle: z.string().optional(),
 })
@@ -64,17 +62,20 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
   const { toast } = useToast()
   const db = useFirestore()
 
+  // Fetch companies and areas for selects
+  const companiesQuery = React.useMemo(() => db ? collection(db, "companies") : null, [db])
+  const areasQuery = React.useMemo(() => db ? collection(db, "areas") : null, [db])
+  
+  const { data: companies } = useCollection(companiesQuery)
+  const { data: areas } = useCollection(areasQuery)
+
   const form = useForm<z.infer<typeof visitSchema>>({
     resolver: zodResolver(visitSchema),
     defaultValues: {
-      company: "",
-      responsible: "",
-      phone: "",
-      suaCode: "",
+      companyId: "",
+      areaId: "",
+      supervisorId: "",
       personnelCount: 1,
-      personnelList: "",
-      area: "",
-      manager: "",
       activity: "",
       vehicle: "",
     },
@@ -83,16 +84,25 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
   const onSubmit = async (values: z.infer<typeof visitSchema>) => {
     if (!db) return
 
+    const selectedCompany = companies?.find(c => c.id === values.companyId)
+    const selectedArea = areas?.find(a => a.id === values.areaId)
+
+    const visitData = {
+      ...values,
+      companyName: selectedCompany?.name || "Empresa Desconocida",
+      areaName: selectedArea?.name || "Área Desconocida",
+      status: "Active",
+      entryTime: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      qrCode: `VIS-${Math.random().toString(36).substring(7).toUpperCase()}`
+    }
+
     try {
-      await addDoc(collection(db, "visits"), {
-        ...values,
-        status: "Active",
-        entryTime: serverTimestamp(),
-      })
+      await addDoc(collection(db, "visits"), visitData)
 
       toast({
-        title: "Registro Exitoso",
-        description: `Visita de ${values.company} registrada correctamente.`,
+        title: "Visita Activada",
+        description: `${visitData.companyName} ha ingresado a ${visitData.areaName}.`,
       })
       setOpen(false)
       form.reset()
@@ -108,183 +118,113 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto border-none shadow-2xl">
         <DialogHeader>
           <div className="bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
              <ClipboardCheck className="w-6 h-6 text-primary" />
           </div>
-          <DialogTitle className="text-2xl font-bold">Registro de Nueva Visita</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Registro de Visita</DialogTitle>
           <DialogDescription>
-            Complete los detalles del personal y el área de trabajo para generar el acceso.
+            Configure el acceso en tiempo real según la arquitectura de seguridad.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Sección Empresa y Responsable */}
-              <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-6">
+              <FormField
+                control={form.control}
+                name="companyId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4" /> Empresa Contratista
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-12">
+                          <SelectValue placeholder="Seleccione empresa autorizada" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {companies?.map(c => (
+                          <SelectItem key={c.id} value={c.id}>
+                            <div className="flex items-center gap-2">
+                               <span className="font-semibold">{c.name}</span>
+                               <Badge variant="outline" className="text-[10px]">{c.sua?.status || 'Sin SUA'}</Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="company"
+                  name="areaId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4" /> Empresa
+                        <MapPin className="w-4 h-4" /> Área Destino
                       </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. ABC Construcciones" {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Área" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {areas?.map(a => (
+                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                          ))}
+                          <SelectItem value="Mantenimiento">Mantenimiento Central</SelectItem>
+                          <SelectItem value="ServerRoom">Sala de Servidores</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
                   control={form.control}
-                  name="responsible"
+                  name="supervisorId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Responsable / Capataz</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nombre completo" {...field} />
-                      </FormControl>
+                      <FormLabel className="flex items-center gap-2">
+                        <UserCog className="w-4 h-4" /> Supervisor Interno
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Encargado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="IngLopez">Ing. López</SelectItem>
+                          <SelectItem value="LicMaza">Lic. Maza</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono</FormLabel>
-                        <FormControl>
-                          <Input placeholder="555-1234" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="suaCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-green-600" /> SUA
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="SUA-001" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
               </div>
 
-              {/* Sección Personal y Vehículo */}
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="personnelCount"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        <Users className="w-4 h-4" /> Cantidad de Personal
+                        <Users className="w-4 h-4" /> Dotación
                       </FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="personnelList"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lista de Personal (Nombres)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="1. Pedro López\n2. Ana Torres..." 
-                          className="h-[110px] resize-none"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Ubicación y Gestión */}
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="area"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" /> Área de Trabajo
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione área" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
-                          <SelectItem value="Eléctrico">Eléctrico</SelectItem>
-                          <SelectItem value="Almacén">Almacén</SelectItem>
-                          <SelectItem value="Oficinas">Oficinas</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="manager"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <UserCog className="w-4 h-4" /> Encargado Interno
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Quién autoriza" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Ing. López">Ing. López</SelectItem>
-                          <SelectItem value="Ing. Ruiz">Ing. Ruiz</SelectItem>
-                          <SelectItem value="Lic. Maza">Lic. Maza</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Actividad y Vehículo */}
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="activity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Actividad a realizar</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. Revisión HVAC" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,27 +236,35 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
-                        <Truck className="w-4 h-4" /> Vehículo (Opcional)
+                        <Truck className="w-4 h-4" /> Patente / Placa
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Patente / Placa" {...field} />
+                        <Input placeholder="Opcional" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="activity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actividad Específica</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Describa el trabajo a realizar..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" className="flex-1 gap-2 border-green-200 text-green-700 hover:bg-green-50">
-                <MessageCircle className="w-4 h-4" /> WhatsApp
-              </Button>
-              <Button type="button" variant="outline" className="flex-1 gap-2 border-accent/20 text-accent hover:bg-accent/5">
-                <QrCode className="w-4 h-4" /> Generar QR
-              </Button>
-              <Button type="submit" className="flex-1 bg-primary text-white gap-2">
-                <Save className="w-4 h-4" /> Guardar Visita
+            <div className="flex gap-3 pt-4 border-t">
+              <Button type="submit" className="flex-1 bg-primary text-white h-12 gap-2 font-bold">
+                <Save className="w-4 h-4" /> ACTIVAR ACCESO
               </Button>
             </div>
           </form>

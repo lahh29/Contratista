@@ -1,76 +1,93 @@
 
 {
   "entities": {
-    "Contractor": {
-      "title": "Contractor",
-      "description": "Details of a contractor and their compliance status.",
+    "Company": {
+      "title": "Company",
+      "description": "Details of a contracting company and its compliance status.",
       "type": "object",
       "properties": {
-        "name": { "type": "string", "description": "Full name of the contractor" },
-        "company": { "type": "string", "description": "Company the contractor belongs to" },
-        "phone": { "type": "string", "description": "Contact phone number" },
-        "suaStatus": { 
-          "type": "string", 
-          "enum": ["Active", "Expired", "Pending"],
-          "description": "Current status of the SUA insurance"
+        "name": { "type": "string" },
+        "contact": { "type": "string" },
+        "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Blocked"] },
+        "sua": {
+          "type": "object",
+          "properties": {
+            "number": { "type": "string" },
+            "validUntil": { "type": "string", "format": "date" },
+            "status": { "type": "string", "enum": ["Valid", "Expired", "Pending"] }
+          }
         },
-        "suaExpiration": { "type": "string", "format": "date", "description": "Expiration date of the SUA" },
-        "policyNumber": { "type": "string", "description": "Insurance policy number" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "company", "suaStatus"]
+      "required": ["name", "status"]
     },
     "Visit": {
       "title": "Visit",
-      "description": "A record of a work visit on-site.",
+      "description": "Main operational record for a work visit.",
       "type": "object",
       "properties": {
-        "company": { "type": "string" },
-        "responsible": { "type": "string" },
-        "phone": { "type": "string" },
-        "suaCode": { "type": "string" },
+        "companyId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "areaId": { "type": "string" },
+        "areaName": { "type": "string" },
+        "supervisorId": { "type": "string" },
         "personnelCount": { "type": "number" },
-        "personnelList": { "type": "string" },
-        "area": { "type": "string" },
-        "manager": { "type": "string" },
         "activity": { "type": "string" },
-        "vehicle": { "type": "string" },
+        "qrCode": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Active", "Completed", "Cancelled"] },
         "entryTime": { "type": "string", "format": "date-time" },
         "exitTime": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["Active", "Finished", "Pending"] }
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["company", "responsible", "area", "status"]
+      "required": ["companyId", "areaId", "status"]
     },
-    "AccessLog": {
-      "title": "Access Log",
-      "description": "A record of an entry or exit event.",
+    "Area": {
+      "title": "Area",
+      "description": "Physical area or department configuration.",
       "type": "object",
       "properties": {
-        "contractorId": { "type": "string" },
-        "contractorName": { "type": "string" },
-        "action": { "type": "string", "enum": ["ENTRY", "EXIT"] },
-        "area": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["VERIFIED", "DENIED"] }
+        "name": { "type": "string" },
+        "supervisorId": { "type": "string" },
+        "maxCapacity": { "type": "number" }
       },
-      "required": ["contractorId", "action", "timestamp", "status"]
+      "required": ["name"]
+    },
+    "PersonnelEntry": {
+      "title": "Personnel Entry",
+      "description": "Individual tracking for each person in a visit.",
+      "type": "object",
+      "properties": {
+        "visitId": { "type": "string" },
+        "name": { "type": "string" },
+        "idNumber": { "type": "string" },
+        "photo": { "type": "string", "description": "Base64 or URL" },
+        "status": { "type": "string", "enum": ["Inside", "Outside"] },
+        "entryTime": { "type": "string", "format": "date-time" },
+        "exitTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["visitId", "name", "status"]
     }
   },
   "auth": {
     "providers": ["google.com", "password"]
   },
   "firestore": {
-    "/contractors/{contractorId}": {
-      "schema": "Contractor",
-      "description": "Collection of registered contractors."
+    "/companies/{companyId}": {
+      "schema": "Company",
+      "description": "Registered companies."
+    },
+    "/areas/{areaId}": {
+      "schema": "Area",
+      "description": "Configured work areas."
     },
     "/visits/{visitId}": {
       "schema": "Visit",
-      "description": "Records of on-site visits."
+      "description": "Main visit records."
     },
-    "/accessLogs/{logId}": {
-      "schema": "AccessLog",
-      "description": "Historical log of access events."
+    "/visits/{visitId}/personnel_entries/{entryId}": {
+      "schema": "PersonnelEntry",
+      "description": "Individual access events per visit."
     }
   }
 }
