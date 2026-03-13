@@ -42,7 +42,7 @@ export default function DashboardLayout({
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex-1">
             <h1 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              SecureConnect Pro Management
+              ViñoPlastic
             </h1>
           </div>
           <div className="flex items-center gap-4">

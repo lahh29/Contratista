@@ -81,10 +81,8 @@ export default function LoginPage() {
           <div className="bg-primary w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">SecureConnect Pro</CardTitle>
-          <CardDescription>
-            Ingrese sus credenciales para acceder al panel de gestión.
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold">CONTRATISTAS</CardTitle>
+          <p>VIÑOPLASTIC</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <Form {...form}>
@@ -96,7 +94,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="admin@secureconnect.pro" {...field} />
+                      <Input placeholder="admin@vinoplastic.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

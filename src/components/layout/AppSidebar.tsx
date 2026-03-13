@@ -55,7 +55,7 @@ export function AppSidebar() {
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
           <span className="text-xl font-bold tracking-tight text-white">
-            SecureConnect <span className="text-accent-foreground opacity-90">Pro</span>
+            Viño <span className="text-accent-foreground opacity-90">Plastic</span>
           </span>
         </div>
       </SidebarHeader>

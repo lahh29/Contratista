@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -8,7 +9,6 @@ import {
   ShieldCheck, 
   UploadCloud, 
   Loader2, 
-  ShieldAlert,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -104,27 +104,35 @@ export function ContractorForm() {
   async function onSubmit(values: z.infer<typeof contractorSchema>) {
     if (!db) return
 
-    const contractorData = {
-      ...values,
-      suaStatus: "Active", // Por defecto activo si se registra con datos válidos
+    // Mapeo de datos para cumplir con el esquema 'Company' definido en backend.json
+    const companyData = {
+      name: values.company,
+      contact: values.name,
+      phone: values.phone || "",
+      status: "Active",
+      sua: {
+        number: values.policyNumber,
+        validUntil: values.suaExpiration,
+        status: "Valid"
+      },
       createdAt: serverTimestamp(),
     }
 
-    const contractorsRef = collection(db, "contractors")
+    const companiesRef = collection(db, "companies")
     
-    addDoc(contractorsRef, contractorData)
+    addDoc(companiesRef, companyData)
       .then(() => {
         toast({
-          title: "Contratista Registrado",
-          description: `Se ha agregado a ${values.name} al sistema exitosamente.`,
+          title: "Registro Exitoso",
+          description: `La empresa ${values.company} ha sido registrada correctamente.`,
         })
         router.push("/contractors")
       })
       .catch(async (error) => {
         const permissionError = new FirestorePermissionError({
-          path: contractorsRef.path,
+          path: companiesRef.path,
           operation: 'create',
-          requestResourceData: contractorData,
+          requestResourceData: companyData,
         })
         errorEmitter.emit('permission-error', permissionError)
       })
@@ -188,7 +196,7 @@ export function ContractorForm() {
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle>Detalles del Perfil</CardTitle>
-          <CardDescription>Confirme la información del contratista antes de registrar.</CardDescription>
+          <CardDescription>Confirme la información antes de completar el registro.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -198,7 +206,7 @@ export function ContractorForm() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre Completo</FormLabel>
+                    <FormLabel>Nombre Completo (Responsable)</FormLabel>
                     <FormControl>
                       <Input placeholder="Ej. Juan Pérez" {...field} />
                     </FormControl>
@@ -238,7 +246,7 @@ export function ContractorForm() {
                   name="policyNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nº de Póliza</FormLabel>
+                      <FormLabel>Nº de Póliza / SUA</FormLabel>
                       <FormControl>
                         <Input placeholder="P-123456" {...field} />
                       </FormControl>
@@ -260,7 +268,7 @@ export function ContractorForm() {
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-6">
+              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-6 h-auto">
                 Completar Registro
               </Button>
             </form>

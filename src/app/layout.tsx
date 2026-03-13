@@ -4,8 +4,8 @@ import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'SecureConnect Pro | Access Control System',
-  description: 'Enterprise-grade contractor access control and monitoring system.',
+  title: 'Vertx System',
+  description: 'Monitoreo Contratistas / Proveedores ViñoPlastic',
 };
 
 export default function RootLayout({
