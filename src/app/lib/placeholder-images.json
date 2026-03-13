@@ -1,3 +1,4 @@
+
 {
   "placeholderImages": [
     {
@@ -11,6 +12,12 @@
       "description": "Document verification preview",
       "imageUrl": "https://picsum.photos/seed/doc1/600/400",
       "imageHint": "document paper"
+    },
+    {
+      "id": "selfie-placeholder",
+      "description": "Contractor selfie verification",
+      "imageUrl": "https://picsum.photos/seed/selfie/400/400",
+      "imageHint": "selfie person"
     }
   ]
 }
