@@ -72,7 +72,7 @@ const documentExtractionPrompt = ai.definePrompt({
   name: 'documentExtractionPrompt',
   input: { schema: AutomatedDocumentDataExtractionInputSchema },
   output: { schema: AutomatedDocumentDataExtractionOutputSchema },
-  model: 'gemini-1.5-flash-latest', // Using a multi-modal model for image processing
+  model: 'googleai/gemini-2.5-flash',
   prompt: `You are an expert document data extractor for contractor compliance. Your task is to accurately read and extract specific information from an uploaded document image.
 
 Based on the provided document and its description:

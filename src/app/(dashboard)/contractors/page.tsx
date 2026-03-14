@@ -7,7 +7,6 @@ import {
   MoreVertical,
   ShieldCheck,
   ShieldAlert,
-  Download,
   Loader2,
   Building2,
   QrCode,
@@ -215,10 +214,7 @@ export default function ContractorsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="gap-2 hidden sm:flex">
-            <Download className="w-4 h-4" /> Exportar
-          </Button>
-          <Button asChild size="sm" className="bg-primary text-white gap-2">
+<Button asChild size="sm" className="bg-primary text-white gap-2">
             <Link href="/contractors/new">
               <Building2 className="w-4 h-4" />
               <span>Nueva Empresa</span>
