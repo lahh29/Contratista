@@ -1,8 +1,8 @@
 export const firebaseConfig = {
-  apiKey: "AIzaSyDCI86FTRzFLfUjg751KJD72OmiB7jxmN8",
-  authDomain: "contratistas-d30db.firebaseapp.com",
-  projectId: "contratistas-d30db",
-  storageBucket: "contratistas-d30db.firebasestorage.app",
-  messagingSenderId: "830635750377",
-  appId: "1:830635750377:web:5f5a8d4ae1f5132b745178"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
