@@ -11,12 +11,14 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Loader2, ClipboardList, LogIn, LogOut } from "lucide-react"
 import { useFirestore, useCollection } from "@/firebase"
-import { collection, query, where, orderBy } from "firebase/firestore"
+import { collection, query, where, orderBy, limit } from "firebase/firestore"
 import { formatDistanceToNow, format } from "date-fns"
 import { es } from "date-fns/locale"
 
+import type { Company } from "@/types"
+
 interface CompanyVisitsSheetProps {
-  company: any
+  company: Company
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -28,8 +30,9 @@ export function CompanyVisitsSheet({ company, open, onOpenChange }: CompanyVisit
     if (!db || !company || !open) return null
     return query(
       collection(db, "visits"),
-      where("companyName", "==", company.name),
-      orderBy("entryTime", "desc")
+      where("companyId", "==", company.id),
+      orderBy("entryTime", "desc"),
+      limit(100)
     )
   }, [db, company, open])
 

@@ -29,6 +29,7 @@ import { useFirestore } from "@/firebase"
 import { useRouter } from "next/navigation"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
+import { sendNotification } from '@/app/actions/notify'
 
 const contractorSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -128,11 +129,7 @@ export function ContractorForm() {
           title: "Registro Exitoso",
           description: `La empresa ${values.company} ha sido registrada correctamente.`,
         })
-        fetch('/api/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'new_contractor', companyName: values.company }),
-        }).catch(() => {})
+        sendNotification({ type: 'new_contractor', companyName: values.company })
         router.push("/contractors")
       })
       .catch(async (error) => {

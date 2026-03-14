@@ -26,7 +26,7 @@ import { NewVisitModal } from "@/components/visits/NewVisitModal"
 import { DashboardStats } from "@/components/admin/DashboardStats"
 import { VisitsTable } from "@/components/admin/VisitsTable"
 import { useFirestore, useCollection, useUser } from "@/firebase"
-import { collection, query, where, updateDoc, doc, serverTimestamp } from "firebase/firestore"
+import { collection, query, where, limit, updateDoc, doc, serverTimestamp } from "firebase/firestore"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
 
@@ -38,12 +38,12 @@ export default function DashboardPage() {
 
   const activeVisitsQuery = React.useMemo(() => {
     if (!db || !user || authLoading) return null
-    return query(collection(db, "visits"), where("status", "==", "Active"))
+    return query(collection(db, "visits"), where("status", "==", "Active"), limit(200))
   }, [db, user, authLoading])
 
   const companiesQuery = React.useMemo(() => {
     if (!db || !user || authLoading) return null
-    return collection(db, "companies")
+    return query(collection(db, "companies"), limit(500))
   }, [db, user, authLoading])
 
   const { data: activeVisits, loading: dataLoading } = useCollection(activeVisitsQuery)
@@ -63,7 +63,10 @@ export default function DashboardPage() {
     })
   }
 
-  const activePeople = activeVisits?.reduce((acc, v) => acc + (Number(v.personnelCount) || 0), 0) || 0
+  const activePeople = React.useMemo(
+    () => activeVisits?.reduce((acc, v) => acc + (Number(v.personnelCount) || 0), 0) || 0,
+    [activeVisits]
+  )
 
   const complianceRate = React.useMemo(() => {
     if (!companies?.length) return 0

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { collection, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore"
+import { collection, addDoc, deleteDoc, doc, updateDoc, query, limit } from "firebase/firestore"
 import { useFirestore, useCollection } from "@/firebase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -180,9 +180,9 @@ function CollectionManager({
 export default function SettingsPage() {
   const db = useFirestore()
 
-  const areasQuery = React.useMemo(() => (db ? collection(db, "areas") : null), [db])
+  const areasQuery = React.useMemo(() => (db ? query(collection(db, "areas"), limit(100)) : null), [db])
   const supervisorsQuery = React.useMemo(
-    () => (db ? collection(db, "supervisors") : null),
+    () => (db ? query(collection(db, "supervisors"), limit(100)) : null),
     [db]
   )
 

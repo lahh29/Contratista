@@ -30,9 +30,11 @@ import {
   query,
   where,
   getDocs,
-  updateDoc
+  updateDoc,
+  limit
 } from "firebase/firestore"
 import { QRScanner } from "@/components/contractor/QRScanner"
+import { sendNotification } from '@/app/actions/notify'
 
 type ScannerMode = 'SCANNING' | 'VERIFYING' | 'ON_SITE'
 
@@ -42,15 +44,15 @@ export default function ScannerPage() {
   const { user } = useUser()
   const [mode, setMode] = React.useState<ScannerMode>('SCANNING')
   const [isProcessing, setIsProcessing] = React.useState(false)
-  const [currentCompany, setCurrentCompany] = React.useState<any>(null)
-  const [activeVisit, setActiveVisit] = React.useState<any>(null)
+  const [currentCompany, setCurrentCompany] = React.useState<import('@/types').Company | null>(null)
+  const [activeVisit, setActiveVisit] = React.useState<import('@/types').Visit | null>(null)
   const [selectedArea, setSelectedArea] = React.useState('')
   const [selectedSupervisor, setSelectedSupervisor] = React.useState('')
   const [vehiclePlates, setVehiclePlates] = React.useState('')
   const [confirmedPersonnel, setConfirmedPersonnel] = React.useState<number>(1)
 
-  const areasQuery = React.useMemo(() => db ? collection(db, 'areas') : null, [db])
-  const supervisorsQuery = React.useMemo(() => db ? collection(db, 'supervisors') : null, [db])
+  const areasQuery = React.useMemo(() => db ? query(collection(db, 'areas'), limit(100)) : null, [db])
+  const supervisorsQuery = React.useMemo(() => db ? query(collection(db, 'supervisors'), limit(100)) : null, [db])
   const { data: areas } = useCollection(areasQuery)
   const { data: supervisors } = useCollection(supervisorsQuery)
 
@@ -129,18 +131,13 @@ export default function ScannerPage() {
         vehiclePlates: vehiclePlates.trim().toUpperCase(),
       })
       setMode('ON_SITE')
-      // Push notification to all users
-      fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'entry',
-          companyName: currentCompany.name,
-          areaName: area?.name || '—',
-          personnelCount: confirmedPersonnel,
-          vehiclePlates: vehiclePlates.trim().toUpperCase(),
-        }),
-      }).catch(() => {/* non-blocking */})
+      sendNotification({
+        type: 'entry',
+        companyName: currentCompany.name,
+        areaName: area?.name || '—',
+        personnelCount: confirmedPersonnel,
+        vehiclePlates: vehiclePlates.trim().toUpperCase(),
+      })
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar entrada' })
     } finally {
@@ -157,16 +154,11 @@ export default function ScannerPage() {
         exitTime: serverTimestamp(),
       })
       toast({ title: 'Salida registrada', description: `${currentCompany?.name} ha salido.` })
-      // Push notification to all users
-      fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'exit',
-          companyName: currentCompany?.name || '—',
-          areaName: activeVisit.areaName || '—',
-        }),
-      }).catch(() => {/* non-blocking */})
+      sendNotification({
+        type: 'exit',
+        companyName: currentCompany?.name || '—',
+        areaName: activeVisit.areaName || '—',
+      })
       resetScanner()
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar salida' })

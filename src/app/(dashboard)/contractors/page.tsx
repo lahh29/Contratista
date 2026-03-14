@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
 import { useFirestore, useCollection } from "@/firebase"
-import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore"
+import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import { CompanyDetailSheet } from "@/components/contractors/CompanyDetailSheet"
@@ -58,6 +58,7 @@ import { CompanyVisitsSheet } from "@/components/contractors/CompanyVisitsSheet"
 import { EditCompanySheet } from "@/components/contractors/EditCompanySheet"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
+import type { Company } from "@/types"
 
 type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
 
@@ -128,14 +129,14 @@ function CompanyActions({ onAction }: { onAction: (type: ActiveDialog) => void }
 
 export default function ContractorsPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
-  const [selectedCompany, setSelectedCompany] = React.useState<any>(null)
+  const [selectedCompany, setSelectedCompany] = React.useState<Company | null>(null)
   const [activeDialog, setActiveDialog] = React.useState<ActiveDialog>(null)
   const db = useFirestore()
   const { toast } = useToast()
 
   const companiesQuery = React.useMemo(() => {
     if (!db) return null
-    return query(collection(db, "companies"), orderBy("createdAt", "desc"))
+    return query(collection(db, "companies"), orderBy("createdAt", "desc"), limit(500))
   }, [db])
 
   const { data: companies, loading } = useCollection(companiesQuery)
@@ -148,7 +149,7 @@ export default function ContractorsPage() {
     )
   }, [companies, searchTerm])
 
-  function openAction(company: any, type: ActiveDialog) {
+  function openAction(company: Company, type: ActiveDialog) {
     setSelectedCompany(company)
     // Delay lets the DropdownMenu fully close its portal + focus trap
     // before mounting a Sheet/Dialog, preventing Radix UI focus conflicts

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { VisitForm } from "@/components/admin/VisitForm"
 import { useFirestore, useCollection } from "@/firebase"
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { collection, addDoc, serverTimestamp, query, limit } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { ClipboardCheck } from "lucide-react"
 
@@ -21,9 +21,9 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
   const { toast } = useToast()
   const db = useFirestore()
 
-  const companiesQuery = React.useMemo(() => db ? collection(db, "companies") : null, [db])
-  const areasQuery = React.useMemo(() => db ? collection(db, "areas") : null, [db])
-  const supervisorsQuery = React.useMemo(() => db ? collection(db, "supervisors") : null, [db])
+  const companiesQuery = React.useMemo(() => db ? query(collection(db, "companies"), limit(500)) : null, [db])
+  const areasQuery = React.useMemo(() => db ? query(collection(db, "areas"), limit(100)) : null, [db])
+  const supervisorsQuery = React.useMemo(() => db ? query(collection(db, "supervisors"), limit(100)) : null, [db])
 
   const { data: companies } = useCollection(companiesQuery)
   const { data: areas } = useCollection(areasQuery)
