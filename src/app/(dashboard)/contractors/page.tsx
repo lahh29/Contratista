@@ -13,6 +13,7 @@ import {
   QrCode,
   Phone,
   Calendar,
+  Trash2,
 } from "lucide-react"
 import {
   Card,
@@ -50,7 +51,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
 import { useFirestore, useCollection } from "@/firebase"
-import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore"
+import { collection, query, orderBy, doc, updateDoc, deleteDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import { CompanyDetailSheet } from "@/components/contractors/CompanyDetailSheet"
@@ -59,7 +60,7 @@ import { EditCompanySheet } from "@/components/contractors/EditCompanySheet"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
 
-type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | null
+type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
 
 function SuaBadge({ status }: { status?: string }) {
   const isValid = status === 'Valid'
@@ -109,10 +110,16 @@ function CompanyActions({ onAction }: { onAction: (type: ActiveDialog) => void }
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
+            className="text-orange-600 focus:text-orange-600"
             onClick={() => onAction('block')}
           >
             Bloquear Acceso
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => onAction('delete')}
+          >
+            <Trash2 className="w-4 h-4 mr-2" /> Eliminar Empresa
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -170,6 +177,26 @@ export default function ContractorsPage() {
         path: companyRef.path,
         operation: 'update',
         requestResourceData: updateData,
+      })
+      errorEmitter.emit('permission-error', permissionError)
+    } finally {
+      closeDialog()
+    }
+  }
+
+  async function handleDelete() {
+    if (!db || !selectedCompany) return
+    const companyRef = doc(db, "companies", selectedCompany.id)
+    try {
+      await deleteDoc(companyRef)
+      toast({
+        title: "Empresa eliminada",
+        description: `${selectedCompany.name} ha sido eliminada del sistema.`,
+      })
+    } catch {
+      const permissionError = new FirestorePermissionError({
+        path: companyRef.path,
+        operation: 'delete',
       })
       errorEmitter.emit('permission-error', permissionError)
     } finally {
@@ -351,10 +378,32 @@ export default function ContractorsPage() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="bg-orange-600 text-white hover:bg-orange-700"
                 onClick={handleBlock}
               >
                 Sí, bloquear
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+      {activeDialog === 'delete' && selectedCompany && (
+        <AlertDialog open onOpenChange={(open) => { if (!open) closeDialog() }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar empresa definitivamente?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción eliminará a <strong>{selectedCompany.name}</strong> y todos sus datos maestros.
+                Esta acción no se puede deshacer. Las visitas históricas permanecerán pero sin vínculo a la empresa.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleDelete}
+              >
+                Eliminar para siempre
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
