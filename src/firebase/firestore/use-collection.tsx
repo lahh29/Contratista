@@ -36,9 +36,13 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
         setError(null);
       },
       async (serverError: FirestoreError) => {
+        setError(serverError);
+        setLoading(false);
+
+        if (serverError.code !== 'permission-denied') return;
+
         let queryPath = 'unknown_collection';
         try {
-          // Extraer la ruta de la colección de forma segura para el error contextual
           // @ts-ignore
           queryPath = query._query?.path?.segments?.join('/') || 'query';
         } catch (e) {
@@ -49,12 +53,7 @@ export function useCollection<T = DocumentData>(query: Query<T> | null) {
           path: queryPath,
           operation: 'list',
         });
-        
-        // Emitir el error para el listener global
         errorEmitter.emit('permission-error', permissionError);
-        
-        setError(serverError);
-        setLoading(false);
       }
     );
 

@@ -38,8 +38,23 @@ yarn-error.log*
 next-env.d.ts
 
 .genkit/*
-.env*
+
+# env — ignore all real env files, but keep .env.example as safe template
+.env
+.env.local
+.env.*.local
+!.env.example
 
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# next-pwa generated files
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/worker-*.js
+/public/worker-*.js.map
+/public/fallback-*.js
+/public/fallback-*.js.map

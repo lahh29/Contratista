@@ -8,6 +8,7 @@ import { useUser } from "@/firebase"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { NotificationBanner } from "@/components/PWASetup"
 
 export default function DashboardLayout({
   children,
@@ -34,6 +35,8 @@ export default function DashboardLayout({
   if (!user) return null
 
   return (
+    <>
+    <NotificationBanner />
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background">
@@ -51,10 +54,11 @@ export default function DashboardLayout({
             </div>
           </div>
         </header>
-        <main className="p-6 md:p-8 max-w-[1600px] mx-auto w-full">
+        <main className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
           {children}
         </main>
       </SidebarInset>
     </SidebarProvider>
+    </>
   )
 }

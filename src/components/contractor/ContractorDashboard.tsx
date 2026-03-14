@@ -39,12 +39,12 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
               </div>
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Área Asignada</p>
-                <p className="font-bold text-slate-800">Mantenimiento Central</p>
+                <p className="font-bold text-slate-800">{contractor?.areaName || '—'}</p>
               </div>
             </div>
             <div className="text-right">
                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Encargado</p>
-               <p className="font-bold text-slate-800">Ing. López</p>
+               <p className="font-bold text-slate-800">{contractor?.supervisorName || '—'}</p>
             </div>
           </div>
 
@@ -53,14 +53,18 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
               <Clock className="w-5 h-5 text-accent" />
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Entrada</p>
-                <p className="font-bold">14:15</p>
+                <p className="font-bold">
+                  {contractor?.entryTime
+                    ? new Date(contractor.entryTime.toDate()).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                    : '—'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-accent" />
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Personal</p>
-                <p className="font-bold">5 / 7</p>
+                <p className="font-bold">{contractor?.personnelCount ?? '—'}</p>
               </div>
             </div>
           </div>

@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { extractDocumentData } from "@/ai/flows/automated-document-data-extraction"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { collection, addDoc, updateDoc, serverTimestamp } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useRouter } from "next/navigation"
 import { errorEmitter } from '@/firebase/error-emitter'
@@ -121,11 +121,18 @@ export function ContractorForm() {
     const companiesRef = collection(db, "companies")
     
     addDoc(companiesRef, companyData)
-      .then(() => {
+      .then(async (docRef) => {
+        // Guardar el ID del documento como qrCode para el escáner
+        await updateDoc(docRef, { qrCode: docRef.id })
         toast({
           title: "Registro Exitoso",
           description: `La empresa ${values.company} ha sido registrada correctamente.`,
         })
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'new_contractor', companyName: values.company }),
+        }).catch(() => {})
         router.push("/contractors")
       })
       .catch(async (error) => {
@@ -139,7 +146,7 @@ export function ContractorForm() {
   }
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
+    <div className="grid gap-5 md:gap-8 lg:grid-cols-2">
       <Card className="border-none shadow-sm">
         <CardHeader>
           <CardTitle>Verificación de Documentos con IA</CardTitle>
@@ -147,8 +154,8 @@ export function ContractorForm() {
             Sube el certificado SUA para verificar automáticamente el cumplimiento.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="border-2 border-dashed border-muted rounded-xl p-8 text-center hover:bg-muted/20 transition-colors group cursor-pointer relative">
+        <CardContent className="space-y-5">
+          <div className="border-2 border-dashed border-muted rounded-xl p-6 md:p-8 text-center hover:bg-muted/20 transition-colors group cursor-pointer relative">
             <input 
               type="file" 
               className="absolute inset-0 opacity-0 cursor-pointer" 
@@ -240,7 +247,7 @@ export function ContractorForm() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="policyNumber"

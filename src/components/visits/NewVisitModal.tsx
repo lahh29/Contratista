@@ -23,9 +23,11 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
 
   const companiesQuery = React.useMemo(() => db ? collection(db, "companies") : null, [db])
   const areasQuery = React.useMemo(() => db ? collection(db, "areas") : null, [db])
-  
+  const supervisorsQuery = React.useMemo(() => db ? collection(db, "supervisors") : null, [db])
+
   const { data: companies } = useCollection(companiesQuery)
   const { data: areas } = useCollection(areasQuery)
+  const { data: supervisors } = useCollection(supervisorsQuery)
 
   const handleFormSubmit = async (values: any) => {
     if (!db) return
@@ -33,11 +35,13 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
 
     const selectedCompany = companies?.find(c => c.id === values.companyId)
     const selectedArea = areas?.find(a => a.id === values.areaId)
+    const selectedSupervisor = supervisors?.find(s => s.id === values.supervisorId)
 
     const visitData = {
       ...values,
       companyName: selectedCompany?.name || "Empresa Desconocida",
       areaName: selectedArea?.name || "Área Desconocida",
+      supervisorName: selectedSupervisor?.name || "Supervisor Desconocido",
       status: "Active",
       entryTime: serverTimestamp(),
       createdAt: serverTimestamp(),
@@ -76,9 +80,10 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
           </DialogDescription>
         </DialogHeader>
 
-        <VisitForm 
-          companies={companies} 
-          areas={areas} 
+        <VisitForm
+          companies={companies}
+          areas={areas}
+          supervisors={supervisors}
           onSubmit={handleFormSubmit}
           isSubmitting={isSubmitting}
         />

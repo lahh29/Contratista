@@ -2,15 +2,17 @@
 "use client"
 
 import * as React from "react"
-import { 
-  Search, 
-  MoreVertical, 
-  UserPlus, 
-  ShieldCheck, 
+import {
+  Search,
+  MoreVertical,
+  ShieldCheck,
   ShieldAlert,
   Download,
   Loader2,
-  Building2
+  Building2,
+  QrCode,
+  Phone,
+  Calendar,
 } from "lucide-react"
 import {
   Card,
@@ -36,13 +38,94 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import Link from "next/link"
 import { useFirestore, useCollection } from "@/firebase"
-import { collection, query, orderBy } from "firebase/firestore"
+import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore"
+import { useToast } from "@/hooks/use-toast"
+import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
+import { CompanyDetailSheet } from "@/components/contractors/CompanyDetailSheet"
+import { CompanyVisitsSheet } from "@/components/contractors/CompanyVisitsSheet"
+import { EditCompanySheet } from "@/components/contractors/EditCompanySheet"
+import { errorEmitter } from "@/firebase/error-emitter"
+import { FirestorePermissionError } from "@/firebase/errors"
+
+type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | null
+
+function SuaBadge({ status }: { status?: string }) {
+  const isValid = status === 'Valid'
+  const isExpired = status === 'Expired'
+  return (
+    <Badge
+      variant={isValid ? 'default' : isExpired ? 'destructive' : 'secondary'}
+      className="rounded-md px-2 py-0.5 flex items-center gap-1 w-fit"
+    >
+      {isValid ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+      {isValid ? 'Válido' : isExpired ? 'Vencido' : 'Pendiente'}
+    </Badge>
+  )
+}
+
+function CompanyActions({ onAction }: { onAction: (type: ActiveDialog) => void }) {
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-primary hover:bg-primary/10"
+        onClick={() => onAction('qr')}
+        title="Ver QR de acceso"
+      >
+        <QrCode className="h-4 w-4" />
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Gestión</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => onAction('qr')}>
+            <QrCode className="w-4 h-4 mr-2" /> Ver QR de Acceso
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction('detail')}>
+            <Building2 className="w-4 h-4 mr-2" /> Ver Expediente
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction('visits')}>
+            <Calendar className="w-4 h-4 mr-2" /> Historial de Visitas
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onAction('edit')}>
+            <Search className="w-4 h-4 mr-2" /> Editar Datos
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => onAction('block')}
+          >
+            Bloquear Acceso
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
 
 export default function ContractorsPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
+  const [selectedCompany, setSelectedCompany] = React.useState<any>(null)
+  const [activeDialog, setActiveDialog] = React.useState<ActiveDialog>(null)
   const db = useFirestore()
+  const { toast } = useToast()
 
   const companiesQuery = React.useMemo(() => {
     if (!db) return null
@@ -53,125 +136,230 @@ export default function ContractorsPage() {
 
   const filteredCompanies = React.useMemo(() => {
     if (!companies) return []
-    return companies.filter(c => 
-      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    return companies.filter(c =>
+      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.contact?.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [companies, searchTerm])
 
+  function openAction(company: any, type: ActiveDialog) {
+    setSelectedCompany(company)
+    // Delay lets the DropdownMenu fully close its portal + focus trap
+    // before mounting a Sheet/Dialog, preventing Radix UI focus conflicts
+    setTimeout(() => setActiveDialog(type), 100)
+  }
+
+  function closeDialog() {
+    setActiveDialog(null)
+    setTimeout(() => setSelectedCompany(null), 300)
+  }
+
+  async function handleBlock() {
+    if (!db || !selectedCompany) return
+    const companyRef = doc(db, "companies", selectedCompany.id)
+    const updateData = { status: "Blocked" }
+    try {
+      await updateDoc(companyRef, updateData)
+      toast({
+        title: "Acceso bloqueado",
+        description: `${selectedCompany.name} ha sido bloqueada y no podrá ingresar.`,
+        variant: "destructive",
+      })
+    } catch {
+      const permissionError = new FirestorePermissionError({
+        path: companyRef.path,
+        operation: 'update',
+        requestResourceData: updateData,
+      })
+      errorEmitter.emit('permission-error', permissionError)
+    } finally {
+      closeDialog()
+    }
+  }
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Empresas Contratistas</h2>
-          <p className="text-muted-foreground mt-1">Gestión de cumplimiento y registros maestros de empresas.</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Empresas Contratistas</h2>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
+            Gestión de cumplimiento y registros maestros de empresas.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2">
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" className="gap-2 hidden sm:flex">
             <Download className="w-4 h-4" /> Exportar
           </Button>
-          <Button asChild className="bg-primary text-white gap-2">
+          <Button asChild size="sm" className="bg-primary text-white gap-2">
             <Link href="/contractors/new">
-              <Building2 className="w-4 h-4" /> Nueva Empresa
+              <Building2 className="w-4 h-4" />
+              <span>Nueva Empresa</span>
             </Link>
           </Button>
         </div>
       </div>
 
+      {/* Search + Table */}
       <Card className="border-none shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar por empresa o contacto..." 
-                className="pl-10 h-10 bg-muted/30 border-none focus-visible:ring-1"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+        <CardHeader className="pb-3 pt-4 px-4 md:px-6">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar empresa o contacto..."
+              className="pl-10 h-10 bg-muted/30 border-none focus-visible:ring-1"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </CardHeader>
-        <CardContent>
+
+        <CardContent className="p-0 md:px-6 md:pb-6">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
+          ) : filteredCompanies.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground text-sm px-4">
+              No se encontraron empresas registradas.
+            </div>
           ) : (
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow>
-                  <TableHead className="font-semibold py-4">Empresa</TableHead>
-                  <TableHead className="font-semibold py-4">Contacto Principal</TableHead>
-                  <TableHead className="font-semibold py-4">Estado SUA</TableHead>
-                  <TableHead className="font-semibold py-4">Vencimiento</TableHead>
-                  <TableHead className="text-right font-semibold py-4">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCompanies.length > 0 ? (
-                  filteredCompanies.map((company) => (
-                    <TableRow key={company.id} className="hover:bg-muted/20 transition-colors">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {company.name?.[0]}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-semibold">{company.name}</span>
-                            <span className="text-xs text-muted-foreground">ID: {company.id.slice(0, 8)}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{company.contact}</span>
-                          <span className="text-xs text-muted-foreground">{company.phone}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={company.sua?.status === 'Valid' ? 'default' : company.sua?.status === 'Expired' ? 'destructive' : 'secondary'}
-                          className="rounded-md px-2 py-0.5"
-                        >
-                          {company.sua?.status === 'Valid' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <ShieldAlert className="w-3 h-3 mr-1" />}
-                          {company.sua?.status === 'Valid' ? 'Válido' : company.sua?.status === 'Expired' ? 'Vencido' : 'Pendiente'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">
-                        {company.sua?.validUntil || 'N/A'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Gestión</DropdownMenuLabel>
-                            <DropdownMenuItem>Ver Expediente</DropdownMenuItem>
-                            <DropdownMenuItem>Historial de Visitas</DropdownMenuItem>
-                            <DropdownMenuItem>Editar Datos</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">Bloquear Acceso</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+            <>
+              {/* Mobile: card list */}
+              <div className="flex flex-col divide-y md:hidden">
+                {filteredCompanies.map((company) => (
+                  <div key={company.id} className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/20 active:bg-muted/30 transition-colors">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0 mt-0.5">
+                      {company.name?.[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-semibold text-sm leading-snug truncate">{company.name}</span>
+                        <SuaBadge status={company.sua?.status} />
+                      </div>
+                      {company.contact && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{company.contact}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        {company.phone && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Phone className="w-3 h-3" />{company.phone}
+                          </span>
+                        )}
+                        {company.sua?.validUntil && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />{company.sua.validUntil}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <CompanyActions onAction={(type) => openAction(company, type)} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow>
+                      <TableHead className="font-semibold py-4">Empresa</TableHead>
+                      <TableHead className="font-semibold py-4">Contacto Principal</TableHead>
+                      <TableHead className="font-semibold py-4">Estado SUA</TableHead>
+                      <TableHead className="font-semibold py-4">Vencimiento</TableHead>
+                      <TableHead className="text-right font-semibold py-4">Acciones</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                      No se encontraron empresas registradas.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCompanies.map((company) => (
+                      <TableRow key={company.id} className="hover:bg-muted/20 transition-colors">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                              {company.name?.[0]}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-semibold">{company.name}</span>
+                              <span className="text-xs text-muted-foreground">ID: {company.id.slice(0, 8)}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span>{company.contact}</span>
+                            <span className="text-xs text-muted-foreground">{company.phone}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <SuaBadge status={company.sua?.status} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-xs">
+                          {company.sua?.validUntil || 'N/A'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <CompanyActions onAction={(type) => openAction(company, type)} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogs / Sheets — rendered only when active to avoid stuck focus traps */}
+      {activeDialog === 'qr' && selectedCompany && (
+        <ContractorQRDialog
+          company={selectedCompany}
+          open
+          onOpenChange={(open) => { if (!open) closeDialog() }}
+        />
+      )}
+      {activeDialog === 'detail' && selectedCompany && (
+        <CompanyDetailSheet
+          company={selectedCompany}
+          open
+          onOpenChange={(open) => { if (!open) closeDialog() }}
+        />
+      )}
+      {activeDialog === 'visits' && selectedCompany && (
+        <CompanyVisitsSheet
+          company={selectedCompany}
+          open
+          onOpenChange={(open) => { if (!open) closeDialog() }}
+        />
+      )}
+      {activeDialog === 'edit' && selectedCompany && (
+        <EditCompanySheet
+          company={selectedCompany}
+          open
+          onOpenChange={(open) => { if (!open) closeDialog() }}
+        />
+      )}
+      {activeDialog === 'block' && selectedCompany && (
+        <AlertDialog open onOpenChange={(open) => { if (!open) closeDialog() }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Bloquear acceso?</AlertDialogTitle>
+              <AlertDialogDescription>
+                La empresa <strong>{selectedCompany.name}</strong> será marcada como bloqueada y no podrá
+                registrar nuevas visitas. Esta acción se puede revertir editando la empresa.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleBlock}
+              >
+                Sí, bloquear
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   )
 }

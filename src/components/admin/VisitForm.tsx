@@ -44,11 +44,12 @@ const visitSchema = z.object({
 interface VisitFormProps {
   companies: any[] | null;
   areas: any[] | null;
+  supervisors: any[] | null;
   onSubmit: (values: z.infer<typeof visitSchema>) => void;
   isSubmitting?: boolean;
 }
 
-export function VisitForm({ companies, areas, onSubmit, isSubmitting }: VisitFormProps) {
+export function VisitForm({ companies, areas, supervisors, onSubmit, isSubmitting }: VisitFormProps) {
   const form = useForm<z.infer<typeof visitSchema>>({
     resolver: zodResolver(visitSchema),
     defaultValues: {
@@ -115,10 +116,9 @@ export function VisitForm({ companies, areas, onSubmit, isSubmitting }: VisitFor
                         <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                       ))}
                       {!areas?.length && (
-                        <>
-                          <SelectItem value="Mantenimiento">Mantenimiento Central</SelectItem>
-                          <SelectItem value="ServerRoom">Sala de Servidores</SelectItem>
-                        </>
+                        <p className="text-sm text-muted-foreground text-center py-3 px-2">
+                          Sin áreas. Agrega en Configuración.
+                        </p>
                       )}
                     </SelectContent>
                   </Select>
@@ -141,8 +141,14 @@ export function VisitForm({ companies, areas, onSubmit, isSubmitting }: VisitFor
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="IngLopez">Ing. López</SelectItem>
-                      <SelectItem value="LicMaza">Lic. Maza</SelectItem>
+                      {supervisors?.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                      {!supervisors?.length && (
+                        <p className="text-sm text-muted-foreground text-center py-3 px-2">
+                          Sin supervisores. Agrega en Configuración.
+                        </p>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -7,7 +7,6 @@ import {
   Users,
   QrCode,
   FileText,
-  ShieldCheck,
   LogOut,
   ChevronRight,
   Settings,
@@ -32,17 +31,18 @@ import {
 
 const navigation = [
   {
-    title: "Overview",
+    title: "General",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Contractors", href: "/contractors", icon: Users },
+      { name: "Panel de Control", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Contratistas", href: "/contractors", icon: Users },
     ],
   },
   {
-    title: "Operations",
+    title: "Operaciones",
     items: [
-      { name: "Access Scanner", href: "/scanner", icon: QrCode },
-      { name: "Reports", href: "/reports", icon: FileText },
+      { name: "Escáner de Acceso", href: "/scanner", icon: QrCode },
+      { name: "Reportes", href: "/reports", icon: FileText },
+      { name: "Configuración", href: "/settings", icon: Settings },
     ],
   },
 ]
@@ -64,14 +64,9 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r-0 shadow-xl">
       <SidebarHeader className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-accent p-2 rounded-lg shadow-lg rotate-3 transition-transform hover:rotate-0">
-            <ShieldCheck className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Viño <span className="text-accent-foreground opacity-90">Plastic</span>
-          </span>
-        </div>
+        <span className="text-lg font-black tracking-widest text-white uppercase">
+          VIÑOPLASTIC
+        </span>
       </SidebarHeader>
       <SidebarContent className="px-2">
         {navigation.map((group) => (
@@ -113,7 +108,7 @@ export function AppSidebar() {
               onClick={handleLogout}
             >
               <LogOut className="w-4 h-4" />
-              <span>Log out</span>
+              <span>Cerrar sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
