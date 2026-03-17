@@ -28,7 +28,7 @@ export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps
           <TableRow>
             <TableHead>Empresa</TableHead>
             <TableHead className="hidden sm:table-cell">Responsable</TableHead>
-            <TableHead>Personal</TableHead>
+            <TableHead className="hidden sm:table-cell">Personal</TableHead>
             <TableHead className="hidden md:table-cell">Área</TableHead>
             <TableHead className="hidden sm:table-cell">Estado</TableHead>
             <TableHead className="hidden lg:table-cell">Permanencia</TableHead>
@@ -42,15 +42,14 @@ export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps
             </TableRow>
           ) : visits && visits.length > 0 ? (
             visits.map((visit) => (
-              <TableRow key={visit.id}>
-                <TableCell className="font-bold">
-                  <div>{visit.companyName}</div>
-                  <div className="text-xs text-muted-foreground sm:hidden">
-                    {visit.areaName} · {visit.entryTime ? formatDistanceToNow(new Date(visit.entryTime.toDate()), { locale: es }) : '...'}
-                  </div>
+              <TableRow key={visit.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="py-4">
+                  <div className="font-bold text-sm sm:text-base">{visit.companyName}</div>
+                  {/* Detalles adicionales solo en desktop o via Tooltip si fuera necesario, 
+                      aquí eliminamos el div sm:hidden para mayor limpieza */}
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">{visit.supervisorName || visit.supervisorId}</TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant="secondary" className="font-mono">
                     {visit.personnelCount || 1}
                   </Badge>
@@ -65,13 +64,14 @@ export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps
                 <TableCell className="hidden lg:table-cell font-mono text-xs">
                   {visit.entryTime ? formatDistanceToNow(new Date(visit.entryTime.toDate()), { locale: es }) : '...'}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right py-4">
                   <div className="flex justify-end gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-full"
                       onClick={() => onFinishVisit(visit.id)}
+                      title="Registrar Salida"
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>
