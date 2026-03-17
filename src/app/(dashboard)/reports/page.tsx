@@ -445,58 +445,83 @@ export default function ReportsPage() {
       {/* ── Filter Sheet ────────────────────────────────────────── */}
       {filterOpen && (
         <Sheet open onOpenChange={(o) => { if (!o) setFilterOpen(false) }}>
-          <SheetContent onCloseAutoFocus={(e) => e.preventDefault()} className="w-full sm:max-w-sm flex flex-col">
-            <SheetHeader>
-              <SheetTitle>Filtrar registros</SheetTitle>
-              <SheetDescription>Aplica filtros para refinar el historial y los reportes.</SheetDescription>
-            </SheetHeader>
+          <SheetContent 
+            onCloseAutoFocus={(e) => e.preventDefault()} 
+            className="w-full sm:max-w-md flex flex-col p-0 overflow-hidden"
+          >
+            <div className="p-6 pb-0">
+              <SheetHeader>
+                <SheetTitle className="text-xl">Filtrar registros</SheetTitle>
+                <SheetDescription>Aplica filtros para refinar el historial y los reportes.</SheetDescription>
+              </SheetHeader>
+            </div>
 
-            <div className="flex-1 space-y-5 mt-6 overflow-y-auto">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5 tracking-wider">
                   <CalendarRange className="w-3.5 h-3.5" /> Rango de fechas
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Desde</p>
-                    <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground ml-1">Desde</p>
+                    <Input 
+                      type="date" 
+                      value={dateFrom} 
+                      onChange={e => setDateFrom(e.target.value)} 
+                      className="h-11 rounded-xl"
+                    />
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Hasta</p>
-                    <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground ml-1">Hasta</p>
+                    <Input 
+                      type="date" 
+                      value={dateTo} 
+                      onChange={e => setDateTo(e.target.value)} 
+                      className="h-11 rounded-xl"
+                    />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Estado de visita</label>
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Estado de visita</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="Active">Activos</SelectItem>
-                    <SelectItem value="Completed">Completados</SelectItem>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="Active">Solo activos</SelectItem>
+                    <SelectItem value="Completed">Solo completados</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+              <div className="space-y-3">
+                <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5 tracking-wider">
                   <Building2 className="w-3.5 h-3.5" /> Empresa
                 </label>
                 <Input
                   placeholder="Buscar por empresa..."
                   value={companyFilter}
                   onChange={e => setCompanyFilter(e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
             </div>
 
-            <SheetFooter className="mt-4 gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => { clearFilters(); setFilterOpen(false) }}>
-                Limpiar
+            <SheetFooter className="p-6 border-t bg-muted/10 mt-auto flex-col sm:flex-row gap-3">
+              <Button 
+                variant="outline" 
+                className="w-full sm:w-auto h-11 rounded-xl" 
+                onClick={() => { clearFilters(); setFilterOpen(false) }}
+              >
+                Limpiar filtros
               </Button>
-              <Button className="flex-1" onClick={() => setFilterOpen(false)}>
+              <Button 
+                className="w-full sm:flex-1 h-11 rounded-xl font-bold" 
+                onClick={() => setFilterOpen(false)}
+              >
                 Aplicar ({filteredVisits.length})
               </Button>
             </SheetFooter>
@@ -508,11 +533,11 @@ export default function ReportsPage() {
       {summaryOpen && summary && (
         <Dialog open onOpenChange={(o) => { if (!o) setSummaryOpen(false) }}>
           <DialogContent
-            className="max-w-lg w-[95vw] max-h-[85vh] overflow-y-auto"
+            className="max-w-lg w-[95vw] max-h-[85vh] overflow-y-auto rounded-2xl"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 text-xl">
                 <TrendingUp className="w-5 h-5 text-primary" /> Resumen de Accesos
               </DialogTitle>
               <DialogDescription>Estadísticas basadas en los últimos 200 registros.</DialogDescription>
@@ -528,7 +553,7 @@ export default function ReportsPage() {
                 ].map(({ label, value, color }) => (
                   <div key={label} className="bg-muted/40 rounded-xl p-3 text-center">
                     <p className={`text-2xl font-black ${color}`}>{value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground mt-0.5">{label}</p>
                   </div>
                 ))}
               </div>
@@ -536,19 +561,19 @@ export default function ReportsPage() {
               {/* By month */}
               {summary.months.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground mb-2">Por mes</p>
-                  <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase text-muted-foreground mb-3 tracking-wider">Tendencia mensual</p>
+                  <div className="space-y-3">
                     {summary.months.map(([month, data]) => {
                       const max = Math.max(...summary.months.map(([, d]) => d.count))
                       const pct = Math.round((data.count / max) * 100)
                       return (
-                        <div key={month} className="space-y-0.5">
+                        <div key={month} className="space-y-1.5">
                           <div className="flex justify-between text-xs">
-                            <span className="capitalize font-medium">{month}</span>
-                            <span className="text-muted-foreground">{data.count} visitas · {data.personnel} personas</span>
+                            <span className="capitalize font-semibold">{month}</span>
+                            <span className="text-muted-foreground font-medium">{data.count} visitas · {data.personnel} personas</span>
                           </div>
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
                       )
@@ -560,15 +585,15 @@ export default function ReportsPage() {
               {/* Top companies */}
               {summary.topCompanies.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5" /> Top empresas
+                  <p className="text-xs font-bold uppercase text-muted-foreground mb-3 flex items-center gap-1.5 tracking-wider">
+                    <Building2 className="w-3.5 h-3.5" /> Empresas con más ingresos
                   </p>
                   <div className="space-y-2">
                     {summary.topCompanies.map(([name, count], i) => (
-                      <div key={name} className="flex items-center gap-3">
-                        <span className="text-xs font-black text-muted-foreground w-4">{i + 1}</span>
-                        <span className="flex-1 text-sm font-medium truncate">{name}</span>
-                        <Badge variant="secondary" className="font-mono shrink-0">{count}</Badge>
+                      <div key={name} className="flex items-center gap-3 p-2 bg-muted/20 rounded-lg">
+                        <span className="text-xs font-black text-primary w-4">{i + 1}</span>
+                        <span className="flex-1 text-sm font-semibold truncate">{name}</span>
+                        <Badge variant="secondary" className="font-mono font-bold shrink-0">{count}</Badge>
                       </div>
                     ))}
                   </div>
@@ -578,15 +603,15 @@ export default function ReportsPage() {
               {/* Top areas */}
               {summary.topAreas.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
+                  <p className="text-xs font-bold uppercase text-muted-foreground mb-3 flex items-center gap-1.5 tracking-wider">
                     <BarChart3 className="w-3.5 h-3.5" /> Áreas más frecuentes
                   </p>
                   <div className="space-y-2">
                     {summary.topAreas.map(([name, count], i) => (
-                      <div key={name} className="flex items-center gap-3">
+                      <div key={name} className="flex items-center gap-3 p-2 bg-muted/20 rounded-lg">
                         <span className="text-xs font-black text-muted-foreground w-4">{i + 1}</span>
-                        <span className="flex-1 text-sm font-medium truncate">{name}</span>
-                        <Badge variant="secondary" className="font-mono shrink-0">{count}</Badge>
+                        <span className="flex-1 text-sm font-semibold truncate">{name}</span>
+                        <Badge variant="secondary" className="font-mono font-bold shrink-0">{count}</Badge>
                       </div>
                     ))}
                   </div>
