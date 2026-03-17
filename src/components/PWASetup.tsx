@@ -7,14 +7,15 @@ import { Bell, BellOff } from 'lucide-react'
 
 export function PWASetup() {
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/firebase-messaging-sw.js')
-        .then(reg => console.log('[SW] Registered:', reg.scope))
-        .catch(err => console.error('[SW] Registration failed:', err))
-    } else {
+    if (!('serviceWorker' in navigator)) {
       console.warn('[SW] Service workers not supported in this browser')
+      return
     }
+    // Register at a dedicated scope so it coexists with next-pwa's sw.js (scope "/")
+    navigator.serviceWorker
+      .register('/firebase-messaging-sw.js', { scope: '/firebase-messaging-sw/' })
+      .then(reg => console.log('[SW] FCM SW registered at scope:', reg.scope))
+      .catch(err => console.error('[SW] FCM SW registration failed:', err))
   }, [])
   return null
 }

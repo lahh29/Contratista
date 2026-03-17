@@ -16,6 +16,9 @@ export function getFirebaseMessaging(): Messaging | null {
   }
 }
 
+// Dedicated scope so this SW coexists with next-pwa's sw.js at scope "/"
+const FCM_SW_SCOPE = '/firebase-messaging-sw/'
+
 export async function getFCMToken(): Promise<string | null> {
   const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
   if (!vapidKey) {
@@ -25,7 +28,11 @@ export async function getFCMToken(): Promise<string | null> {
   const messaging = getFirebaseMessaging()
   if (!messaging) return null
   try {
-    const swReg = await navigator.serviceWorker.ready
+    // Register the FCM SW at its own scope so it coexists with the Workbox sw.js
+    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: FCM_SW_SCOPE,
+    })
+    console.log('[FCM] Using SW registration at scope:', swReg.scope)
     const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg })
     return token || null
   } catch (err) {
