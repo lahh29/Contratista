@@ -1,6 +1,6 @@
 "use client"
 
-import { LogOut } from "lucide-react"
+import { LogOut, Pencil } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -15,12 +15,13 @@ import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 
 interface VisitsTableProps {
-  visits: any[] | null;
-  loading: boolean;
-  onFinishVisit: (id: string) => void;
+  visits: any[] | null
+  loading: boolean
+  onFinishVisit: (id: string) => void
+  onEditVisit: (visit: any) => void
 }
 
-export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps) {
+export function VisitsTable({ visits, loading, onFinishVisit, onEditVisit }: VisitsTableProps) {
   return (
     <div className="overflow-x-auto -mx-6 px-6">
       <Table>
@@ -45,8 +46,6 @@ export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps
               <TableRow key={visit.id} className="hover:bg-muted/20 transition-colors">
                 <TableCell className="py-4">
                   <div className="font-bold text-sm sm:text-base">{visit.companyName}</div>
-                  {/* Detalles adicionales solo en desktop o via Tooltip si fuera necesario, 
-                      aquí eliminamos el div sm:hidden para mayor limpieza */}
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">{visit.supervisorName || visit.supervisorId}</TableCell>
                 <TableCell className="hidden sm:table-cell">
@@ -62,10 +61,21 @@ export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps
                   </div>
                 </TableCell>
                 <TableCell className="hidden lg:table-cell font-mono text-xs">
-                  {visit.entryTime ? formatDistanceToNow(new Date(visit.entryTime.toDate()), { locale: es }) : '...'}
+                  {visit.entryTime
+                    ? formatDistanceToNow(new Date(visit.entryTime.toDate()), { locale: es })
+                    : '...'}
                 </TableCell>
                 <TableCell className="text-right py-4">
                   <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:bg-muted rounded-full"
+                      onClick={() => onEditVisit(visit)}
+                      title="Editar visita"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

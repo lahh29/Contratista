@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { NewVisitModal } from "@/components/visits/NewVisitModal"
 import { DashboardStats } from "@/components/admin/DashboardStats"
 import { VisitsTable } from "@/components/admin/VisitsTable"
+import { EditVisitSheet } from "@/components/admin/EditVisitSheet"
 import { useFirestore, useCollection, useUser } from "@/firebase"
 import { collection, query, where, limit, updateDoc, doc, serverTimestamp } from "firebase/firestore"
 import { errorEmitter } from '@/firebase/error-emitter'
@@ -22,6 +23,7 @@ import { FirestorePermissionError } from '@/firebase/errors'
 export default function DashboardPage() {
   const db = useFirestore()
   const { user, loading: authLoading } = useUser()
+  const [editingVisit, setEditingVisit] = React.useState<any | null>(null)
 
   const activeVisitsQuery = React.useMemo(() => {
     if (!db || !user || authLoading) return null
@@ -104,9 +106,15 @@ export default function DashboardPage() {
             visits={activeVisits}
             loading={dataLoading || authLoading}
             onFinishVisit={handleFinishVisit}
+            onEditVisit={setEditingVisit}
           />
         </CardContent>
       </Card>
+      <EditVisitSheet
+        visit={editingVisit}
+        open={!!editingVisit}
+        onOpenChange={(open) => { if (!open) setEditingVisit(null) }}
+      />
     </div>
   )
 }

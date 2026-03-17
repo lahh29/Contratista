@@ -50,6 +50,9 @@ export default function ScannerPage() {
   const [selectedSupervisor, setSelectedSupervisor] = React.useState('')
   const [vehiclePlates, setVehiclePlates] = React.useState('')
   const [confirmedPersonnel, setConfirmedPersonnel] = React.useState<number>(1)
+  const [scanHistory, setScanHistory] = React.useState<
+    { companyName: string; action: 'entry' | 'exit'; time: Date }[]
+  >([])
 
   const areasQuery = React.useMemo(() => db ? query(collection(db, 'areas'), limit(100)) : null, [db])
   const supervisorsQuery = React.useMemo(() => db ? query(collection(db, 'supervisors'), limit(100)) : null, [db])
@@ -123,6 +126,7 @@ export default function ScannerPage() {
         qrCode: `VIS-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
       })
       toast({ title: 'Acceso autorizado', description: `${currentCompany.name} ha ingresado.` })
+      setScanHistory(h => [{ companyName: currentCompany.name, action: 'entry' as const, time: new Date() }, ...h].slice(0, 5))
       setActiveVisit({
         id: visitRef.id,
         areaName: area?.name,
@@ -171,6 +175,7 @@ export default function ScannerPage() {
         exitTime: serverTimestamp(),
       })
       toast({ title: 'Salida registrada', description: `${currentCompany?.name} ha salido.` })
+      setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 5))
       sendNotification({
         type: 'exit',
         companyName: currentCompany?.name || '—',
@@ -197,7 +202,31 @@ export default function ScannerPage() {
   // ── MODO: ESCANEANDO ──────────────────────────────────────────
   if (mode === 'SCANNING') {
     return (
-      <QRScanner onQRDetected={handleQRDetected} isProcessing={isProcessing} />
+      <div className="space-y-4">
+        <QRScanner onQRDetected={handleQRDetected} isProcessing={isProcessing} />
+
+        {scanHistory.length > 0 && (
+          <div className="max-w-sm mx-auto space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+              Últimos escaneos
+            </p>
+            <div className="divide-y rounded-xl border bg-card overflow-hidden">
+              {scanHistory.map((entry, i) => (
+                <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${entry.action === 'entry' ? 'bg-green-500' : 'bg-orange-400'}`} />
+                  <span className="text-sm font-medium flex-1 truncate">{entry.companyName}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {entry.action === 'entry' ? 'Ingreso' : 'Salida'}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground/60 shrink-0">
+                    {entry.time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -357,10 +386,18 @@ export default function ScannerPage() {
                   </Select>
                 </div>
 
+                {isExpired && (
+                  <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">
+                    <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                    <p className="text-xs text-destructive font-medium">
+                      No se puede autorizar el ingreso. El SUA de esta empresa está vencido o pendiente de validación.
+                    </p>
+                  </div>
+                )}
                 <Button
                   className="w-full h-14 text-lg font-black rounded-2xl gap-2 bg-primary text-white shadow-xl shadow-primary/20 mt-2"
                   onClick={handleConfirmEntry}
-                  disabled={!selectedArea || !selectedSupervisor || !vehiclePlates.trim() || isProcessing}
+                  disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || isProcessing}
                 >
                   {isProcessing ? <Loader2 className="animate-spin" /> : <UserCheck className="w-5 h-5" />}
                   CONFIRMAR ENTRADA
