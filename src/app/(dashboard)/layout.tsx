@@ -9,6 +9,7 @@ import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { NotificationBanner } from "@/components/PWASetup"
 import { useAppUser } from "@/hooks/use-app-user"
+import { NotificationBell } from "@/components/layout/NotificationBell"
 
 export default function DashboardLayout({
   children,
@@ -52,7 +53,8 @@ export default function DashboardLayout({
               ViñoPlastic
             </h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <NotificationBell />
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-accent/20 ring-offset-2 ring-offset-background cursor-pointer hover:scale-110 transition-transform">
               {appUser.email?.slice(0, 2).toUpperCase()}
             </div>

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Settings2, Users, Loader2 } from "lucide-react"
+import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Settings2, Users, Loader2, ShieldAlert } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Firestore, DocumentData } from "firebase/firestore"
 
@@ -32,9 +32,10 @@ interface CollectionManagerProps {
   db: Firestore | null
   items: DocumentData[] | null | undefined
   loading: boolean
+  showRestrictedToggle?: boolean
 }
 
-function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading }: CollectionManagerProps) {
+function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading, showRestrictedToggle }: CollectionManagerProps) {
   const [newName,  setNewName]  = React.useState("")
   const [editId,   setEditId]   = React.useState<string | null>(null)
   const [editName, setEditName] = React.useState("")
@@ -43,11 +44,23 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   const handleAdd = async () => {
     if (!db || !newName.trim()) return
     try {
-      await addDoc(collection(db, collectionName), { name: newName.trim() })
+      const data: Record<string, unknown> = { name: newName.trim() }
+      if (showRestrictedToggle) data.restricted = false
+      await addDoc(collection(db, collectionName), data)
       setNewName("")
       toast({ title: "Agregado correctamente" })
     } catch {
       toast({ variant: "destructive", title: "Error al agregar" })
+    }
+  }
+
+  const handleToggleRestricted = async (id: string, current: boolean) => {
+    if (!db) return
+    try {
+      await updateDoc(doc(db, collectionName, id), { restricted: !current })
+      toast({ title: !current ? "Área marcada como restringida" : "Área sin restricción" })
+    } catch {
+      toast({ variant: "destructive", title: "Error al actualizar" })
     }
   }
 
@@ -160,6 +173,19 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
                 ) : (
                   <>
                     <span className="flex-1 text-sm font-medium truncate">{item.name}</span>
+                    {showRestrictedToggle && (
+                      <button
+                        onClick={() => handleToggleRestricted(item.id, !!item.restricted)}
+                        title={item.restricted ? "Zona restringida (click para quitar)" : "Marcar como restringida"}
+                        className="shrink-0"
+                        aria-label={item.restricted ? "Quitar restricción" : "Marcar como restringida"}
+                      >
+                        <ShieldAlert
+                          className={`w-4 h-4 transition-colors ${item.restricted ? "text-destructive" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    )}
                     {/*
                       Botones siempre visibles en mobile (touch no tiene hover).
                       En desktop (≥sm) se ocultan hasta hover para no saturar la UI.
@@ -466,12 +492,13 @@ export default function SettingsPage() {
       <div className="grid gap-5 md:gap-6 md:grid-cols-2">
         <CollectionManager
           title="Áreas Destino"
-          description="Departamentos."
+          description="Departamentos o zonas de la planta. Marca con el escudo las areas restringidas."
           icon={MapPin}
           collectionName="areas"
           db={db}
           items={areas}
           loading={areasLoading}
+          showRestrictedToggle
         />
         <CollectionManager
           title="Encargados de Departamento"

@@ -3,12 +3,16 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAdminApp } from './firebase-admin'
 
 export type NotifyEvent =
-  | { type: 'entry';             companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
-  | { type: 'exit';              companyName: string; areaName: string }
-  | { type: 'sua_expiring';      companyName: string; daysLeft: number; companyId?: string }
-  | { type: 'new_contractor';    companyName: string }
-  | { type: 'delete_contractor'; companyName: string }
-  | { type: 'over_capacity';     companyName: string; areaName: string; authorized: number; actual: number }
+  | { type: 'entry';              companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
+  | { type: 'exit';               companyName: string; areaName: string }
+  | { type: 'sua_expiring';       companyName: string; daysLeft: number; companyId?: string }
+  | { type: 'new_contractor';     companyName: string }
+  | { type: 'delete_contractor';  companyName: string }
+  | { type: 'over_capacity';      companyName: string; areaName: string; authorized: number; actual: number }
+  | { type: 'blocked_contractor'; companyName: string; companyId: string }
+  | { type: 'sua_renewed';        companyName: string }
+  | { type: 'prolonged_visit';    companyName: string; areaName: string; hoursOnSite: number }
+  | { type: 'restricted_area';    companyName: string; areaName: string }
 
 /**
  * Audience control:
@@ -21,7 +25,7 @@ export type Audience =
   | 'admins'
   | { companyId: string }
 
-function buildNotification(event: NotifyEvent): { title: string; body: string; url: string } {
+export function buildNotification(event: NotifyEvent): { title: string; body: string; url: string } {
   switch (event.type) {
     case 'entry':
       return {
@@ -63,12 +67,39 @@ function buildNotification(event: NotifyEvent): { title: string; body: string; u
         body:  `Ingresaron ${event.actual} personas en ${event.areaName}. Autorizado: ${event.authorized}.`,
         url:   '/dashboard',
       }
+    case 'blocked_contractor':
+      return {
+        title: `Acceso bloqueado: ${event.companyName}`,
+        body:  `La empresa ${event.companyName} ha sido bloqueada y no puede ingresar a planta.`,
+        url:   '/contractors',
+      }
+    case 'sua_renewed':
+      return {
+        title: `SUA renovado: ${event.companyName}`,
+        body:  `El SUA de ${event.companyName} fue actualizado correctamente.`,
+        url:   '/contractors',
+      }
+    case 'prolonged_visit':
+      return {
+        title: `Visita prolongada: ${event.companyName}`,
+        body:  `Llevan ${event.hoursOnSite} hora${event.hoursOnSite !== 1 ? 's' : ''} en ${event.areaName} sin registrar salida.`,
+        url:   '/dashboard',
+      }
+    case 'restricted_area':
+      return {
+        title: `Acceso a zona restringida: ${event.companyName}`,
+        body:  `${event.companyName} ingresó al área restringida: ${event.areaName}.`,
+        url:   '/dashboard',
+      }
   }
 }
 
 /** Default audience per event type. */
 function defaultAudience(event: NotifyEvent): Audience {
   if (event.type === 'sua_expiring' && event.companyId) {
+    return { companyId: event.companyId }
+  }
+  if (event.type === 'blocked_contractor') {
     return { companyId: event.companyId }
   }
   return 'admins'

@@ -148,6 +148,13 @@ export default function ScannerPage() {
           actual: confirmedPersonnel,
         })
       }
+      if ((area as any)?.restricted) {
+        sendNotification({
+          type: 'restricted_area',
+          companyName: currentCompany.name,
+          areaName: area?.name || '—',
+        })
+      }
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar entrada' })
     } finally {

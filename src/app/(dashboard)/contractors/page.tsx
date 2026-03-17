@@ -173,6 +173,7 @@ export default function ContractorsPage() {
         description: `${selectedCompany.name} ha sido bloqueada y no podrá ingresar.`,
         variant: "destructive",
       })
+      sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id })
     } catch {
       const permissionError = new FirestorePermissionError({
         path: companyRef.path,

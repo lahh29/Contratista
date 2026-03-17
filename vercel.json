@@ -6,6 +6,10 @@
     {
       "path": "/api/cron/check-sua",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/check-visits",
+      "schedule": "0 * * * *"
     }
   ],
   "headers": [

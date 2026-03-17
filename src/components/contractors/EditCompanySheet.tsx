@@ -28,6 +28,7 @@ import { doc, updateDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
+import { sendNotification } from "@/app/actions/notify"
 
 const schema = z.object({
   name: z.string().min(2, "Mínimo 2 caracteres"),
@@ -96,6 +97,14 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
     try {
       await updateDoc(companyRef, updateData)
       toast({ title: "Empresa actualizada", description: `${values.name} fue actualizada correctamente.` })
+
+      const oldDate = company.sua?.validUntil
+      const newDate = values.suaValidUntil
+      const isRenewed = newDate && newDate !== oldDate && newDate > new Date().toISOString().slice(0, 10)
+      if (isRenewed) {
+        sendNotification({ type: 'sua_renewed', companyName: values.name })
+      }
+
       onUpdated?.({ ...company, ...updateData })
       onOpenChange(false)
     } catch {

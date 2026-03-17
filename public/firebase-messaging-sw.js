@@ -41,14 +41,18 @@ function getActions(type) {
     case 'entry':
     case 'exit':
     case 'over_capacity':
+    case 'prolonged_visit':
+    case 'restricted_area':
       return [{ action: 'view', title: 'Ver dashboard' }]
     case 'sua_expiring':
       return [
         { action: 'view',    title: 'Ver contratistas' },
         { action: 'dismiss', title: 'Ignorar' },
       ]
+    case 'sua_renewed':
     case 'new_contractor':
     case 'delete_contractor':
+    case 'blocked_contractor':
       return [{ action: 'view', title: 'Ver contratistas' }]
     default:
       return []

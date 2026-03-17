@@ -45,9 +45,20 @@ export interface Visit {
 export interface Area {
   id: string
   name: string
+  restricted?: boolean
 }
 
 export interface Supervisor {
   id: string
   name: string
+}
+
+export interface AppNotification {
+  id: string
+  type: string
+  title: string
+  body: string
+  url: string
+  createdAt: Timestamp
+  readBy: string[]
 }
