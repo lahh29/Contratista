@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { collection, doc, orderBy, query, where, limit } from "firebase/firestore"
+import { collection, doc, query, where, limit } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useDoc } from "@/firebase/firestore/use-doc"
 import { useCollection } from "@/firebase/firestore/use-collection"
@@ -130,45 +130,49 @@ function visitDuration(entry: Date, exit: Date) {
 // ── Main page ──────────────────────────────────────────────
 
 export default function PortalPage() {
-  const { appUser }  = useAppUser()
+  const { appUser, loading: authLoading } = useAppUser()
   const db           = useFirestore()
   const { permission, supported, requestPermission } = useNotifications()
   const [editingProfile, setEditingProfile] = useState(false)
 
+  // Use companyId (string) as dep — more stable than the appUser object reference
+  const companyId = appUser?.companyId
   const companyRef = useMemo(
-    () => appUser?.companyId && db ? doc(db, 'companies', appUser.companyId) : null,
-    [appUser, db],
+    () => companyId && db ? doc(db, 'companies', companyId) : null,
+    [companyId, db],
   )
-  const { data: rawCompany, loading } = useDoc(companyRef)
+  const { data: rawCompany, loading: companyLoading } = useDoc(companyRef)
   const company = rawCompany as Company | null
 
-  // Active visit (real-time in-plant status)
-  const activeVisitQuery = useMemo(() => {
-    if (!db || !appUser?.companyId) return null
-    return query(
-      collection(db, 'visits'),
-      where('companyId', '==', appUser.companyId),
-      where('status', '==', 'Active'),
-      limit(1),
-    )
-  }, [db, appUser?.companyId])
-  const { data: activeVisits } = useCollection(activeVisitQuery)
-  const activeVisit = (activeVisits as Visit[] | null)?.[0] ?? null
-
-  // Visit history
+  // All visits for this company — single-field query avoids composite index requirement
   const visitsQuery = useMemo(() => {
-    if (!db || !appUser?.companyId) return null
+    if (!db || !companyId) return null
     return query(
       collection(db, 'visits'),
-      where('companyId', '==', appUser.companyId),
-      orderBy('entryTime', 'desc'),
-      limit(20),
+      where('companyId', '==', companyId),
+      limit(50),
     )
-  }, [db, appUser?.companyId])
+  }, [db, companyId])
   const { data: rawVisits, loading: visitsLoading } = useCollection(visitsQuery)
-  const visits = rawVisits as Visit[] | null
 
-  if (loading) {
+  // Sort and derive client-side (no composite index needed)
+  const visits = useMemo(() => {
+    if (!rawVisits) return null
+    return [...rawVisits]
+      .sort((a: any, b: any) => {
+        const at = a.entryTime?.toMillis?.() ?? 0
+        const bt = b.entryTime?.toMillis?.() ?? 0
+        return bt - at
+      })
+      .slice(0, 20) as Visit[]
+  }, [rawVisits])
+
+  const activeVisit = useMemo(
+    () => (visits as Visit[] | null)?.find(v => v.status === 'Active') ?? null,
+    [visits],
+  )
+
+  if (authLoading || companyLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { useAuth } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
 import { MorphingText } from "@/components/ui/morphing-text"
+import { PWAInstallBanner } from "@/components/PWAInstallBanner"
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 const schema = z.object({
@@ -83,6 +84,7 @@ export default function LoginPage() {
       bg-background
       supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)]
     ">
+      <PWAInstallBanner />
 
       {/* ── Panel izquierdo — logo (solo desktop) ───────────────────────── */}
       <motion.div

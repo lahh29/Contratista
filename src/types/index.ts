@@ -35,6 +35,7 @@ export interface Visit {
   supervisorName?: string
   personnelCount?: number
   vehiclePlates?: string
+  safetyEquipment?: { shoes: boolean; vest: boolean }
   status: 'Active' | 'Completed'
   entryTime?: Timestamp
   exitTime?: Timestamp

@@ -13,7 +13,9 @@ import {
   LogOut,
   Car,
   AlertTriangle,
+  HardHat,
 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -50,6 +52,8 @@ export default function ScannerPage() {
   const [selectedSupervisor, setSelectedSupervisor] = React.useState('')
   const [vehiclePlates, setVehiclePlates] = React.useState('')
   const [confirmedPersonnel, setConfirmedPersonnel] = React.useState<number>(1)
+  const [safetyShoes, setSafetyShoes] = React.useState(false)
+  const [safetyVest,  setSafetyVest]  = React.useState(false)
   const [scanHistory, setScanHistory] = React.useState<
     { companyName: string; action: 'entry' | 'exit'; time: Date }[]
   >([])
@@ -120,6 +124,7 @@ export default function ScannerPage() {
         supervisorName: supervisor?.name || '—',
         personnelCount: confirmedPersonnel,
         vehiclePlates: vehiclePlates.trim().toUpperCase(),
+        safetyEquipment: { shoes: safetyShoes, vest: safetyVest },
         status: 'Active',
         entryTime: serverTimestamp(),
         createdAt: serverTimestamp(),
@@ -197,6 +202,8 @@ export default function ScannerPage() {
     setSelectedSupervisor('')
     setVehiclePlates('')
     setConfirmedPersonnel(1)
+    setSafetyShoes(false)
+    setSafetyVest(false)
   }
 
   // ── MODO: ESCANEANDO ──────────────────────────────────────────
@@ -386,6 +393,44 @@ export default function ScannerPage() {
                   </Select>
                 </div>
 
+                {/* Equipo de seguridad */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <HardHat className="w-3.5 h-3.5" /> Equipo de Seguridad
+                  </label>
+                  <div className={`rounded-xl border px-4 py-3 space-y-3 ${(!safetyShoes || !safetyVest) ? 'border-orange-200 bg-orange-50' : 'border-green-200 bg-green-50'}`}>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <Checkbox
+                        id="safety-shoes"
+                        checked={safetyShoes}
+                        onCheckedChange={(v) => setSafetyShoes(!!v)}
+                        className="h-5 w-5"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold leading-tight">Zapatos de seguridad</p>
+                        <p className="text-xs text-muted-foreground">El personal porta calzado de protección</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <Checkbox
+                        id="safety-vest"
+                        checked={safetyVest}
+                        onCheckedChange={(v) => setSafetyVest(!!v)}
+                        className="h-5 w-5"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold leading-tight">Chaleco de seguridad</p>
+                        <p className="text-xs text-muted-foreground">El personal porta chaleco reflectivo</p>
+                      </div>
+                    </label>
+                    {(!safetyShoes || !safetyVest) && (
+                      <p className="text-xs text-orange-700 font-medium">
+                        Verifica que el personal porte todo el equipo antes de autorizar el acceso.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 {isExpired && (
                   <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">
                     <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
@@ -397,7 +442,7 @@ export default function ScannerPage() {
                 <Button
                   className="w-full h-14 text-lg font-black rounded-2xl gap-2 bg-primary text-white shadow-xl shadow-primary/20 mt-2"
                   onClick={handleConfirmEntry}
-                  disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || isProcessing}
+                  disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || !safetyShoes || !safetyVest || isProcessing}
                 >
                   {isProcessing ? <Loader2 className="animate-spin" /> : <UserCheck className="w-5 h-5" />}
                   CONFIRMAR ENTRADA

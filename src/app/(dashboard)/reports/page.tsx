@@ -54,14 +54,16 @@ function fmtDateTime(ts: any) {
 async function generateExcel(visits: any[]) {
   const XLSX = await import('xlsx')
   const rows = visits.map(v => ({
-    'Fecha Entrada':  fmtDateTime(v.entryTime),
-    'Empresa':        v.companyName      || '—',
-    'Área':           v.areaName         || '—',
-    'Supervisor':     v.supervisorName   || '—',
-    'Personal':       v.personnelCount   ?? 1,
-    'Placas':         v.vehiclePlates    || '—',
-    'Estado':         v.status === 'Active' ? 'Activo' : 'Completado',
-    'Fecha Salida':   fmtDateTime(v.exitTime),
+    'Fecha Entrada':        fmtDateTime(v.entryTime),
+    'Empresa':              v.companyName      || '—',
+    'Área':                 v.areaName         || '—',
+    'Supervisor':           v.supervisorName   || '—',
+    'Personal':             v.personnelCount   ?? 1,
+    'Placas':               v.vehiclePlates    || '—',
+    'Zapatos Seguridad':    v.safetyEquipment?.shoes ? 'Sí' : 'No',
+    'Chaleco Seguridad':    v.safetyEquipment?.vest  ? 'Sí' : 'No',
+    'Estado':               v.status === 'Active' ? 'Activo' : 'Completado',
+    'Fecha Salida':         fmtDateTime(v.exitTime),
   }))
   const ws = XLSX.utils.json_to_sheet(rows)
   const wb = XLSX.utils.book_new()
@@ -86,7 +88,7 @@ async function generatePDF(visits: any[]) {
 
   autoTable(doc, {
     startY: 40,
-    head: [['Fecha', 'Empresa', 'Área', 'Supervisor', 'Personal', 'Placas', 'Estado', 'Salida']],
+    head: [['Fecha', 'Empresa', 'Área', 'Supervisor', 'Personal', 'Placas', 'Zapatos', 'Chaleco', 'Estado', 'Salida']],
     body: visits.map(v => [
       fmtDate(v.entryTime),
       v.companyName    || '—',
@@ -94,6 +96,8 @@ async function generatePDF(visits: any[]) {
       v.supervisorName || '—',
       String(v.personnelCount ?? 1),
       v.vehiclePlates  || '—',
+      v.safetyEquipment?.shoes ? 'Sí' : 'No',
+      v.safetyEquipment?.vest  ? 'Sí' : 'No',
       v.status === 'Active' ? 'Activo' : 'Completado',
       fmtDate(v.exitTime),
     ]),
@@ -122,14 +126,16 @@ async function generateVisitPDF(visit: any) {
   doc.setTextColor(60)
 
   const rows = [
-    ['Empresa',      visit.companyName    || '—'],
-    ['Área',         visit.areaName       || '—'],
-    ['Supervisor',   visit.supervisorName || '—'],
-    ['Personal',     String(visit.personnelCount ?? 1)],
-    ['Placas',       visit.vehiclePlates  || '—'],
-    ['Fecha Entrada',fmtDateTime(visit.entryTime)],
-    ['Fecha Salida', fmtDateTime(visit.exitTime)],
-    ['Estado',       visit.status === 'Active' ? 'Activo' : 'Completado'],
+    ['Empresa',           visit.companyName    || '—'],
+    ['Área',              visit.areaName       || '—'],
+    ['Supervisor',        visit.supervisorName || '—'],
+    ['Personal',          String(visit.personnelCount ?? 1)],
+    ['Placas',            visit.vehiclePlates  || '—'],
+    ['Zapatos seguridad', visit.safetyEquipment?.shoes ? 'Sí' : 'No'],
+    ['Chaleco seguridad', visit.safetyEquipment?.vest  ? 'Sí' : 'No'],
+    ['Fecha Entrada',     fmtDateTime(visit.entryTime)],
+    ['Fecha Salida',      fmtDateTime(visit.exitTime)],
+    ['Estado',            visit.status === 'Active' ? 'Activo' : 'Completado'],
   ]
 
   rows.forEach(([label, value], i) => {
@@ -405,6 +411,7 @@ export default function ReportsPage() {
                       <TableHead className="font-semibold">Supervisor</TableHead>
                       <TableHead className="font-semibold">Personal</TableHead>
                       <TableHead className="font-semibold">Placas</TableHead>
+                      <TableHead className="font-semibold">Equipo</TableHead>
                       <TableHead className="font-semibold">Estado</TableHead>
                       <TableHead className="font-semibold">Permanencia</TableHead>
                       <TableHead className="text-right font-semibold">Comp.</TableHead>
@@ -419,6 +426,16 @@ export default function ReportsPage() {
                         <TableCell className="text-muted-foreground">{visit.supervisorName || '—'}</TableCell>
                         <TableCell><Badge variant="secondary" className="font-mono">{visit.personnelCount ?? 1}</Badge></TableCell>
                         <TableCell className="font-mono text-xs">{visit.vehiclePlates || '—'}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Badge variant="outline" className={`rounded-md text-xs px-1.5 ${visit.safetyEquipment?.shoes ? 'border-green-300 text-green-700' : 'border-red-200 text-red-500'}`}>
+                              Zapatos
+                            </Badge>
+                            <Badge variant="outline" className={`rounded-md text-xs px-1.5 ${visit.safetyEquipment?.vest ? 'border-green-300 text-green-700' : 'border-red-200 text-red-500'}`}>
+                              Chaleco
+                            </Badge>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge className={`rounded-md ${visit.status === 'Active' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-100'}`}>
                             {visit.status === 'Active' ? 'Activo' : 'Completado'}
