@@ -171,7 +171,6 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                 <FormItem>
                   <FormLabel>
                     Email del Contratista{" "}
-                    <span className="text-muted-foreground font-normal">(opcional)</span>
                   </FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="proveedor@empresa.com" {...field} />

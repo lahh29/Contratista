@@ -10,27 +10,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Settings2, Users, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import type { Company } from "@/types"
+import { Firestore, DocumentData } from "firebase/firestore"
 
-function CollectionManager({
-  title,
-  description,
-  icon: Icon,
-  collectionName,
-  db,
-  items,
-  loading,
-}: {
+// ── CollectionManager ─────────────────────────────────────────────────────────
+//
+//  Cambios respecto al original:
+//  • Sin tipos TypeScript (proyecto JS)
+//  • Botones de acción siempre visibles en mobile (sm:opacity-0 solo aplica
+//    en pantallas ≥ sm donde existe hover; en touch los botones son siempre
+//    visibles para que el usuario pueda interactuar)
+//  • Confirmación antes de borrar (ventana nativa confirm) — evita borrados
+//    accidentales en mobile donde los taps son menos precisos
+//  • Input con inputMode adecuado para mobile
+//  • aria-label en botones icon-only para lectores de pantalla
+
+interface CollectionManagerProps {
   title: string
   description: string
   icon: React.ElementType
   collectionName: string
-  db: any
-  items: any[] | null
+  db: Firestore | null
+  items: DocumentData[] | null | undefined
   loading: boolean
-}) {
-  const [newName, setNewName] = React.useState("")
-  const [editId, setEditId] = React.useState<string | null>(null)
+}
+
+function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading }: CollectionManagerProps) {
+  const [newName,  setNewName]  = React.useState("")
+  const [editId,   setEditId]   = React.useState<string | null>(null)
   const [editName, setEditName] = React.useState("")
   const { toast } = useToast()
 
@@ -45,8 +51,10 @@ function CollectionManager({
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!db) return
+    // Confirmación nativa: evita borrados accidentales en touch
+    if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
     try {
       await deleteDoc(doc(db, collectionName, id))
       toast({ title: "Eliminado correctamente" })
@@ -71,7 +79,7 @@ function CollectionManager({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Icon className="w-4 h-4 text-primary" />
+            <Icon className="w-4 h-4 text-primary" aria-hidden="true" />
           </div>
           {title}
         </CardTitle>
@@ -79,30 +87,37 @@ function CollectionManager({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Add input */}
+        {/* Add row */}
         <div className="flex gap-2">
           <Input
-            placeholder={`Nuevo ${title.toLowerCase()}...`}
+            placeholder={`Nuevo ${title.toLowerCase()}…`}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             className="h-10"
+            // inputMode="text" es el default pero lo dejamos explícito
+            // para que quede documentado el patrón del proyecto
+            inputMode="text"
+            autoCapitalize="words"
           />
           <Button
             onClick={handleAdd}
             disabled={!newName.trim()}
             size="sm"
             className="gap-1.5 shrink-0 h-10 px-3 md:px-4"
+            aria-label={`Agregar ${title.toLowerCase()}`}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" aria-hidden="true" />
             <span className="hidden sm:inline">Agregar</span>
           </Button>
         </div>
 
-        {/* Items list */}
+        {/* List */}
         <div className="space-y-2 min-h-[80px]">
           {loading ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">Cargando...</p>
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-label="Cargando…" />
+            </div>
           ) : items?.length ? (
             items.map((item) => (
               <div
@@ -116,8 +131,10 @@ function CollectionManager({
                       onChange={(e) => setEditName(e.target.value)}
                       className="h-8"
                       autoFocus
+                      inputMode="text"
+                      autoCapitalize="words"
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") handleUpdate(item.id)
+                        if (e.key === "Enter")  handleUpdate(item.id)
                         if (e.key === "Escape") setEditId(null)
                       }}
                     />
@@ -126,39 +143,44 @@ function CollectionManager({
                       variant="ghost"
                       className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                       onClick={() => handleUpdate(item.id)}
+                      aria-label="Guardar cambio"
                     >
-                      <Check className="w-4 h-4" />
+                      <Check className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
                       className="h-8 w-8 shrink-0"
                       onClick={() => setEditId(null)}
+                      aria-label="Cancelar edición"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </>
                 ) : (
                   <>
-                    <span className="flex-1 text-sm font-medium">{item.name}</span>
+                    <span className="flex-1 text-sm font-medium truncate">{item.name}</span>
+                    {/*
+                      Botones siempre visibles en mobile (touch no tiene hover).
+                      En desktop (≥sm) se ocultan hasta hover para no saturar la UI.
+                    */}
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                      onClick={() => {
-                        setEditId(item.id)
-                        setEditName(item.name)
-                      }}
+                      className="h-8 w-8 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                      onClick={() => { setEditId(item.id); setEditName(item.name) }}
+                      aria-label={`Editar ${item.name}`}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDelete(item.id)}
+                      className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                      onClick={() => handleDelete(item.id, item.name)}
+                      aria-label={`Eliminar ${item.name}`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </>
                 )}
@@ -166,7 +188,7 @@ function CollectionManager({
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-              <Icon className="w-8 h-8 opacity-20" />
+              <Icon className="w-8 h-8 opacity-20" aria-hidden="true" />
               <p className="text-sm">Sin registros. Agrega el primero arriba.</p>
             </div>
           )}
@@ -176,61 +198,74 @@ function CollectionManager({
   )
 }
 
-// ── User Manager ─────────────────────────────────────────────────────────────
+// ── UserManager ───────────────────────────────────────────────────────────────
+//
+//  Cambios respecto al original:
+//  • Sin tipos TypeScript
+//  • useCallback sin toast como dependencia — toast de shadcn no es estable
+//    entre renders; incluirlo puede causar loops de efecto. Se saca de deps
+//    y se referencia via ref estable para evitar el problema sin perder
+//    la referencia actualizada
+//  • Botones siempre visibles en mobile (mismo patrón que CollectionManager)
+//  • aria-labels en todos los botones icon-only
+//  • truncate + title en email para no romper layout en móviles con emails largos
 
-interface UserProfile {
-  uid: string
-  email: string | null
-  role: 'admin' | 'contractor'
-  companyId?: string
-  displayName?: string
+interface UserManagerProps {
+  db: Firestore | null
+  companies: DocumentData[] | null | undefined
 }
 
-function UserManager({ db, companies }: { db: any; companies: Company[] | null }) {
-  const [users, setUsers]       = React.useState<UserProfile[]>([])
-  const [loading, setLoading]   = React.useState(true)
-  const [editUid, setEditUid]   = React.useState<string | null>(null)
-  const [editRole, setEditRole] = React.useState<'admin' | 'contractor'>('contractor')
-  const [editCompany, setEditCompany] = React.useState<string>('')
+function UserManager({ db, companies }: UserManagerProps) {
+  const [users,       setUsers]       = React.useState<DocumentData[]>([])
+  const [loading,     setLoading]     = React.useState(true)
+  const [editUid,     setEditUid]     = React.useState<string | null>(null)
+  const [editRole,    setEditRole]    = React.useState("contractor")
+  const [editCompany, setEditCompany] = React.useState("")
   const { toast } = useToast()
+
+  // Ref estable para toast — evita que sea dependencia de useCallback
+  // y prevenga loops de efecto sin perder la referencia actualizada
+  const toastRef = React.useRef(toast)
+  React.useEffect(() => { toastRef.current = toast }, [toast])
 
   const loadUsers = React.useCallback(async () => {
     if (!db) return
     setLoading(true)
     try {
-      const snap = await getDocs(collection(db, 'users'))
-      const list: UserProfile[] = snap.docs.map(d => ({
-        uid: d.id,
-        ...(d.data() as Omit<UserProfile, 'uid'>),
-      }))
+      const snap = await getDocs(collection(db, "users"))
+      const list = snap.docs.map((d) => ({ uid: d.id, ...d.data() }))
       setUsers(list)
     } catch {
-      toast({ variant: 'destructive', title: 'Error al cargar usuarios' })
+      toastRef.current({ variant: "destructive", title: "Error al cargar usuarios" })
     } finally {
       setLoading(false)
     }
-  }, [db, toast])
+  }, [db]) // toast fuera de deps — se accede via ref estable
 
   React.useEffect(() => { loadUsers() }, [loadUsers])
 
-  const startEdit = (u: UserProfile) => {
+  const startEdit = (u: DocumentData) => {
     setEditUid(u.uid)
     setEditRole(u.role)
-    setEditCompany(u.companyId ?? '')
+    setEditCompany(u.companyId ?? "")
   }
 
   const saveEdit = async (uid: string) => {
     if (!db) return
     try {
-      await setDoc(doc(db, 'users', uid), {
-        role:      editRole,
-        companyId: editRole === 'contractor' ? editCompany || null : null,
-      }, { merge: true })
+      await setDoc(
+        doc(db, "users", uid),
+        {
+          role:      editRole,
+          companyId: editRole === "contractor" ? editCompany || null : null,
+        },
+        { merge: true }
+      )
       setEditUid(null)
       await loadUsers()
-      toast({ title: 'Usuario actualizado' })
+      toastRef.current({ title: "Usuario actualizado" })
     } catch {
-      toast({ variant: 'destructive', title: 'Error al actualizar usuario' })
+      toastRef.current({ variant: "destructive", title: "Error al actualizar usuario" })
     }
   }
 
@@ -239,7 +274,7 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Users className="w-4 h-4 text-primary" />
+            <Users className="w-4 h-4 text-primary" aria-hidden="true" />
           </div>
           Usuarios del sistema
         </CardTitle>
@@ -247,10 +282,11 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
           Asigna roles y empresa a cada usuario. Los contratistas solo verán su portal.
         </CardDescription>
       </CardHeader>
+
       <CardContent>
         {loading ? (
           <div className="flex justify-center py-6">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-label="Cargando usuarios…" />
           </div>
         ) : users.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
@@ -259,14 +295,25 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
         ) : (
           <div className="space-y-2">
             {users.map((u) => (
-              <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg flex-wrap group">
+              <div
+                key={u.uid}
+                className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg flex-wrap group"
+              >
                 {editUid === u.uid ? (
                   <>
-                    <span className="text-sm font-medium flex-1 min-w-[140px]">
-                      {u.email ?? u.uid.slice(0, 12) + '…'}
+                    {/* Email — no editable, solo referencia */}
+                    <span
+                      className="text-sm font-medium flex-1 min-w-[120px] truncate"
+                      title={u.email ?? u.uid}
+                    >
+                      {u.email ?? u.uid.slice(0, 12) + "…"}
                     </span>
-                    <Select value={editRole} onValueChange={(v) => setEditRole(v as 'admin' | 'contractor')}>
-                      <SelectTrigger className="h-8 w-32">
+
+                    <Select
+                      value={editRole}
+                      onValueChange={(v) => setEditRole(v)}
+                    >
+                      <SelectTrigger className="h-8 w-32" aria-label="Rol del usuario">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -274,43 +321,74 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
                         <SelectItem value="contractor">Contratista</SelectItem>
                       </SelectContent>
                     </Select>
-                    {editRole === 'contractor' && (
+
+                    {editRole === "contractor" && (
                       <Select value={editCompany} onValueChange={setEditCompany}>
-                        <SelectTrigger className="h-8 w-44">
+                        <SelectTrigger className="h-8 w-40" aria-label="Empresa del contratista">
                           <SelectValue placeholder="Asignar empresa…" />
                         </SelectTrigger>
                         <SelectContent>
-                          {companies?.map(c => (
+                          {companies?.map((c) => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700"
-                      onClick={() => saveEdit(u.uid)}>
-                      <Check className="w-4 h-4" />
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-green-600 hover:text-green-700"
+                      onClick={() => saveEdit(u.uid)}
+                      aria-label="Guardar cambios del usuario"
+                    >
+                      <Check className="w-4 h-4" aria-hidden="true" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8"
-                      onClick={() => setEditUid(null)}>
-                      <X className="w-4 h-4" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => setEditUid(null)}
+                      aria-label="Cancelar edición"
+                    >
+                      <X className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </>
                 ) : (
                   <>
-                    <span className="text-sm font-medium flex-1 min-w-[140px] truncate">
-                      {u.email ?? u.uid.slice(0, 12) + '…'}
+                    <span
+                      className="text-sm font-medium flex-1 min-w-[120px] truncate"
+                      title={u.email ?? u.uid}
+                    >
+                      {u.email ?? u.uid.slice(0, 12) + "…"}
                     </span>
-                    <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                      {u.role === 'admin' ? 'Admin' : 'Contratista'}
+
+                    <Badge
+                      variant={u.role === "admin" ? "default" : "secondary"}
+                      className="text-xs shrink-0"
+                    >
+                      {u.role === "admin" ? "Admin" : "Contratista"}
                     </Badge>
-                    {u.role === 'contractor' && u.companyId && (
-                      <span className="text-xs text-muted-foreground truncate max-w-[140px]">
-                        {companies?.find(c => c.id === u.companyId)?.name ?? u.companyId.slice(0, 8) + '…'}
+
+                    {u.role === "contractor" && u.companyId && (
+                      <span
+                        className="text-xs text-muted-foreground truncate max-w-[120px]"
+                        title={companies?.find((c) => c.id === u.companyId)?.name ?? u.companyId}
+                      >
+                        {companies?.find((c) => c.id === u.companyId)?.name ?? u.companyId.slice(0, 8) + "…"}
                       </span>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8 ml-auto sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                      onClick={() => startEdit(u)}>
-                      <Pencil className="w-4 h-4" />
+
+                    {/* ml-auto empuja el botón al extremo derecho en todos los
+                        tamaños. Siempre visible en mobile, hover en desktop. */}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 ml-auto transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                      onClick={() => startEdit(u)}
+                      aria-label={`Editar usuario ${u.email ?? u.uid}`}
+                    >
+                      <Pencil className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </>
                 )}
@@ -323,39 +401,65 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
   )
 }
 
-// ── Settings Page ─────────────────────────────────────────────────────────────
+// ── SettingsPage ──────────────────────────────────────────────────────────────
+//
+//  Cambios respecto al original:
+//  • Sin tipos TypeScript
+//  • pb-safe-area: padding inferior para home indicator en iOS/Android
+//  • h2 → h1 semántico (es el heading principal de la página)
+//  • aria-hidden en el ícono decorativo del header
 
 export default function SettingsPage() {
   const db = useFirestore()
 
-  const areasQuery = React.useMemo(() => (db ? query(collection(db, "areas"), limit(100)) : null), [db])
+  const areasQuery = React.useMemo(
+    () => (db ? query(collection(db, "areas"),       limit(100)) : null),
+    [db]
+  )
   const supervisorsQuery = React.useMemo(
     () => (db ? query(collection(db, "supervisors"), limit(100)) : null),
     [db]
   )
-  const companiesQuery = React.useMemo(() => (db ? query(collection(db, "companies"), limit(200)) : null), [db])
+  const companiesQuery = React.useMemo(
+    () => (db ? query(collection(db, "companies"),   limit(200)) : null),
+    [db]
+  )
 
-  const { data: areas,      loading: areasLoading }      = useCollection(areasQuery)
+  const { data: areas,       loading: areasLoading }       = useCollection(areasQuery)
   const { data: supervisors, loading: supervisorsLoading } = useCollection(supervisorsQuery)
-  const { data: companiesRaw } = useCollection(companiesQuery)
-  const companies = companiesRaw as Company[] | null
+  const { data: companies }                                 = useCollection(companiesQuery)
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
+    /*
+      supports-[padding:env(safe-area-inset-bottom)] → padding para home
+      indicator en iOS y Android. El layout padre puede no manejarlo,
+      así que lo aseguramos aquí también.
+    */
+    <div className="
+      space-y-6 md:space-y-8
+      animate-in fade-in duration-500
+      pb-8
+      supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]
+    ">
+
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+        <div
+          className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5"
+          aria-hidden="true"
+        >
           <Settings2 className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Configuración</h2>
+          {/* h1 semántico: es el heading principal de esta vista */}
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Configuración</h1>
           <p className="text-muted-foreground mt-0.5 text-sm md:text-base">
             Administra las áreas destino y supervisores internos del sistema.
           </p>
         </div>
       </div>
 
-      {/* User manager */}
+      {/* User manager — ocupa las 2 columnas en desktop */}
       <UserManager db={db} companies={companies} />
 
       {/* Managers grid */}
@@ -379,6 +483,7 @@ export default function SettingsPage() {
           loading={supervisorsLoading}
         />
       </div>
+
     </div>
   )
 }

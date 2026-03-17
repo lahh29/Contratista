@@ -254,7 +254,6 @@ export function ContractorForm() {
                   <FormItem>
                     <FormLabel>
                       Email del Contratista{" "}
-                      <span className="text-muted-foreground font-normal">(opcional)</span>
                     </FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="proveedor@empresa.com" {...field} />
