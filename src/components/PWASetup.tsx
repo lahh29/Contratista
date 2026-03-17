@@ -10,7 +10,10 @@ export function PWASetup() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/firebase-messaging-sw.js')
-        .catch(() => {/* SW opcional */})
+        .then(reg => console.log('[SW] Registered:', reg.scope))
+        .catch(err => console.error('[SW] Registration failed:', err))
+    } else {
+      console.warn('[SW] Service workers not supported in this browser')
     }
   }, [])
   return null

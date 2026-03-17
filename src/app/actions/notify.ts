@@ -9,8 +9,9 @@ import type { NotifyEvent } from '@/lib/send-fcm'
  */
 export async function sendNotification(event: NotifyEvent): Promise<void> {
   try {
-    await sendFCM(event)
-  } catch {
-    // Notifications are non-critical — failures are silently ignored
+    const { sent } = await sendFCM(event)
+    console.log(`[notify] ${event.type} → ${sent} device(s) notified`)
+  } catch (err) {
+    console.error('[notify] Failed to send notification:', err)
   }
 }

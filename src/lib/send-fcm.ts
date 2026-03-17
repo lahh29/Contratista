@@ -97,6 +97,7 @@ export async function sendFCM(
     }
   })
 
+  console.log(`[sendFCM] ${event.type}: ${tokensSnap.size} token(s) in DB, ${eligible.length} match audience "${JSON.stringify(audience)}"`)
   if (eligible.length === 0) return { sent: 0 }
 
   const tokens    = eligible.map(e => e.token)
@@ -131,6 +132,7 @@ export async function sendFCM(
     res.responses.forEach((r, idx) => {
       if (!r.success) {
         const code = r.error?.code ?? ''
+        console.warn(`[sendFCM] Token failed (${code}):`, r.error?.message)
         if (
           code === 'messaging/registration-token-not-registered' ||
           code === 'messaging/invalid-registration-token'

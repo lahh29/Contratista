@@ -25,10 +25,12 @@ export function useNotifications() {
   // Register FCM token once permission is granted
   useEffect(() => {
     if (!db || !user || !appUser || permission !== 'granted' || tokenSaved.current) return
-    tokenSaved.current = true
 
     getFCMToken().then(async (token) => {
-      if (!token) return
+      if (!token) {
+        console.warn('[FCM] No token returned — check VAPID key and service worker')
+        return
+      }
       try {
         const ref = doc(db, 'users', user.uid, 'fcmTokens', token)
         await setDoc(ref, {
@@ -39,8 +41,10 @@ export function useNotifications() {
           role:       appUser.role,
           companyId:  appUser.companyId ?? null,
         }, { merge: true })
+        tokenSaved.current = true
+        console.log('[FCM] Token saved for', appUser.role, token.slice(0, 20) + '...')
       } catch (err) {
-        console.warn('[FCM] Could not save token:', err)
+        console.error('[FCM] Could not save token:', err)
       }
     })
   }, [db, user, appUser, permission])

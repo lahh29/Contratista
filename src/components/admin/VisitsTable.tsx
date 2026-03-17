@@ -1,9 +1,6 @@
 "use client"
 
-import { 
-  MoreHorizontal, 
-  LogOut 
-} from "lucide-react"
+import { LogOut } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -70,9 +67,6 @@ export function VisitsTable({ visits, loading, onFinishVisit }: VisitsTableProps
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
