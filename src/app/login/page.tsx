@@ -28,12 +28,13 @@ export default function LoginPage() {
   const router  = useRouter()
   const { toast } = useToast()
 
-  const form = useForm<z.infer<typeof schema>>({
+  // ── Sin genéricos TypeScript (proyecto JS) ───────────────────────────
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
   })
 
-  async function onSubmit(values: z.infer<typeof schema>) {
+  async function onSubmit(values) {
     if (!auth) return
     setLoading(true)
     try {
@@ -89,8 +90,9 @@ export default function LoginPage() {
       </div>
 
       {/* ── Panel derecho — form ─────────────────────────────────────────── */}
+      {/* Quitado max-w del panel, ahora vive solo en el div interior */}
       <motion.div
-        className="flex flex-1 items-center justify-center bg-white px-6 py-12 lg:max-w-lg xl:max-w-xl"
+        className="flex flex-1 items-center justify-center bg-white px-6 py-12"
         initial={{ opacity: 0, x: 24 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
@@ -109,9 +111,9 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Títulos */}
+          {/* Título — peso reducido, sin mayúsculas forzadas */}
           <div className="space-y-1">
-            <h1 className="text-2xl font-black tracking-tight">Iniciar sesión</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">VIÑOPLASTIC</h1>
           </div>
 
           {/* Form */}
@@ -122,7 +124,8 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {/* Labels en sentence case, sin uppercase decorativo */}
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
                       Correo electrónico
                     </FormLabel>
                     <FormControl>
@@ -130,7 +133,7 @@ export default function LoginPage() {
                         type="email"
                         placeholder="usuario@vinoplastic.com"
                         autoComplete="email"
-                        className="h-11"
+                        className="h-11 rounded-xl"
                         {...field}
                       />
                     </FormControl>
@@ -144,7 +147,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    <FormLabel className="text-xs font-medium text-muted-foreground">
                       Contraseña
                     </FormLabel>
                     <FormControl>
@@ -152,7 +155,7 @@ export default function LoginPage() {
                         type="password"
                         placeholder="••••••••"
                         autoComplete="current-password"
-                        className="h-11"
+                        className="h-11 rounded-xl"
                         {...field}
                       />
                     </FormControl>
@@ -161,9 +164,10 @@ export default function LoginPage() {
                 )}
               />
 
+              {/* Altura unificada con los inputs */}
               <Button
                 type="submit"
-                className="w-full h-12 font-bold text-base rounded-xl mt-2"
+                className="w-full h-11 font-semibold text-base rounded-xl mt-2"
                 disabled={loading}
               >
                 {loading
@@ -175,7 +179,9 @@ export default function LoginPage() {
           </Form>
 
           <p className="text-center text-xs text-muted-foreground/50">
-          <a href="https://vertxk.xyz/" target="_blank" rel="noopener noreferrer" className="hover:text-muted-foreground transition-colors">Vertx System Add-on</a>
+            <a href="https://vertxk.xyz/" target="_blank" rel="noopener noreferrer" className="hover:text-muted-foreground transition-colors">
+              Vertx System Add-on
+            </a>
           </p>
         </div>
       </motion.div>
