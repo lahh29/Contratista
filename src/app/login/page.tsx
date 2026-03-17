@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
+import { MorphingText } from "@/components/ui/morphing-text"
 
 const schema = z.object({
   email:    z.string().email("Correo inválido"),
@@ -113,7 +114,7 @@ export default function LoginPage() {
 
           {/* Título — peso reducido, sin mayúsculas forzadas */}
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">VIÑOPLASTIC</h1>
+            <MorphingText texts={["VIÑOPLASTIC","CONTRATISTAS","INICIA SESIÓN"]} className="h-8 md:h-8 text-2xl lg:text-2xl font-bold tracking-tight" />
           </div>
 
           {/* Form */}
