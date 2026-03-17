@@ -19,7 +19,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
   return (
     <div className="max-w-md mx-auto space-y-8 animate-in zoom-in-95 duration-500">
       <div className="text-center space-y-4">
-        <div className="w-24 h-24 rounded-full bg-accent mx-auto flex items-center justify-center text-white text-4xl font-black border-4 border-white shadow-xl ring-4 ring-accent/20">
+        <div className="w-24 h-24 rounded-full bg-primary mx-auto flex items-center justify-center text-white text-4xl font-black border-4 border-white shadow-xl ring-4 ring-primary/20">
           {contractor?.name?.[0]}
         </div>
         <div>
@@ -50,7 +50,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
 
           <div className="grid grid-cols-2 gap-6 pt-2">
             <div className="flex items-center gap-3">
-              <Clock className="w-5 h-5 text-accent" />
+              <Clock className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Entrada</p>
                 <p className="font-bold">
@@ -61,7 +61,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-accent" />
+              <Users className="w-5 h-5 text-primary" />
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Personal</p>
                 <p className="font-bold">{contractor?.personnelCount ?? '—'}</p>

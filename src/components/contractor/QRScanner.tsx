@@ -75,10 +75,10 @@ export function QRScanner({ onQRDetected, isProcessing }: QRScannerProps) {
         {!scanning && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <div className="w-48 h-48 border-2 border-white/20 rounded-2xl relative">
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-accent rounded-tl-xl" />
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-accent rounded-tr-xl" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-accent rounded-bl-xl" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-accent rounded-br-xl" />
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl" />
               <Camera className="absolute inset-0 m-auto w-10 h-10 text-white/30" />
             </div>
           </div>
@@ -86,7 +86,7 @@ export function QRScanner({ onQRDetected, isProcessing }: QRScannerProps) {
 
         {/* Línea de escaneo animada */}
         {scanning && (
-          <div className="absolute inset-x-8 top-1/2 h-0.5 bg-accent/70 animate-pulse pointer-events-none" />
+          <div className="absolute inset-x-8 top-1/2 h-0.5 bg-primary/70 animate-pulse pointer-events-none" />
         )}
       </div>
 
@@ -103,7 +103,7 @@ export function QRScanner({ onQRDetected, isProcessing }: QRScannerProps) {
           <Button
             onClick={startScanner}
             disabled={isProcessing}
-            className="flex-1 h-14 text-base font-bold rounded-2xl gap-2 bg-accent hover:bg-accent/90 text-white shadow-lg"
+            className="flex-1 h-14 text-base font-bold rounded-2xl gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg"
           >
             {isProcessing ? (
               <Loader2 className="w-5 h-5 animate-spin" />

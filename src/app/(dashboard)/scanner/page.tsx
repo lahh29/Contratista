@@ -374,7 +374,7 @@ export default function ScannerPage() {
   return (
     <div className="max-w-sm mx-auto space-y-6 animate-in zoom-in-95 duration-400">
       <div className="text-center space-y-3">
-        <div className="w-20 h-20 rounded-full bg-accent mx-auto flex items-center justify-center text-white text-3xl font-black shadow-xl ring-4 ring-accent/20">
+        <div className="w-20 h-20 rounded-full bg-primary mx-auto flex items-center justify-center text-white text-3xl font-black shadow-xl ring-4 ring-primary/20">
           {currentCompany?.name?.[0]}
         </div>
         <div>
