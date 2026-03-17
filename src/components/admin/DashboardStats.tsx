@@ -26,13 +26,13 @@ export function DashboardStats({ activePeople, activeVisits, complianceRate, ale
         </CardHeader>
         <CardContent>
           <div className="text-2xl md:text-3xl font-black">{activeVisits}</div>
-          <p className="text-xs text-blue-600/70 mt-1 font-medium">En sitio ahora</p>
+          <p className="text-xs text-blue-600/70 mt-1 font-medium">En planta ahora</p>
         </CardContent>
       </Card>
 
       <Card className="border-none shadow-sm bg-purple-50/50">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-bold uppercase text-purple-600">Personas en Sitio</CardTitle>
+          <CardTitle className="text-xs font-bold uppercase text-purple-600">Personas en Planta</CardTitle>
           <Users className="w-4 h-4 text-purple-600" />
         </CardHeader>
         <CardContent>
@@ -43,7 +43,7 @@ export function DashboardStats({ activePeople, activeVisits, complianceRate, ale
 
       <Card className="border-none shadow-sm bg-green-50/50">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-bold uppercase text-green-600">Cumplimiento SUA</CardTitle>
+          <CardTitle className="text-xs font-bold uppercase text-green-600">SUA Vigente</CardTitle>
           <ClipboardCheck className="w-4 h-4 text-green-600" />
         </CardHeader>
         <CardContent>
@@ -54,7 +54,7 @@ export function DashboardStats({ activePeople, activeVisits, complianceRate, ale
 
       <Card className="border-none shadow-sm bg-orange-50/50 border-l-4 border-orange-500">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-bold uppercase text-orange-600">Alertas SUA</CardTitle>
+          <CardTitle className="text-xs font-bold uppercase text-orange-600">SUA Vencidos</CardTitle>
           <AlertCircle className="w-4 h-4 text-orange-600" />
         </CardHeader>
         <CardContent>

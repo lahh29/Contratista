@@ -33,6 +33,7 @@ const schema = z.object({
   name: z.string().min(2, "Mínimo 2 caracteres"),
   contact: z.string().min(2, "Mínimo 2 caracteres"),
   phone: z.string().optional(),
+  email: z.string().email("Email inválido").optional().or(z.literal('')),
   suaNumber: z.string().optional(),
   suaValidUntil: z.string().optional(),
 })
@@ -55,6 +56,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       name: "",
       contact: "",
       phone: "",
+      email: "",
       suaNumber: "",
       suaValidUntil: "",
     },
@@ -67,6 +69,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
         name: company.name || "",
         contact: company.contact || "",
         phone: company.phone || "",
+        email: company.email || "",
         suaNumber: company.sua?.number || "",
         suaValidUntil: company.sua?.validUntil || "",
       })
@@ -81,6 +84,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       name: values.name,
       contact: values.contact,
       phone: values.phone || "",
+      email: values.email ? values.email.toLowerCase().trim() : null,
       sua: {
         ...company.sua,
         number: values.suaNumber || company.sua?.number || "",
@@ -156,6 +160,25 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                   <FormControl>
                     <Input placeholder="+52 442..." {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Email del Contratista{" "}
+                    <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="proveedor@empresa.com" {...field} />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Usado para vincular automáticamente su cuenta al portal.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

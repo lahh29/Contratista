@@ -14,7 +14,9 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "firebase/auth"
-import { useAuth } from "@/firebase"
+import { doc, deleteDoc } from "firebase/firestore"
+import { useAuth, useFirestore, useUser } from "@/firebase"
+import { getFCMToken } from "@/firebase/messaging"
 
 import {
   Sidebar,
@@ -49,15 +51,23 @@ const navigation = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const auth = useAuth()
+  const auth  = useAuth()
+  const db    = useFirestore()
+  const { user } = useUser()
 
   const handleLogout = async () => {
-    if (auth) {
-      try {
-        await signOut(auth)
-      } catch (error) {
-        console.error("Error signing out:", error)
+    if (!auth) return
+    try {
+      // Remove this device's FCM token before signing out
+      if (db && user) {
+        const token = await getFCMToken().catch(() => null)
+        if (token) {
+          await deleteDoc(doc(db, 'users', user.uid, 'fcmTokens', token)).catch(() => {})
+        }
       }
+      await signOut(auth)
+    } catch (error) {
+      console.error("Error signing out:", error)
     }
   }
 

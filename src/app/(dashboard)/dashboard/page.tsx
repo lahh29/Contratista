@@ -107,7 +107,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Panel de Control</h2>
-          <p className="text-muted-foreground mt-1">Monitoreo en tiempo real de accesos y cumplimiento.</p>
+          <p className="text-muted-foreground mt-1">Monitoreo en tiempo real de accesos.</p>
         </div>
         <div className="flex gap-2">
           <NewVisitModal trigger={
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                Sin visitas activas para graficar
+                Sin datos para graficar
               </div>
             )}
           </CardContent>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
 
         <Card className="md:col-span-2 lg:col-span-3 border-none shadow-sm overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Distribución por Áreas</CardTitle>
+            <CardTitle className="text-lg font-bold">Distribución por Departamentos</CardTitle>
           </CardHeader>
           <CardContent className="h-[240px] md:h-[300px]">
             {areaData.length > 0 ? (
@@ -179,7 +179,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                Sin visitas activas para graficar
+                Sin datos para graficar
               </div>
             )}
           </CardContent>
@@ -189,11 +189,11 @@ export default function DashboardPage() {
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle>Contratistas Activos</CardTitle>
-            <CardDescription>Personal trabajando actualmente en sitio.</CardDescription>
+            <CardTitle>Contratistas</CardTitle>
+            <CardDescription>Personal trabajando actualmente en planta.</CardDescription>
           </div>
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1 self-start sm:self-auto">
-            {activeVisits?.length || 0} Empresas trabajando
+            {activeVisits?.length || 0} En Planta
           </Badge>
         </CardHeader>
         <CardContent>

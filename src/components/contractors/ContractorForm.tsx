@@ -34,6 +34,7 @@ import { sendNotification } from '@/app/actions/notify'
 const contractorSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   company: z.string().min(2, "La empresa debe tener al menos 2 caracteres"),
+  email: z.string().email("Email inválido").optional().or(z.literal('')),
   suaExpiration: z.string().min(1, "La fecha de expiración es requerida"),
   policyNumber: z.string().min(1, "El número de póliza es requerido"),
   phone: z.string().optional(),
@@ -51,6 +52,7 @@ export function ContractorForm() {
     defaultValues: {
       name: "",
       company: "",
+      email: "",
       suaExpiration: "",
       policyNumber: "",
       phone: "",
@@ -110,6 +112,7 @@ export function ContractorForm() {
       name: values.company,
       contact: values.name,
       phone: values.phone || "",
+      ...(values.email ? { email: values.email.toLowerCase().trim() } : {}),
       status: "Active",
       sua: {
         number: values.policyNumber,
@@ -238,8 +241,27 @@ export function ContractorForm() {
                   <FormItem>
                     <FormLabel>Teléfono de Contacto</FormLabel>
                     <FormControl>
-                      <Input placeholder="+54 11..." {...field} />
+                      <Input placeholder="+52 442..." {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Email del Contratista{" "}
+                      <span className="text-muted-foreground font-normal">(opcional)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="proveedor@empresa.com" {...field} />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      El contratista usará este email para acceder a su portal automáticamente.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

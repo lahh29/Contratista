@@ -1,8 +1,7 @@
 'use server'
 
-import { sendFCM, type NotifyEvent } from '@/lib/send-fcm'
-
-export type { NotifyEvent }
+import { sendFCM } from '@/lib/send-fcm'
+import type { NotifyEvent } from '@/lib/send-fcm'
 
 /**
  * Server Action — sends a push notification to all registered devices.

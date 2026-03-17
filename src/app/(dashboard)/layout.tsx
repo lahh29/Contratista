@@ -4,25 +4,29 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { Separator } from "@/components/ui/separator"
-import { useUser } from "@/firebase"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { NotificationBanner } from "@/components/PWASetup"
+import { useAppUser } from "@/hooks/use-app-user"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading } = useUser()
+  const { appUser, loading } = useAppUser()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return
+    if (!appUser) {
       router.push("/login")
+    } else if (appUser.role === 'contractor') {
+      // Contractors have their own portal
+      router.push("/portal")
     }
-  }, [user, loading, router])
+  }, [appUser, loading, router])
 
   if (loading) {
     return (
@@ -32,7 +36,7 @@ export default function DashboardLayout({
     )
   }
 
-  if (!user) return null
+  if (!appUser || appUser.role === 'contractor') return null
 
   return (
     <>
@@ -50,7 +54,7 @@ export default function DashboardLayout({
           </div>
           <div className="flex items-center gap-4">
             <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-accent/20 ring-offset-2 ring-offset-background cursor-pointer hover:scale-110 transition-transform">
-              {user.email?.slice(0, 2).toUpperCase()}
+              {appUser.email?.slice(0, 2).toUpperCase()}
             </div>
           </div>
         </header>

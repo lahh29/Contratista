@@ -72,12 +72,12 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, isSubmittin
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4" /> Empresa Contratista
+                  <Building2 className="w-4 h-4" /> Contratista
                 </FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Seleccione empresa autorizada" />
+                      <SelectValue placeholder="Selecciona empresa registrada" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -132,7 +132,7 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, isSubmittin
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <UserCog className="w-4 h-4" /> Supervisor Interno
+                    <UserCog className="w-4 h-4" /> Encargado
                   </FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
@@ -146,7 +146,7 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, isSubmittin
                       ))}
                       {!supervisors?.length && (
                         <p className="text-sm text-muted-foreground text-center py-3 px-2">
-                          Sin supervisores. Agrega en Configuración.
+                          Sin encargados. Agrega en Configuración.
                         </p>
                       )}
                     </SelectContent>
@@ -164,7 +164,7 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, isSubmittin
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Users className="w-4 h-4" /> Dotación
+                    <Users className="w-4 h-4" /> Personas
                   </FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
@@ -179,7 +179,7 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, isSubmittin
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Truck className="w-4 h-4" /> Patente / Placa
+                    <Truck className="w-4 h-4" /> Placa Vehiculo
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="Opcional" {...field} />

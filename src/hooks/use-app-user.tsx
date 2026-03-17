@@ -1,0 +1,104 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { doc, onSnapshot, setDoc, collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { useFirestore, useUser } from '@/firebase'
+import type { AppUser } from '@/types'
+
+/**
+ * Returns the authenticated user enriched with their Firestore profile
+ * (role + companyId). Uses onSnapshot so role changes reflect immediately
+ * without a page reload. On first login, creates an 'admin' profile.
+ */
+export function useAppUser() {
+  const { user, loading: authLoading } = useUser()
+  const db = useFirestore()
+  const [appUser, setAppUser] = useState<AppUser | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user || !db) {
+      setAppUser(null)
+      setLoading(false)
+      return
+    }
+
+    const ref = doc(db, 'users', user.uid)
+
+    const unsubscribe = onSnapshot(
+      ref,
+      async (snap) => {
+        if (snap.exists()) {
+          const data = snap.data()
+          const role = data.role === 'contractor' ? 'contractor' : 'admin'
+          let companyId: string | undefined = data.companyId ?? undefined
+
+          // If contractor has no companyId yet, try to auto-link by email
+          if (role === 'contractor' && !companyId && user.email) {
+            try {
+              const q = query(
+                collection(db, 'companies'),
+                where('email', '==', user.email.toLowerCase().trim()),
+                limit(1),
+              )
+              const companySnap = await getDocs(q)
+              if (!companySnap.empty) {
+                companyId = companySnap.docs[0].id
+                await setDoc(ref, { companyId }, { merge: true })
+              }
+            } catch {
+              // non-critical
+            }
+          }
+
+          setAppUser({
+            uid:         user.uid,
+            email:       user.email,
+            role,
+            companyId,
+            displayName: data.displayName ?? undefined,
+          })
+        } else {
+          // First login — try to auto-link by email to an existing company
+          let companyId: string | undefined
+          if (user.email) {
+            try {
+              const q = query(
+                collection(db, 'companies'),
+                where('email', '==', user.email.toLowerCase().trim()),
+                limit(1),
+              )
+              const snap = await getDocs(q)
+              if (!snap.empty) companyId = snap.docs[0].id
+            } catch {
+              // non-critical
+            }
+          }
+          const profile = {
+            email:       user.email,
+            role:        'contractor' as const,
+            displayName: user.displayName ?? undefined,
+            ...(companyId ? { companyId } : {}),
+          }
+          try {
+            await setDoc(ref, profile)
+          } catch {
+            // ignore
+          }
+          setAppUser({ uid: user.uid, ...profile })
+        }
+        setLoading(false)
+      },
+      () => {
+        // Firestore unavailable — fallback to admin to not lock out the user
+        setAppUser({ uid: user.uid, email: user.email, role: 'admin' })
+        setLoading(false)
+      },
+    )
+
+    return () => unsubscribe()
+  }, [user, db, authLoading])
+
+  return { appUser, loading }
+}
