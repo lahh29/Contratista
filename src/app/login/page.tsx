@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { Loader2, ShieldCheck } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
@@ -49,91 +51,135 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex bg-white">
 
-      {/* Card container */}
-      <div className="w-full max-w-sm space-y-8">
-
-        {/* Brand */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <ShieldCheck className="w-7 h-7 text-white" />
-          </div>
-          <div className="text-center space-y-0.5">
-            <h1 className="text-2xl font-black tracking-tight text-foreground">
-              Control Contratistas
-            </h1>
-            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
-              ViñoPlastic
-            </p>
-          </div>
+      {/* ── Panel izquierdo — logo ───────────────────────────────────────── */}
+      <motion.div
+        className="hidden lg:flex flex-1 items-center justify-center bg-white"
+        initial={{ opacity: 0, x: -24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        <div className="flex flex-col items-center gap-6 px-16">
+          <Image
+            src="/logo-vino-plastic.png"
+            alt="ViñoPlastic"
+            width={280}
+            height={280}
+            className="object-contain"
+            priority
+          />
         </div>
+      </motion.div>
 
-        {/* Form */}
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Correo electrónico
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="usuario@vinoplastic.com"
-                      autoComplete="email"
-                      className="h-11 bg-muted/40 border-transparent focus-visible:bg-background focus-visible:border-primary/40 transition-all"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                    Contraseña
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      className="h-11 bg-muted/40 border-transparent focus-visible:bg-background focus-visible:border-primary/40 transition-all"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              className="w-full h-12 font-bold text-base rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 mt-2"
-              disabled={loading}
-            >
-              {loading
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : "Iniciar sesión"
-              }
-            </Button>
-          </form>
-        </Form>
-
-        {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground/60">
-          Acceso restringido a personal autorizado
-        </p>
+      {/* ── Separador punteado animado ───────────────────────────────────── */}
+      <div className="hidden lg:flex flex-col items-center justify-center w-px py-16">
+        <svg height="100%" width="2" className="overflow-visible">
+          <motion.line
+            x1="1" y1="0" x2="1" y2="100%"
+            stroke="#e2e8f0"
+            strokeWidth="2"
+            strokeDasharray="6 8"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 1.2, ease: "easeInOut", delay: 0.2 }}
+          />
+        </svg>
       </div>
+
+      {/* ── Panel derecho — form ─────────────────────────────────────────── */}
+      <motion.div
+        className="flex flex-1 items-center justify-center bg-white px-6 py-12 lg:max-w-lg xl:max-w-xl"
+        initial={{ opacity: 0, x: 24 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+      >
+        <div className="w-full max-w-sm space-y-8">
+
+          {/* Logo mobile */}
+          <div className="flex lg:hidden justify-center">
+            <Image
+              src="/logo-vino-plastic.png"
+              alt="ViñoPlastic"
+              width={100}
+              height={100}
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          {/* Títulos */}
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black tracking-tight">Iniciar sesión</h1>
+          </div>
+
+          {/* Form */}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      Correo electrónico
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="usuario@vinoplastic.com"
+                        autoComplete="email"
+                        className="h-11"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      Contraseña
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        autoComplete="current-password"
+                        className="h-11"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full h-12 font-bold text-base rounded-xl mt-2"
+                disabled={loading}
+              >
+                {loading
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : "Iniciar sesión"
+                }
+              </Button>
+            </form>
+          </Form>
+
+          <p className="text-center text-xs text-muted-foreground/50">
+          <a href="https://vertxk.xyz/" target="_blank" rel="noopener noreferrer" className="hover:text-muted-foreground transition-colors">Vertx System Add-on</a>
+          </p>
+        </div>
+      </motion.div>
+
     </div>
   )
 }
