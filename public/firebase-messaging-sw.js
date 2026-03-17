@@ -1,5 +1,5 @@
-importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js')
-importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging-compat.js')
+importScripts('https://www.gstatic.com/firebasejs/11.9.0/firebase-app-compat.js')
+importScripts('https://www.gstatic.com/firebasejs/11.9.0/firebase-messaging-compat.js')
 
 firebase.initializeApp({
   apiKey:            "AIzaSyDCI86FTRzFLfUjg751KJD72OmiB7jxmN8",
@@ -14,6 +14,7 @@ const messaging = firebase.messaging()
 
 // Background messages (app closed or in another tab)
 messaging.onBackgroundMessage((payload) => {
+  console.log('[SW] Background message received:', JSON.stringify(payload))
   const { title, body } = payload.notification ?? {}
   const type = payload.data?.type ?? 'notification'
   const url  = payload.data?.url  ?? '/dashboard'

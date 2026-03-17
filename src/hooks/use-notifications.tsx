@@ -52,10 +52,15 @@ export function useNotifications() {
   // Handle foreground FCM messages (app is open)
   useEffect(() => {
     if (permission !== 'granted') return
+    console.log('[FCM] Foreground listener registered')
     const unsubscribe = onForegroundMessage((payload) => {
+      console.log('[FCM] Foreground message received:', payload)
       const { title, body } = payload.notification ?? {}
       const url = payload.data?.url ?? '/dashboard'
-      if (!title) return
+      if (!title) {
+        console.warn('[FCM] Message has no title, skipping notification')
+        return
+      }
 
       navigator.serviceWorker.ready.then(reg => {
         reg.showNotification(title, {
@@ -66,7 +71,7 @@ export function useNotifications() {
           data:    { url },
           vibrate: [200, 100, 200],
         } as NotificationOptions)
-      })
+      }).catch(err => console.error('[FCM] showNotification failed:', err))
     })
     return () => unsubscribe()
   }, [permission])
