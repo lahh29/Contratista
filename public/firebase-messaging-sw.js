@@ -39,8 +39,8 @@ messaging.onBackgroundMessage((payload) => {
 function getActions(type) {
   switch (type) {
     case 'entry':
-      return [{ action: 'view', title: 'Ver dashboard' }]
     case 'exit':
+    case 'over_capacity':
       return [{ action: 'view', title: 'Ver dashboard' }]
     case 'sua_expiring':
       return [
@@ -48,6 +48,7 @@ function getActions(type) {
         { action: 'dismiss', title: 'Ignorar' },
       ]
     case 'new_contractor':
+    case 'delete_contractor':
       return [{ action: 'view', title: 'Ver contratistas' }]
     default:
       return []

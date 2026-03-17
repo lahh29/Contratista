@@ -138,6 +138,16 @@ export default function ScannerPage() {
         personnelCount: confirmedPersonnel,
         vehiclePlates: vehiclePlates.trim().toUpperCase(),
       })
+      const authorized = Number(currentCompany.personnelCount) || 0
+      if (authorized > 0 && confirmedPersonnel > authorized) {
+        sendNotification({
+          type: 'over_capacity',
+          companyName: currentCompany.name,
+          areaName: area?.name || '—',
+          authorized,
+          actual: confirmedPersonnel,
+        })
+      }
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar entrada' })
     } finally {

@@ -3,10 +3,12 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAdminApp } from './firebase-admin'
 
 export type NotifyEvent =
-  | { type: 'entry';          companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
-  | { type: 'exit';           companyName: string; areaName: string }
-  | { type: 'sua_expiring';   companyName: string; daysLeft: number; companyId?: string }
-  | { type: 'new_contractor'; companyName: string }
+  | { type: 'entry';             companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
+  | { type: 'exit';              companyName: string; areaName: string }
+  | { type: 'sua_expiring';      companyName: string; daysLeft: number; companyId?: string }
+  | { type: 'new_contractor';    companyName: string }
+  | { type: 'delete_contractor'; companyName: string }
+  | { type: 'over_capacity';     companyName: string; areaName: string; authorized: number; actual: number }
 
 /**
  * Audience control:
@@ -23,21 +25,21 @@ function buildNotification(event: NotifyEvent): { title: string; body: string; u
   switch (event.type) {
     case 'entry':
       return {
-        title: `🏢 Ingreso: ${event.companyName}`,
-        body:  `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} → ${event.areaName}${event.vehiclePlates ? ` · Placas: ${event.vehiclePlates}` : ''}`,
+        title: `Ingreso: ${event.companyName}`,
+        body:  `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} en ${event.areaName}${event.vehiclePlates ? ` · Placas: ${event.vehiclePlates}` : ''}`,
         url:   '/dashboard',
       }
     case 'exit':
       return {
-        title: `✅ Salida: ${event.companyName}`,
+        title: `Salida: ${event.companyName}`,
         body:  `Ha salido del área: ${event.areaName}`,
         url:   '/dashboard',
       }
     case 'sua_expiring':
       return {
         title: event.daysLeft === 0
-          ? `🚨 SUA vencido hoy: ${event.companyName}`
-          : `⚠️ SUA por vencer: ${event.companyName}`,
+          ? `SUA vencido hoy: ${event.companyName}`
+          : `SUA por vencer: ${event.companyName}`,
         body: event.daysLeft === 0
           ? `El SUA de ${event.companyName} venció hoy. Requiere renovación inmediata.`
           : `Vence en ${event.daysLeft} día${event.daysLeft !== 1 ? 's' : ''}. Renueva antes de que expire.`,
@@ -45,9 +47,21 @@ function buildNotification(event: NotifyEvent): { title: string; body: string; u
       }
     case 'new_contractor':
       return {
-        title: `➕ Nueva empresa registrada`,
+        title: `Nueva empresa registrada`,
         body:  `${event.companyName} fue agregada al sistema.`,
         url:   '/contractors',
+      }
+    case 'delete_contractor':
+      return {
+        title: `Empresa eliminada`,
+        body:  `${event.companyName} fue eliminada del sistema.`,
+        url:   '/contractors',
+      }
+    case 'over_capacity':
+      return {
+        title: `Exceso de personal: ${event.companyName}`,
+        body:  `Ingresaron ${event.actual} personas en ${event.areaName}. Autorizado: ${event.authorized}.`,
+        url:   '/dashboard',
       }
   }
 }
@@ -57,7 +71,6 @@ function defaultAudience(event: NotifyEvent): Audience {
   if (event.type === 'sua_expiring' && event.companyId) {
     return { companyId: event.companyId }
   }
-  // entry/exit/new_contractor → only admins (contractors don't need ops alerts)
   return 'admins'
 }
 

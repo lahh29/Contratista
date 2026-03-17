@@ -58,6 +58,7 @@ import { CompanyVisitsSheet } from "@/components/contractors/CompanyVisitsSheet"
 import { EditCompanySheet } from "@/components/contractors/EditCompanySheet"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
+import { sendNotification } from "@/app/actions/notify"
 import type { Company } from "@/types"
 
 type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
@@ -193,6 +194,7 @@ export default function ContractorsPage() {
         title: "Empresa eliminada",
         description: `${selectedCompany.name} ha sido eliminada del sistema.`,
       })
+      sendNotification({ type: 'delete_contractor', companyName: selectedCompany.name })
     } catch {
       const permissionError = new FirestorePermissionError({
         path: companyRef.path,
