@@ -1,14 +1,25 @@
 "use client"
 
-import { useMemo } from "react"
-import { doc } from "firebase/firestore"
+import { useMemo, useState } from "react"
+import { collection, doc, orderBy, query, where, limit } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useDoc } from "@/firebase/firestore/use-doc"
+import { useCollection } from "@/firebase/firestore/use-collection"
 import { useAppUser } from "@/hooks/use-app-user"
 import { useNotifications } from "@/hooks/use-notifications"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { EditProfileSheet } from "@/components/portal/EditProfileSheet"
+import { generateVoucherPDF } from "@/lib/generate-voucher"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   ShieldCheck,
   ShieldAlert,
@@ -23,11 +34,19 @@ import {
   Loader2,
   AlertTriangle,
   Clock,
+  Pencil,
+  Download,
+  MapPin,
+  Users,
 } from "lucide-react"
-import type { Company } from "@/types"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
+import type { Company, Visit } from "@/types"
+
+// ── Sub-components ─────────────────────────────────────────
 
 function SuaStatusCard({ company }: { company: Company }) {
-  const status    = company.sua?.status
+  const status     = company.sua?.status
   const validUntil = company.sua?.validUntil
 
   const config = {
@@ -40,8 +59,7 @@ function SuaStatusCard({ company }: { company: Company }) {
 
   const daysLeft = useMemo(() => {
     if (!validUntil) return null
-    const today  = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today  = new Date(); today.setHours(0, 0, 0, 0)
     const expiry = new Date(validUntil + 'T00:00:00')
     return Math.round((expiry.getTime() - today.getTime()) / 864e5)
   }, [validUntil])
@@ -102,16 +120,53 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
   )
 }
 
+function visitDuration(entry: Date, exit: Date) {
+  const ms = exit.getTime() - entry.getTime()
+  const h  = Math.floor(ms / 3600000)
+  const m  = Math.floor((ms % 3600000) / 60000)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
+// ── Main page ──────────────────────────────────────────────
+
 export default function PortalPage() {
-  const { appUser } = useAppUser()
-  const db = useFirestore()
+  const { appUser }  = useAppUser()
+  const db           = useFirestore()
   const { permission, supported, requestPermission } = useNotifications()
+  const [editingProfile, setEditingProfile] = useState(false)
 
   const companyRef = useMemo(
     () => appUser?.companyId && db ? doc(db, 'companies', appUser.companyId) : null,
     [appUser, db],
   )
-  const { data: company, loading } = useDoc<Company>(companyRef)
+  const { data: rawCompany, loading } = useDoc(companyRef)
+  const company = rawCompany as Company | null
+
+  // Active visit (real-time in-plant status)
+  const activeVisitQuery = useMemo(() => {
+    if (!db || !appUser?.companyId) return null
+    return query(
+      collection(db, 'visits'),
+      where('companyId', '==', appUser.companyId),
+      where('status', '==', 'Active'),
+      limit(1),
+    )
+  }, [db, appUser?.companyId])
+  const { data: activeVisits } = useCollection(activeVisitQuery)
+  const activeVisit = (activeVisits as Visit[] | null)?.[0] ?? null
+
+  // Visit history
+  const visitsQuery = useMemo(() => {
+    if (!db || !appUser?.companyId) return null
+    return query(
+      collection(db, 'visits'),
+      where('companyId', '==', appUser.companyId),
+      orderBy('entryTime', 'desc'),
+      limit(20),
+    )
+  }, [db, appUser?.companyId])
+  const { data: rawVisits, loading: visitsLoading } = useCollection(visitsQuery)
+  const visits = rawVisits as Visit[] | null
 
   if (loading) {
     return (
@@ -171,18 +226,62 @@ export default function PortalPage() {
         </div>
       </div>
 
-      {/* SUA status — full width, prominente */}
+      {/* En Planta — banner en tiempo real */}
+      {activeVisit && (
+        <Card className="border-green-200 bg-green-50 shadow-none">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-green-800">Actualmente dentro de planta</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
+                {activeVisit.areaName && (
+                  <span className="flex items-center gap-1 text-xs text-green-700">
+                    <MapPin className="w-3 h-3" /> {activeVisit.areaName}
+                  </span>
+                )}
+                {activeVisit.personnelCount && (
+                  <span className="flex items-center gap-1 text-xs text-green-700">
+                    <Users className="w-3 h-3" /> {activeVisit.personnelCount} personas
+                  </span>
+                )}
+                {activeVisit.entryTime && (
+                  <span className="flex items-center gap-1 text-xs text-green-700">
+                    <Clock className="w-3 h-3" />
+                    Ingresó {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Badge className="shrink-0 bg-green-600 text-white border-green-700 px-3 py-1">
+              En Planta
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* SUA status */}
       <SuaStatusCard company={company} />
 
-      {/* 2 columnas en desktop, 1 en mobile */}
+      {/* 2 columnas en desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Datos de la empresa */}
         <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2 pt-5 px-5">
+          <CardHeader className="pb-2 pt-5 px-5 flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Información de la empresa
             </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:bg-muted rounded-full"
+              onClick={() => setEditingProfile(true)}
+              title="Editar perfil"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </Button>
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-0">
             <InfoRow icon={Building2} label="Razón Social"       value={company.name} />
@@ -204,14 +303,14 @@ export default function PortalPage() {
           </CardContent>
         </Card>
 
-        {/* Notificaciones — full width en ambos breakpoints */}
+        {/* Notificaciones */}
         {supported && (
           <Card className="border-none shadow-sm lg:col-span-2">
             <CardContent className="p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${permission === 'granted' ? 'bg-green-100' : 'bg-muted'}`}>
                   {permission === 'granted'
-                    ? <Bell   className="w-5 h-5 text-green-700" />
+                    ? <Bell    className="w-5 h-5 text-green-700" />
                     : <BellOff className="w-5 h-5 text-muted-foreground" />
                   }
                 </div>
@@ -227,19 +326,108 @@ export default function PortalPage() {
                 </div>
               </div>
               {permission !== 'granted' ? (
-                <Button onClick={requestPermission} className="shrink-0">
-                  Activar
-                </Button>
+                <Button onClick={requestPermission} className="shrink-0">Activar</Button>
               ) : (
-                <Badge className="shrink-0 bg-green-100 text-green-700 border-green-200 px-3 py-1.5">
-                  Activo
-                </Badge>
+                <Badge className="shrink-0 bg-green-100 text-green-700 border-green-200 px-3 py-1.5">Activo</Badge>
               )}
             </CardContent>
           </Card>
         )}
-
       </div>
+
+      {/* Historial de visitas */}
+      <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="flex-row items-center justify-between space-y-0 px-5 pt-5 pb-2">
+          <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Historial de visitas
+          </CardTitle>
+          {visits && visits.length > 0 && (
+            <span className="text-xs text-muted-foreground">{visits.length} registro{visits.length !== 1 ? 's' : ''}</span>
+          )}
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="pl-5">Fecha</TableHead>
+                  <TableHead className="hidden sm:table-cell">Área</TableHead>
+                  <TableHead className="hidden md:table-cell">Entrada</TableHead>
+                  <TableHead className="hidden md:table-cell">Salida</TableHead>
+                  <TableHead className="hidden sm:table-cell">Duración</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="pr-5 text-right">Voucher</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visitsLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
+                    </TableCell>
+                  </TableRow>
+                ) : visits && visits.length > 0 ? (
+                  visits.map((visit) => {
+                    const entryDate = visit.entryTime?.toDate()
+                    const exitDate  = visit.exitTime?.toDate()
+                    return (
+                      <TableRow key={visit.id} className="hover:bg-muted/20 transition-colors">
+                        <TableCell className="pl-5 py-4 font-medium text-sm">
+                          {entryDate
+                            ? entryDate.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-sm">{visit.areaName ?? '—'}</TableCell>
+                        <TableCell className="hidden md:table-cell text-xs font-mono">
+                          {entryDate ? entryDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-xs font-mono">
+                          {exitDate ? exitDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-xs">
+                          {entryDate && exitDate ? visitDuration(entryDate, exitDate) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={visit.status === 'Completed' ? 'secondary' : 'default'}
+                            className={visit.status === 'Active' ? 'bg-green-100 text-green-700 border-green-200' : ''}
+                          >
+                            {visit.status === 'Active' ? 'Activa' : 'Completada'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="pr-5 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:bg-muted rounded-full"
+                            title="Descargar voucher"
+                            onClick={() => generateVoucherPDF(visit, company)}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground pl-5">
+                      No hay visitas registradas aún.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Edit profile sheet */}
+      <EditProfileSheet
+        company={company}
+        open={editingProfile}
+        onOpenChange={setEditingProfile}
+      />
     </div>
   )
 }
