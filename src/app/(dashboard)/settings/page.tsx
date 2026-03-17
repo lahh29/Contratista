@@ -141,10 +141,6 @@ function CollectionManager({
                 ) : (
                   <>
                     <span className="flex-1 text-sm font-medium">{item.name}</span>
-                    {/*
-                      On mobile (touch): always visible
-                      On desktop: show on hover via group-hover
-                    */}
                     <Button
                       size="icon"
                       variant="ghost"
@@ -263,7 +259,7 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
         ) : (
           <div className="space-y-2">
             {users.map((u) => (
-              <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg flex-wrap">
+              <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg flex-wrap group">
                 {editUid === u.uid ? (
                   <>
                     <span className="text-sm font-medium flex-1 min-w-[140px]">
@@ -312,7 +308,7 @@ function UserManager({ db, companies }: { db: any; companies: Company[] | null }
                         {companies?.find(c => c.id === u.companyId)?.name ?? u.companyId.slice(0, 8) + '…'}
                       </span>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8 ml-auto sm:opacity-0 sm:group-hover:opacity-100"
+                    <Button size="icon" variant="ghost" className="h-8 w-8 ml-auto sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       onClick={() => startEdit(u)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -366,7 +362,7 @@ export default function SettingsPage() {
       <div className="grid gap-5 md:gap-6 md:grid-cols-2">
         <CollectionManager
           title="Áreas Destino"
-          description="Zonas a las que puede ingresar el personal contratista."
+          description="Departamentos."
           icon={MapPin}
           collectionName="areas"
           db={db}
@@ -374,8 +370,8 @@ export default function SettingsPage() {
           loading={areasLoading}
         />
         <CollectionManager
-          title="Supervisores Internos"
-          description="Encargados internos que supervisan el trabajo contratado."
+          title="Encargados de Departamento"
+          description="Encargados."
           icon={UserCog}
           collectionName="supervisors"
           db={db}
