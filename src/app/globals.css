@@ -16,7 +16,7 @@
     --secondary-foreground: 222 47% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 264 70% 50%;
+    --accent: 216 67% 42%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -26,12 +26,12 @@
     --radius: 0.75rem;
     --sidebar-background: 216 67% 42%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 264 70% 50%;
+    --sidebar-primary: 216 67% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 216 67% 50%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 216 67% 35%;
-    --sidebar-ring: 264 70% 50%;
+    --sidebar-ring: 216 67% 55%;
   }
 }
 
@@ -41,5 +41,33 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+@layer components {
+  .glass-input {
+    @apply w-full h-11 rounded-2xl border text-sm outline-none pr-4 transition-colors duration-150;
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
+  }
+  .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.30);
+  }
+  .glass-input:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  .glass-input:focus {
+    border-color: rgba(255, 255, 255, 0.45);
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+  /* Override browser autofill — keeps glass look */
+  .glass-input:-webkit-autofill,
+  .glass-input:-webkit-autofill:hover,
+  .glass-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 60px hsl(216, 67%, 22%) inset !important;
+    -webkit-text-fill-color: white !important;
+    caret-color: white;
+    transition: background-color 9999s ease-in-out 0s;
   }
 }

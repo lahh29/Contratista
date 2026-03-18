@@ -7,41 +7,20 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { Loader2 } from "lucide-react"
+import { Loader2, Mail, Lock } from "lucide-react"
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { useAuth } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
-import { MorphingText } from "@/components/ui/morphing-text"
 import { PWAInstallBanner } from "@/components/PWAInstallBanner"
 
-// ── Schema ────────────────────────────────────────────────────────────────────
 const schema = z.object({
   email:    z.string().email("Correo inválido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
 })
 
-// ── Textos del morphing — fuera del componente para no re-crear el array
-//    en cada render y que MorphingText no reinicie la animación ───────────────
-const MORPHING_TEXTS = ["VIÑOPLASTIC", "CONTRATISTAS", "INICIA SESIÓN"]
-
-// ── Variantes de animación — fuera del componente para no re-crearlas ────────
-const panelLeft = {
-  initial:    { opacity: 0, x: -24 },
-  animate:    { opacity: 1, x: 0 },
-  transition: { duration: 0.45, ease: "easeOut" },
-}
-const panelRight = {
-  initial:    { opacity: 0, x: 24 },
-  animate:    { opacity: 1, x: 0 },
-  transition: { duration: 0.45, ease: "easeOut", delay: 0.08 },
-}
-
-// ── Componente ────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const [loading, setLoading] = React.useState(false)
   const auth      = useAuth()
@@ -53,7 +32,7 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   })
 
-  async function onSubmit(values) {
+  async function onSubmit(values: z.infer<typeof schema>) {
     if (!auth) return
     setLoading(true)
     try {
@@ -71,199 +50,175 @@ export default function LoginPage() {
   }
 
   return (
-    /*
-      overflow-hidden  → evita scroll horizontal en mobile
-      min-h-dvh        → usa dynamic viewport height en mobile (evita el
-                         salto del browser chrome en iOS/Android)
-      bg-background    → respeta el theme-color del PWA manifest y dark mode
-                         en lugar de hardcodear bg-white
-      safe-area insets → padding para notch / home indicator en iOS y Android
-    */
-    <div className="
-      min-h-screen min-h-dvh flex overflow-hidden
-      bg-background
-      supports-[padding:env(safe-area-inset-bottom)]:pb-[env(safe-area-inset-bottom)]
-    ">
+    <div
+      className="relative min-h-screen min-h-dvh flex items-center justify-center overflow-hidden px-5"
+      style={{
+        background: "linear-gradient(135deg, hsl(214,80%,96%) 0%, hsl(220,70%,98%) 40%, hsl(210,90%,94%) 100%)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingTop:    "env(safe-area-inset-top)",
+      }}
+    >
       <PWAInstallBanner />
 
-      {/* ── Panel izquierdo — logo (solo desktop) ───────────────────────── */}
-      <motion.div
-        className="hidden lg:flex flex-1 items-center justify-center bg-background"
-        {...panelLeft}
-      >
-        <div className="flex flex-col items-center gap-6 px-16">
-          <Image
-            src="/logo-vino-plastic.png"
-            alt="Logotipo ViñoPlastic"
-            width={280}
-            height={280}
-            /*
-              sizes le dice a Next.js exactamente qué tan grande se renderizará
-              la imagen → genera el srcset correcto y evita descargar una imagen
-              de 560px en una pantalla de 280px
-            */
-            sizes="280px"
-            className="object-contain"
-            priority
-          />
-        </div>
-      </motion.div>
-
-      {/* ── Separador punteado animado (solo desktop) ────────────────────── */}
-      {/*
-        aria-hidden: puramente decorativo.
-        Sin esto los lectores de pantalla anuncian un SVG vacío.
-        El stroke usa var(--border) en lugar de #e2e8f0 hardcodeado
-        → respeta dark mode y el tema del sistema.
-      */}
-      <div
-        className="hidden lg:flex flex-col items-center justify-center w-px py-16"
-        aria-hidden="true"
-      >
-        <svg height="100%" width="2" className="overflow-visible">
-          <motion.line
-            x1="1" y1="0" x2="1" y2="100%"
-            stroke="var(--border)"
-            strokeWidth="2"
-            strokeDasharray="6 8"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: 1.2, ease: "easeInOut", delay: 0.2 }}
-          />
-        </svg>
+      {/* Background orbs — give glass something to blur */}
+      <div aria-hidden="true" className="pointer-events-none select-none absolute inset-0 overflow-hidden">
+        {/* Top-right large orb */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            top: "-12%", right: "-8%",
+            width: "55vmax", height: "55vmax",
+            maxWidth: 600, maxHeight: 600,
+            background: "radial-gradient(circle, hsl(216,90%,65%) 0%, hsl(216,80%,72%) 40%, transparent 70%)",
+            opacity: 0.22,
+            filter: "blur(60px)",
+          }}
+        />
+        {/* Bottom-left orb */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            bottom: "-10%", left: "-8%",
+            width: "45vmax", height: "45vmax",
+            maxWidth: 480, maxHeight: 480,
+            background: "radial-gradient(circle, hsl(200,85%,60%) 0%, hsl(210,80%,68%) 40%, transparent 70%)",
+            opacity: 0.18,
+            filter: "blur(70px)",
+          }}
+        />
+        {/* Center accent */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            width: "30vmax", height: "30vmax",
+            maxWidth: 360, maxHeight: 360,
+            background: "radial-gradient(circle, hsl(220,75%,70%) 0%, transparent 65%)",
+            opacity: 0.10,
+            filter: "blur(50px)",
+          }}
+        />
       </div>
 
-      {/* ── Panel derecho — form ─────────────────────────────────────────── */}
+      {/* Card */}
       <motion.div
-        className="
-          flex flex-1 items-center justify-center bg-background
-          px-6 py-12
-          pt-[max(3rem,env(safe-area-inset-top))]
-        "
-        {...panelRight}
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0,  scale: 1    }}
+        transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="relative z-10 w-full max-w-[380px]"
       >
-        <div className="w-full max-w-sm space-y-8">
+        {/* Glass surface */}
+        <div
+          className="rounded-3xl overflow-hidden"
+          style={{
+            backdropFilter:         "blur(32px) saturate(180%)",
+            WebkitBackdropFilter:   "blur(32px) saturate(180%)",
+            background:             "rgba(255, 255, 255, 0.62)",
+            border:                 "1px solid rgba(255, 255, 255, 0.75)",
+            boxShadow:              "0 8px 40px rgba(30, 80, 180, 0.10), 0 1.5px 0 rgba(255,255,255,0.9) inset, 0 -1px 0 rgba(180,200,255,0.15) inset",
+          }}
+        >
+          <div className="px-8 py-10 space-y-7">
 
-          {/* Logo mobile — decorativo, oculto en desktop y de lectores
-              de pantalla (el h1 ya describe la página) */}
-          <div className="flex lg:hidden justify-center" aria-hidden="true">
-            <Image
-              src="/logo-vino-plastic.png"
-              alt=""
-              width={88}
-              height={88}
-              sizes="88px"
-              className="object-contain"
-              priority
-            />
-          </div>
-
-          {/* Heading accesible:
-              - h1 con sr-only anuncia la página a lectores de pantalla
-              - MorphingText es aria-hidden (animación visual, no semántica)
-              - MORPHING_TEXTS definido fuera → no reinicia la animación
-                al re-render del componente padre */}
-          <div className="space-y-1">
-            <h1 className="sr-only">Viñoplastic Qro — Iniciar sesión</h1>
-            <MorphingText
-              texts={MORPHING_TEXTS}
-              className="h-8 md:h-8 text-2xl lg:text-2xl font-bold tracking-tight"
-              aria-hidden="true"
-            />
-          </div>
-
-          {/* noValidate → delega validación a zod/RHF.
-              El validador nativo del browser es inconsistente entre plataformas
-              y no respeta el diseño del sistema. */}
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-              noValidate
-            >
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">
-                      Correo electrónico
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="usuario@vinoplastic.com"
-                        autoComplete="email"
-                        /*
-                          inputMode="email" abre el teclado correcto en iOS y
-                          Android (muestra @ y .com, sin barra espaciadora
-                          prominente) independientemente del atributo type
-                        */
-                        inputMode="email"
-                        className="h-11 rounded-xl"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            {/* Brand */}
+            <div className="flex flex-col items-center gap-3">
+              <Image
+                src="/logo-vino-plastic.png"
+                alt="ViñoPlastic"
+                width={52}
+                height={52}
+                sizes="52px"
+                className="object-contain drop-shadow-sm"
+                priority
               />
+              <div className="text-center">
+                <p className="font-black text-lg tracking-widest uppercase text-foreground leading-none">
+                  ViñoPlastic
+                </p>
+                <p className="text-muted-foreground text-[11px] font-medium tracking-wider mt-1">
+                  Control de acceso · Planta Querétaro
+                </p>
+              </div>
+            </div>
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium text-muted-foreground">
-                      Contraseña
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        autoComplete="current-password"
-                        className="h-11 rounded-xl"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Form */}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3" noValidate>
 
-              <Button
-                type="submit"
-                className="w-full h-11 font-semibold text-base rounded-xl mt-2"
-                disabled={loading}
-                /*
-                  aria-busy comunica el estado de carga a tecnologías de
-                  asistencia sin depender solo del spinner visual
-                */
-                aria-busy={loading}
-              >
-                {loading
-                  ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                  : "Iniciar sesión"
-                }
-              </Button>
-            </form>
-          </Form>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                          <Input
+                            type="email"
+                            placeholder="correo@vinoplastic.com"
+                            autoComplete="email"
+                            inputMode="email"
+                            className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-xs pl-1" />
+                    </FormItem>
+                  )}
+                />
 
-          <p className="text-center text-xs text-muted-foreground/50">
-            <a
-              href="https://vertxk.xyz/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-muted-foreground transition-colors"
-            >
-              Vertx System Add-on
-            </a>
-          </p>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                          <Input
+                            type="password"
+                            placeholder="Contraseña"
+                            autoComplete="current-password"
+                            className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-xs pl-1" />
+                    </FormItem>
+                  )}
+                />
 
+                <Button
+                  type="submit"
+                  className="w-full h-11 rounded-2xl font-bold text-sm mt-1 shadow-md shadow-primary/20"
+                  disabled={loading}
+                  aria-busy={loading}
+                >
+                  {loading
+                    ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                    : "Iniciar sesión"
+                  }
+                </Button>
+
+              </form>
+            </Form>
+
+          </div>
         </div>
-      </motion.div>
 
+        {/* Footer */}
+        <p className="text-center text-[11px] text-foreground/25 mt-5">
+          <a
+            href="https://vertxk.xyz/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground/50 transition-colors"
+          >
+            Vertx System Add-on
+          </a>
+        </p>
+      </motion.div>
     </div>
   )
 }
