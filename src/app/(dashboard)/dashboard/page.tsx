@@ -77,20 +77,7 @@ export default function DashboardPage() {
   }, [companies])
 
   return (
-    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Inicio</h2>
-        </div>
-        <div className="flex gap-2">
-          <NewVisitModal trigger={
-            <Button className="bg-primary text-white gap-2 shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4" /> 
-            </Button>
-          } />
-        </div>
-      </div>
-
+    <div className="space-y-6 animate-in fade-in duration-500">
       <DashboardStats
         activePeople={activePeople}
         activeVisits={activeVisits?.length || 0}
@@ -99,16 +86,25 @@ export default function DashboardPage() {
       />
 
       <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 py-3 px-4 md:px-6">
           <div>
-            <CardTitle>Proveedores</CardTitle>
-            <CardDescription>Personal trabajando actualmente en planta.</CardDescription>
+            <CardTitle className="text-base font-semibold">Proveedores en planta</CardTitle>
+            <CardDescription className="text-xs">Personal trabajando actualmente.</CardDescription>
           </div>
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1 self-start sm:self-auto">
-            {activeVisits?.length || 0} En Planta
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            {(activeVisits?.length ?? 0) > 0 && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-2.5 py-0.5 text-xs font-semibold">
+                {activeVisits!.length} En Planta
+              </Badge>
+            )}
+            <NewVisitModal trigger={
+              <Button size="sm" className="bg-primary text-white h-8 w-8 p-0 shadow-sm shadow-primary/20">
+                <Plus className="w-4 h-4" />
+              </Button>
+            } />
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <VisitsTable
             visits={activeVisits}
             loading={dataLoading || authLoading}

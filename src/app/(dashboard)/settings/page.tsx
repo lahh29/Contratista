@@ -469,14 +469,6 @@ export default function SettingsPage() {
       supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]
     ">
 
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <div>
-          {/* h1 semántico: es el heading principal de esta vista */}
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Configuración</h1>
-        </div>
-      </div>
-
       {/* User manager — ocupa las 2 columnas en desktop */}
       <UserManager db={db} companies={companies} />
 

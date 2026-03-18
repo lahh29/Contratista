@@ -221,31 +221,24 @@ export default function ContractorsPage() {
 
   return (
     <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Proveedores</h2>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-<Button asChild size="sm" className="bg-primary text-white gap-2">
-            <Link href="/contractors/new">
-              <Plus className="w-4 h-4" /> 
-            </Link>
-          </Button>
-        </div>
-      </div>
-
       {/* Search + Table */}
       <Card className="border-none shadow-sm">
         <CardHeader className="pb-3 pt-4 px-4 md:px-6">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar empresa o contacto..."
-              className="pl-10 h-10 bg-muted/30 border-none focus-visible:ring-1"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 md:max-w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar empresa o contacto..."
+                className="pl-10 h-10 bg-muted/30 border-none focus-visible:ring-1"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button asChild size="sm" className="bg-primary text-white shrink-0 h-10 w-10 p-0">
+              <Link href="/contractors/new">
+                <Plus className="w-4 h-4" />
+              </Link>
+            </Button>
           </div>
         </CardHeader>
 
@@ -260,33 +253,20 @@ export default function ContractorsPage() {
             </div>
           ) : (
             <>
-              {/* Mobile: card list */}
+              {/* Mobile: compact rows */}
               <div className="flex flex-col divide-y md:hidden">
                 {filteredCompanies.map((company) => (
-                  <div key={company.id} className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/20 active:bg-muted/30 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0 mt-0.5">
-                      {company.name?.[0]}
-                    </div>
+                  <div key={company.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 active:bg-muted/30 transition-colors">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-sm leading-snug truncate">{company.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm truncate">{company.name}</span>
                         <SuaBadge sua={company.sua} />
                       </div>
-                      {company.contact && (
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{company.contact}</p>
+                      {(company.contact || company.phone) && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                          {[company.contact, company.phone].filter(Boolean).join(' · ')}
+                        </p>
                       )}
-                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                        {company.phone && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Phone className="w-3 h-3" />{company.phone}
-                          </span>
-                        )}
-                        {company.sua?.validUntil && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />{company.sua.validUntil}
-                          </span>
-                        )}
-                      </div>
                     </div>
                     <CompanyActions onAction={(type) => openAction(company, type)} />
                   </div>

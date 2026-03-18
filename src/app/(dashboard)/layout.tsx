@@ -43,11 +43,12 @@ export default function DashboardLayout({
   if (!appUser || appUser.role === 'contractor') return null
 
   const PAGE_TITLES: Record<string, string> = {
-    '/dashboard':   'Inicio',
-    '/contractors': 'Proveedores',
-    '/scanner':     'Escáner de Acceso',
-    '/reports':     'Reportes',
-    '/settings':    'Configuración',
+    '/dashboard':        'Inicio',
+    '/contractors':      'Proveedores',
+    '/contractors/new':  'Nueva Empresa',
+    '/scanner':          'Escáner de Acceso',
+    '/reports':          'Reportes',
+    '/settings':         'Configuración',
   }
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
 

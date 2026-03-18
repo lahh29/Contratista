@@ -267,26 +267,6 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
 
-      {/* Header */}
-      <div className="flex flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Reportes</h2>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <Button variant="outline" className="gap-2 relative" onClick={() => setFilterOpen(true)}>
-            <Filter className="w-4 h-4" />
-            {activeFilters > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
-                {activeFilters}
-              </span>
-            )}
-          </Button>
-          <Button className="bg-primary text-white gap-2" onClick={handleAll} disabled={genAll || loading}>
-            {genAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-          </Button>
-        </div>
-      </div>
-
       {/* Export cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
         <Card className="border-none shadow-sm hover:ring-2 hover:ring-primary/20 transition-all">
@@ -350,12 +330,25 @@ export default function ReportsPage() {
       {/* Visits table */}
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Historial de Accesos</CardTitle>
+              <CardTitle>Historial</CardTitle>
               <CardDescription>
                 {loading ? 'Cargando...' : `${filteredVisits.length} visitas`}
               </CardDescription>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" className="gap-2 relative" onClick={() => setFilterOpen(true)}>
+                <Filter className="w-4 h-4" />
+                {activeFilters > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                    {activeFilters}
+                  </span>
+                )}
+              </Button>
+              <Button size="sm" className="bg-primary text-white" onClick={handleAll} disabled={genAll || loading}>
+                {genAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -368,32 +361,21 @@ export default function ReportsPage() {
             <p className="text-center py-12 text-muted-foreground text-sm">No hay registros con los filtros actuales.</p>
           ) : (
             <>
-              {/* Mobile cards */}
+              {/* Mobile — solo Empresa, Estado y Comprobante */}
               <div className="flex flex-col divide-y md:hidden">
                 {filteredVisits.map(visit => (
-                  <div key={visit.id} className="px-4 py-3.5 space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-semibold text-sm">{visit.companyName || '—'}</span>
-                      <Badge className={`text-xs rounded-md shrink-0 ${
-                        visit.status === 'Active'
-                          ? 'bg-green-100 text-green-700 hover:bg-green-100'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-100'
-                      }`}>
-                        {visit.status === 'Active' ? 'Activo' : 'Completado'}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                      <span>{fmtDate(visit.entryTime)}</span>
-                      {visit.areaName && <span>{visit.areaName}</span>}
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />{visit.personnelCount ?? 1}</span>
-                      {visit.vehiclePlates && <span className="flex items-center gap-1"><Car className="w-3 h-3" />{visit.vehiclePlates}</span>}
-                    </div>
-                    <div className="flex justify-end">
-                      <Button variant="ghost" size="sm" className="h-7 gap-1.5 text-xs" onClick={() => handleRowPDF(visit)} disabled={genRow === visit.id}>
-                        {genRow === visit.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileDown className="w-3 h-3" />}
-                        Comprobante
-                      </Button>
-                    </div>
+                  <div key={visit.id} className="px-4 py-3 flex items-center gap-3">
+                    <span className="font-semibold text-sm flex-1 truncate">{visit.companyName || '—'}</span>
+                    <Badge className={`text-xs rounded-md shrink-0 ${
+                      visit.status === 'Active'
+                        ? 'bg-green-100 text-green-700 hover:bg-green-100'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-100'
+                    }`}>
+                      {visit.status === 'Active' ? 'Activo' : 'Completado'}
+                    </Badge>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleRowPDF(visit)} disabled={genRow === visit.id}>
+                      {genRow === visit.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                    </Button>
                   </div>
                 ))}
               </div>

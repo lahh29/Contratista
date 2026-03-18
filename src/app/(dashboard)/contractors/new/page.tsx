@@ -12,10 +12,7 @@ export default function NewContractorPage() {
             <ChevronLeft className="w-5 h-5" />
           </Link>
         </Button>
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Nueva Empresa</h2>
-          <p className="text-muted-foreground mt-0.5 text-sm md:text-base">Registra la empresa y verifica sus documentos de cumplimiento.</p>
-        </div>
+        <p className="text-muted-foreground text-sm">Registra la empresa y verifica sus documentos de cumplimiento.</p>
       </div>
       
       <ContractorForm />
