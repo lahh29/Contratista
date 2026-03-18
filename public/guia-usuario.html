@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía de Usuario — ViñoPlastic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #2563eb;
+      --blue-lt: #eff6ff;
+      --green:   #16a34a;
+      --green-lt:#f0fdf4;
+      --orange:  #ea580c;
+      --orange-lt:#fff7ed;
+      --red:     #dc2626;
+      --red-lt:  #fef2f2;
+      --gray:    #6b7280;
+      --gray-lt: #f9fafb;
+      --border:  #e5e7eb;
+      --text:    #111827;
+      --text-sm: #6b7280;
+      --radius:  10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: #f3f4f6;
+      line-height: 1.6;
+    }
+
+    /* ── Cover ── */
+    .cover {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%);
+      color: #fff;
+      padding: 64px 40px 56px;
+      text-align: center;
+    }
+    .cover-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .cover-logo-icon {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+    }
+    .cover-logo-name { font-size: 22px; font-weight: 700; letter-spacing: -.5px; }
+    .cover h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 700; letter-spacing: -1px; margin-bottom: 12px; }
+    .cover p  { font-size: 16px; opacity: .8; margin-bottom: 40px; }
+    .cover-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .cover-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px; font-weight: 600;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+    }
+    .toc h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray); margin-bottom: 16px; }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .toc-list a { color: var(--blue); text-decoration: none; font-weight: 500; font-size: 13.5px; }
+    .toc-list a:hover { text-decoration: underline; }
+    .toc-section { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--gray); margin-top: 12px; margin-bottom: 4px; padding-left: 8px; }
+    .toc-list li { padding-left: 12px; }
+
+    /* ── Section ── */
+    .section {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 22px 28px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .section-icon.blue   { background: var(--blue-lt);   }
+    .section-icon.green  { background: var(--green-lt);  }
+    .section-icon.orange { background: var(--orange-lt); }
+    .section-icon.gray   { background: var(--gray-lt);   }
+    .section-title { font-size: 17px; font-weight: 700; }
+    .section-sub   { font-size: 12.5px; color: var(--gray); margin-top: 2px; }
+    .section-body  { padding: 24px 28px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* ── Role pill ── */
+    .role-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      border-radius: 999px; padding: 3px 10px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .role-pill.admin    { background: #dbeafe; color: #1d4ed8; }
+    .role-pill.guard    { background: #dcfce7; color: #15803d; }
+    .role-pill.contractor { background: #fed7aa; color: #c2410c; }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step  { display: flex; gap: 16px; }
+    .step-line { display: flex; flex-direction: column; align-items: center; }
+    .step-num  {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--blue); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .step-connector { width: 2px; background: #e5e7eb; flex: 1; min-height: 20px; margin-top: 6px; }
+    .step:last-child .step-connector { display: none; }
+    .step-content { padding-bottom: 20px; padding-top: 4px; }
+    .step-content h4 { font-weight: 600; font-size: 13.5px; margin-bottom: 4px; }
+    .step-content p  { font-size: 13px; color: #374151; }
+
+    /* ── Info boxes ── */
+    .info-box {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .info-box.blue   { background: var(--blue-lt);   border-left: 3px solid var(--blue);   }
+    .info-box.green  { background: var(--green-lt);  border-left: 3px solid var(--green);  }
+    .info-box.orange { background: var(--orange-lt); border-left: 3px solid var(--orange); }
+    .info-box.red    { background: var(--red-lt);    border-left: 3px solid var(--red);    }
+    .info-box-icon  { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .info-box strong { font-weight: 600; display: block; margin-bottom: 2px; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: var(--gray-lt); text-align: left;
+      padding: 10px 14px; font-weight: 600; font-size: 11.5px;
+      text-transform: uppercase; letter-spacing: .05em; color: var(--gray);
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; }
+    tr:last-child td { border-bottom: none; }
+    td .tick { color: var(--green); font-weight: 700; }
+    td .cross { color: #d1d5db; }
+
+    /* ── Feature list ── */
+    .feat-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .feat-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; }
+    .feat-list li::before { content: "→"; color: var(--blue); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      border-radius: 999px; padding: 2px 9px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge.green  { background: #dcfce7; color: #15803d; }
+    .badge.red    { background: #fee2e2; color: #dc2626; }
+    .badge.orange { background: #ffedd5; color: #ea580c; }
+    .badge.gray   { background: #f3f4f6; color: #6b7280; }
+
+    /* ── H3 divider ── */
+    h3.divider {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--gray); padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card-sm {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 13px;
+    }
+    .card-sm h4 { font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; color: var(--gray);
+      font-size: 12px; padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-logo">
+    <div class="cover-logo-icon">🍇</div>
+    <span class="cover-logo-name">ViñoPlastic</span>
+  </div>
+  <h1>Guía de Usuario</h1>
+  <p>Control de Acceso y Cumplimiento SUA para Contratistas</p>
+  <div class="cover-badges">
+    <span class="cover-badge">🛡️ Administrador</span>
+    <span class="cover-badge">🔒 Guardia</span>
+    <span class="cover-badge">🏢 Contratista</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ CONTAINER -->
+<div class="container">
+
+  <!-- ── Tabla de contenido ── -->
+  <div class="toc" id="top">
+    <h2>Contenido</h2>
+    <ul class="toc-list">
+      <div class="toc-section">General</div>
+      <li><a href="#intro">¿Qué es ViñoPlastic?</a></li>
+      <li><a href="#roles">Roles y accesos</a></li>
+      <li><a href="#login">Inicio de sesión</a></li>
+      <div class="toc-section">Administrador</div>
+      <li><a href="#dashboard">Inicio / Dashboard</a></li>
+      <li><a href="#contractors">Proveedores</a></li>
+      <li><a href="#nueva-visita">Nueva visita (wizard)</a></li>
+      <li><a href="#scanner-admin">Escáner de acceso</a></li>
+      <li><a href="#reports">Reportes</a></li>
+      <li><a href="#settings">Configuración</a></li>
+      <div class="toc-section">Guardia</div>
+      <li><a href="#scanner-guard">Escáner — flujo de guardia</a></li>
+      <div class="toc-section">Contratista</div>
+      <li><a href="#portal">Portal del contratista</a></li>
+      <div class="toc-section">Referencia</div>
+      <li><a href="#sua">¿Qué es el SUA?</a></li>
+      <li><a href="#glossary">Glosario</a></li>
+    </ul>
+  </div>
+
+  <!-- ══════ INTRO ══════ -->
+  <div class="section" id="intro">
+    <div class="section-header">
+      <div class="section-icon blue">📋</div>
+      <div>
+        <div class="section-title">¿Qué es ViñoPlastic?</div>
+        <div class="section-sub">Plataforma de control de acceso y cumplimiento normativo</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>ViñoPlastic es un sistema digital para gestionar el acceso de empresas contratistas a las instalaciones de la planta. Permite registrar entradas y salidas mediante código QR, verificar la vigencia del SUA (Seguro Social), confirmar equipos de seguridad y generar reportes de auditoría.</p>
+      <div class="grid-2">
+        <div class="card-sm">
+          <h4>🎯 Objetivo principal</h4>
+          Garantizar que solo contratistas con SUA vigente y equipo de seguridad ingresen a la planta, con trazabilidad completa de cada visita.
+        </div>
+        <div class="card-sm">
+          <h4>📱 Acceso</h4>
+          Funciona como aplicación web progresiva (PWA). Puede instalarse en el celular desde el navegador para usarse sin conexión parcial y con acceso rápido desde el escritorio.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ ROLES ══════ -->
+  <div class="section" id="roles">
+    <div class="section-header">
+      <div class="section-icon blue">👥</div>
+      <div>
+        <div class="section-title">Roles y accesos</div>
+        <div class="section-sub">Qué puede hacer cada tipo de usuario</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th><span class="role-pill admin">Admin</span></th>
+              <th><span class="role-pill guard">Guardia</span></th>
+              <th><span class="role-pill contractor">Contratista</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Inicio / Dashboard</td><td class="tick">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+            <tr><td>Proveedores</td><td class="tick">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+            <tr><td>Escáner de acceso</td><td class="tick">✓</td><td class="tick">✓</td><td class="cross">—</td></tr>
+            <tr><td>Reportes</td><td class="tick">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+            <tr><td>Configuración</td><td class="tick">✓</td><td class="cross">—</td><td class="cross">—</td></tr>
+            <tr><td>Portal del contratista</td><td class="cross">—</td><td class="cross">—</td><td class="tick">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box blue">
+        <div class="info-box-icon">ℹ️</div>
+        <div>El sistema redirige automáticamente según el rol al iniciar sesión. Los guardias solo pueden acceder al Escáner; los contratistas solo a su Portal. No es necesario memorizar URLs.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ LOGIN ══════ -->
+  <div class="section" id="login">
+    <div class="section-header">
+      <div class="section-icon gray">🔑</div>
+      <div>
+        <div class="section-title">Inicio de sesión</div>
+        <div class="section-sub">Acceso a la plataforma</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="steps">
+        <div class="step">
+          <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Abre la aplicación</h4>
+            <p>Ingresa a la URL de la plataforma en tu navegador o ábrela desde el ícono instalado en tu celular.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Ingresa tus credenciales</h4>
+            <p>Escribe tu correo electrónico y contraseña. Estos datos son asignados por el Administrador del sistema.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Redirección automática</h4>
+            <p>El sistema detecta tu rol y te lleva a la pantalla correcta:<br>
+            <strong>Admin</strong> → Inicio · <strong>Guardia</strong> → Escáner · <strong>Contratista</strong> → Portal</p>
+          </div>
+        </div>
+      </div>
+      <div class="info-box orange">
+        <div class="info-box-icon">⚠️</div>
+        <div><strong>¿Olvidaste tu contraseña?</strong> Contacta al Administrador para restablecer el acceso. No hay opción de auto-restablecimiento en esta versión.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ DASHBOARD ══════ -->
+  <div class="section" id="dashboard">
+    <div class="section-header">
+      <div class="section-icon blue">🏠</div>
+      <div>
+        <div class="section-title">Inicio / Dashboard</div>
+        <div class="section-sub"><span class="role-pill admin">Admin</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Vista general en tiempo real de la operación. Lo primero que ves al iniciar sesión como administrador.</p>
+
+      <h3 class="divider">Métricas en tiempo real</h3>
+      <div class="grid-2">
+        <div class="card-sm"><h4>👷 Personas en planta</h4>Suma del personal de todas las visitas activas en este momento.</div>
+        <div class="card-sm"><h4>🏢 Empresas activas</h4>Número de empresas contratistas con visita en curso.</div>
+        <div class="card-sm"><h4>✅ Cumplimiento SUA</h4>Porcentaje de proveedores con SUA vigente sobre el total registrado.</div>
+        <div class="card-sm"><h4>🚨 Alertas</h4>Conteo de proveedores con SUA vencido que requieren atención.</div>
+      </div>
+
+      <h3 class="divider">Proveedores en planta</h3>
+      <p>Tabla con todas las visitas activas. Por cada visita puedes:</p>
+      <ul class="feat-list">
+        <li><strong>Editar</strong> — ajusta el número de personas confirmadas en planta (ícono de lápiz).</li>
+        <li><strong>Finalizar visita</strong> — registra la salida y cierra la visita (botón rojo "Finalizar").</li>
+        <li><strong>Nueva visita</strong> — el botón <strong>+</strong> en el encabezado de la tarjeta abre el wizard de 3 pasos.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════ NUEVA VISITA ══════ -->
+  <div class="section" id="nueva-visita">
+    <div class="section-header">
+      <div class="section-icon blue">➕</div>
+      <div>
+        <div class="section-title">Nueva visita — Wizard de 3 pasos</div>
+        <div class="section-sub"><span class="role-pill admin">Admin</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Registro manual de visitas desde el Dashboard. En móvil aparece como panel inferior (Drawer); en escritorio como ventana modal.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Empresa</h4>
+            <p>Selecciona la empresa contratista del listado. Al elegirla verás su estado SUA, fecha de vencimiento y contacto. Si el SUA está vencido, el sistema lo indica visualmente pero no bloquea el registro manual.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Lugar &amp; Encargado</h4>
+            <p>Selecciona el <strong>Área Destino</strong>. El <strong>Encargado</strong> se asigna automáticamente según el área configurada — no es editable. Si el área no tiene encargado asignado, deberás configurarlo primero en Ajustes.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Detalles</h4>
+            <p>Ajusta el número de personas con los botones <strong>+</strong> y <strong>−</strong>. Ingresa las placas del vehículo (opcional) y describe la actividad a realizar (obligatorio). Presiona <strong>Activar Acceso</strong> para crear la visita.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box green">
+        <div class="info-box-icon">✅</div>
+        <div>Una vez creada la visita aparece inmediatamente en la tabla de "Proveedores en planta" y en el historial del portal del contratista.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ PROVEEDORES ══════ -->
+  <div class="section" id="contractors">
+    <div class="section-header">
+      <div class="section-icon blue">🏢</div>
+      <div>
+        <div class="section-title">Proveedores</div>
+        <div class="section-sub"><span class="role-pill admin">Admin</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Catálogo maestro de empresas contratistas registradas. Desde aquí gestionas toda la información de cada empresa.</p>
+
+      <h3 class="divider">Indicadores de estado SUA</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span class="badge green">✓ Válido</span>
+        <span class="badge red">⚠ Vencido</span>
+        <span class="badge orange">· Pendiente</span>
+        <span class="badge gray">Sin datos</span>
+      </div>
+      <p style="margin-top:8px;font-size:13px;">El estado <strong>Vencido</strong> se calcula automáticamente comparando la fecha de vencimiento con el día de hoy — aunque el campo interno diga "Válido", si la fecha ya pasó, el sistema lo muestra como vencido.</p>
+
+      <h3 class="divider">Acciones por proveedor</h3>
+      <ul class="feat-list">
+        <li><strong>Ver QR</strong> — muestra el código QR único de acceso de la empresa. Puedes imprimirlo o compartirlo con el proveedor para que lo presente en la entrada.</li>
+        <li><strong>Ver Expediente</strong> — ficha resumen de solo lectura: SUA, contacto, fechas.</li>
+        <li><strong>Historial de visitas</strong> — lista completa de todas las entradas anteriores.</li>
+        <li><strong>Editar datos</strong> — modifica información de contacto, SUA, placas, personal autorizado.</li>
+        <li><strong>Bloquear acceso</strong> — impide el ingreso aunque el SUA esté vigente. Reversible.</li>
+        <li><strong>Eliminar empresa</strong> — borra permanentemente el registro.</li>
+      </ul>
+
+      <h3 class="divider">Nuevo proveedor</h3>
+      <p>Usa el botón <strong>+ Nueva Empresa</strong> en la esquina superior. Completa la ficha con razón social, contacto, datos SUA, número de personas autorizadas y placas del vehículo.</p>
+
+      <div class="info-box blue">
+        <div class="info-box-icon">ℹ️</div>
+        <div>El <strong>QR de acceso</strong> se genera al crear la empresa y no cambia. Recomienda al proveedor guardarlo en su celular para presentarlo en cada visita.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SCANNER ADMIN ══════ -->
+  <div class="section" id="scanner-admin">
+    <div class="section-header">
+      <div class="section-icon green">📷</div>
+      <div>
+        <div class="section-title">Escáner de acceso</div>
+        <div class="section-sub"><span class="role-pill admin">Admin</span> <span class="role-pill guard">Guardia</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Pantalla principal para registrar entradas y salidas de contratistas mediante código QR. Diseñada para uso en tablet o celular en la caseta de vigilancia.</p>
+
+      <h3 class="divider">Flujo de entrada</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Escanear QR</h4>
+            <p>Apunta la cámara al código QR que presenta el contratista (impreso o en su celular). El sistema identifica la empresa automáticamente.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Verificación SUA</h4>
+            <p>Si el SUA está <strong>vencido o pendiente</strong>, aparece una alerta roja y no se puede continuar. Si está <strong>vigente</strong>, continúa normalmente.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Verificar placas</h4>
+            <p>Ingresa las placas del vehículo y marca la casilla <strong>"Placas verificadas"</strong>. Si las placas no coinciden con las registradas, aparece una advertencia naranja.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">4</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Confirmar personal</h4>
+            <p>Ajusta el contador de personas que ingresan. Si excede el número autorizado, se envía una notificación de exceso de capacidad.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">5</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Seleccionar área destino</h4>
+            <p>Elige el área a la que se dirige el personal. El encargado asignado a esa área se muestra automáticamente.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">6</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Verificar equipo de seguridad ⚠️</h4>
+            <p>Marca <strong>ambas</strong> casillas obligatorias:<br>
+            ☑ Zapatos de seguridad<br>
+            ☑ Chaleco de seguridad<br>
+            Sin estas confirmaciones el botón de entrada permanece deshabilitado.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">7</div><div class="step-connector"></div></div>
+          <div class="step-content">
+            <h4>Confirmar entrada</h4>
+            <p>Presiona <strong>"CONFIRMAR ENTRADA"</strong>. La visita queda registrada y aparece en el Dashboard en tiempo real.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="divider">Flujo de salida</h3>
+      <p>Si el contratista ya tiene una visita activa, al escanear su QR el sistema detecta la visita en curso y muestra el botón <strong>"Registrar Salida"</strong>. Al presionarlo, la visita se cierra con la hora exacta de salida.</p>
+
+      <div class="info-box red">
+        <div class="info-box-icon">🚫</div>
+        <div><strong>Acceso bloqueado automáticamente si:</strong>
+          <ul style="margin-top:6px;padding-left:18px;font-size:13px;line-height:2;">
+            <li>SUA vencido o pendiente</li>
+            <li>Empresa marcada como Bloqueada</li>
+            <li>Equipo de seguridad no confirmado</li>
+            <li>Área destino no seleccionada</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ REPORTS ══════ -->
+  <div class="section" id="reports">
+    <div class="section-header">
+      <div class="section-icon blue">📊</div>
+      <div>
+        <div class="section-title">Reportes</div>
+        <div class="section-sub"><span class="role-pill admin">Admin</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Auditoría completa de todas las visitas registradas. Permite filtrar, exportar y descargar comprobantes individuales.</p>
+
+      <h3 class="divider">Filtros disponibles</h3>
+      <ul class="feat-list">
+        <li><strong>Rango de fechas</strong> — filtra visitas entre dos fechas específicas.</li>
+        <li><strong>Estado</strong> — todas, solo activas, o solo completadas.</li>
+        <li><strong>Empresa</strong> — busca por nombre de empresa contratista.</li>
+      </ul>
+
+      <h3 class="divider">Exportar datos</h3>
+      <div class="grid-2">
+        <div class="card-sm">
+          <h4>📥 Excel (.xlsx)</h4>
+          Exporta todas las visitas filtradas con columnas completas: fecha, empresa, área, supervisor, personal, placas, equipo de seguridad, estado y hora de salida.
+        </div>
+        <div class="card-sm">
+          <h4>📄 PDF Auditoría</h4>
+          Reporte formal en formato de tabla con encabezado, fecha de generación y todos los registros. Ideal para presentar a auditores o dirección.
+        </div>
+        <div class="card-sm">
+          <h4>📈 Resumen mensual</h4>
+          Tendencia de los últimos 6 meses: visitas, personas, top empresas y top áreas más utilizadas.
+        </div>
+        <div class="card-sm">
+          <h4>🧾 Comprobante por visita</h4>
+          Cada visita tiene un botón de descarga para generar un PDF individual como comprobante de la visita.
+        </div>
+      </div>
+
+      <div class="info-box blue">
+        <div class="info-box-icon">ℹ️</div>
+        <div>La columna <strong>Equipo de Seguridad</strong> en los reportes muestra íconos de calzado y chaleco en verde (confirmado) o rojo (no confirmado), para facilitar la auditoría visual.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SETTINGS ══════ -->
+  <div class="section" id="settings">
+    <div class="section-header">
+      <div class="section-icon gray">⚙️</div>
+      <div>
+        <div class="section-title">Configuración</div>
+        <div class="section-sub"><span class="role-pill admin">Admin</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Panel de administración del sistema dividido en tres secciones. En móvil se navega por pestañas; en escritorio todo aparece en pantalla.</p>
+
+      <h3 class="divider">Usuarios del sistema</h3>
+      <p>Lista todos los usuarios registrados mostrando nombre y rol. Para editar un usuario:</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+          <div class="step-content"><h4>Toca el ícono de lápiz</h4><p>Se abre un panel en la parte inferior con las opciones del usuario.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+          <div class="step-content"><h4>Cambia el rol</h4><p>Selecciona entre Admin, Contratista o Guardia.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+          <div class="step-content"><h4>Asigna empresa (si es Contratista)</h4><p>Vincula al usuario con la empresa contratista correspondiente para que pueda acceder a su portal.</p></div>
+        </div>
+      </div>
+
+      <h3 class="divider">Áreas Destino</h3>
+      <p>Zonas de la planta a las que pueden dirigirse los contratistas. Cada área puede tener:</p>
+      <ul class="feat-list">
+        <li><strong>Nombre</strong> del área (ej. Mantenimiento, Calidad, Almacén).</li>
+        <li><strong>Encargado asignado</strong> — se auto-selecciona al registrar una visita en esa área.</li>
+        <li><strong>Zona restringida</strong> — activa una notificación especial cuando se registra acceso a esa área.</li>
+      </ul>
+      <div class="info-box orange">
+        <div class="info-box-icon">⚠️</div>
+        <div>Asignar el encargado a cada área es <strong>importante</strong>: sin él, el campo de encargado queda vacío en el wizard de nueva visita y en el escáner.</div>
+      </div>
+
+      <h3 class="divider">Encargados de Departamento</h3>
+      <p>Lista de personas responsables de recibir a los contratistas. Al agregar o editar un encargado, su nombre queda disponible para asignarse a las áreas. Los nombres se muestran en formato abreviado (apellido paterno + primer nombre) para mayor legibilidad.</p>
+    </div>
+  </div>
+
+  <!-- ══════ SCANNER GUARD ══════ -->
+  <div class="section" id="scanner-guard">
+    <div class="section-header">
+      <div class="section-icon green">🔒</div>
+      <div>
+        <div class="section-title">Escáner — Flujo del Guardia</div>
+        <div class="section-sub"><span class="role-pill guard">Guardia</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Los guardias de seguridad solo tienen acceso al Escáner. Al iniciar sesión son dirigidos directamente a esa pantalla y no pueden navegar a otras secciones.</p>
+
+      <div class="info-box green">
+        <div class="info-box-icon">✅</div>
+        <div><strong>Responsabilidades del guardia:</strong>
+          <ul style="margin-top:6px;padding-left:18px;font-size:13px;line-height:2;">
+            <li>Solicitar el QR al contratista y escanearlo</li>
+            <li>Verificar físicamente las placas del vehículo</li>
+            <li>Confirmar que el personal porta zapatos y chaleco de seguridad</li>
+            <li>Registrar la salida al finalizar la jornada</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-box red">
+        <div class="info-box-icon">🚫</div>
+        <div><strong>El guardia no debe permitir el acceso si:</strong> el sistema muestra alerta de SUA vencido (fondo rojo), aunque el contratista insista. La decisión de autorización la toma el sistema, no el guardia.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ PORTAL ══════ -->
+  <div class="section" id="portal">
+    <div class="section-header">
+      <div class="section-icon orange">🏢</div>
+      <div>
+        <div class="section-title">Portal del Contratista</div>
+        <div class="section-sub"><span class="role-pill contractor">Contratista</span></div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>Pantalla exclusiva para usuarios contratistas. Muestra el estado de cumplimiento de su empresa y el historial de visitas.</p>
+
+      <h3 class="divider">Estado SUA</h3>
+      <div class="grid-2">
+        <div class="card-sm" style="border-color:#16a34a;">
+          <h4 style="color:#16a34a;">🟢 Vigente</h4>
+          Tu SUA está al corriente. Se muestran los días restantes hasta el vencimiento.
+        </div>
+        <div class="card-sm" style="border-color:#dc2626;">
+          <h4 style="color:#dc2626;">🔴 Vencido</h4>
+          El SUA ha expirado. No podrás ingresar a planta hasta renovarlo y actualizarlo en el sistema.
+        </div>
+      </div>
+
+      <h3 class="divider">Información disponible</h3>
+      <ul class="feat-list">
+        <li><strong>Estado de visita en curso</strong> — banner verde animado si el equipo está actualmente en planta, mostrando área y hora de entrada.</li>
+        <li><strong>Datos de la empresa</strong> — razón social, contacto y número de póliza SUA.</li>
+        <li><strong>Historial de visitas</strong> — todas las entradas anteriores con fecha, área, duración y estado.</li>
+        <li><strong>Comprobante PDF</strong> — descarga el comprobante de cualquier visita pasada.</li>
+        <li><strong>Notificaciones</strong> — activa alertas en el navegador para recibir avisos sobre vencimiento del SUA.</li>
+      </ul>
+
+      <div class="info-box blue">
+        <div class="info-box-icon">ℹ️</div>
+        <div>Para actualizar datos de contacto o la información SUA, usa el botón <strong>editar (lápiz)</strong> en la sección de información de empresa. Los datos deben ser verídicos ya que son verificados por el Administrador.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SUA ══════ -->
+  <div class="section" id="sua">
+    <div class="section-header">
+      <div class="section-icon orange">📜</div>
+      <div>
+        <div class="section-title">¿Qué es el SUA?</div>
+        <div class="section-sub">Seguro Social — Obligatorio para contratistas</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <p>El <strong>SUA (Sistema Único de Autodeterminación)</strong> es el comprobante que emite el IMSS para acreditar que una empresa tiene sus cuotas de seguridad social al corriente. Es un requisito legal obligatorio para que las empresas contratistas puedan operar en las instalaciones.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Situación</th><th>Qué ocurre en ViñoPlastic</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="badge green">SUA Vigente</span></td><td>El contratista puede ingresar normalmente al escanear el QR.</td></tr>
+            <tr><td><span class="badge red">SUA Vencido</span></td><td>El escáner bloquea el acceso con alerta roja. No se puede registrar entrada.</td></tr>
+            <tr><td><span class="badge orange">SUA Pendiente</span></td><td>No se ha capturado información del SUA. El acceso también queda bloqueado.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-box orange">
+        <div class="info-box-icon">📋</div>
+        <div><strong>¿Cómo actualizar el SUA?</strong> El Administrador debe ir a <em>Proveedores → Editar → Datos SUA</em> y capturar el número de póliza y la nueva fecha de vencimiento. El estado se actualiza de inmediato.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ GLOSARIO ══════ -->
+  <div class="section" id="glossary">
+    <div class="section-header">
+      <div class="section-icon gray">📖</div>
+      <div>
+        <div class="section-title">Glosario</div>
+        <div class="section-sub">Términos utilizados en la plataforma</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Término</th><th>Definición</th></tr></thead>
+          <tbody>
+            <tr><td><strong>SUA</strong></td><td>Sistema Único de Autodeterminación. Comprobante de pago del IMSS.</td></tr>
+            <tr><td><strong>Visita</strong></td><td>Registro de acceso activo o completado de una empresa contratista.</td></tr>
+            <tr><td><strong>Área Destino</strong></td><td>Zona de la planta a la que se dirige el personal contratista.</td></tr>
+            <tr><td><strong>Encargado</strong></td><td>Persona interna responsable de recibir al contratista en el área.</td></tr>
+            <tr><td><strong>QR de acceso</strong></td><td>Código único por empresa para registrar entradas/salidas en el escáner.</td></tr>
+            <tr><td><strong>Zona restringida</strong></td><td>Área que genera una alerta especial al ser seleccionada como destino.</td></tr>
+            <tr><td><strong>PWA</strong></td><td>Aplicación Web Progresiva — se instala en el celular desde el navegador.</td></tr>
+            <tr><td><strong>Comprobante</strong></td><td>PDF descargable que certifica los detalles de una visita específica.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  ViñoPlastic · Control de Contratistas · Guía de Usuario v1.0 · 2026
+</footer>
+
+</body>
+</html>

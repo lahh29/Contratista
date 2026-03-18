@@ -4,7 +4,7 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, Users, Truck } from "lucide-react"
+import { Loader2, Users, Truck, Building2, Phone, Mail, ShieldCheck, MapPin } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -31,14 +31,14 @@ import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
 
 const schema = z.object({
-  name: z.string().min(2, "Mínimo 2 caracteres"),
-  contact: z.string().min(2, "Mínimo 2 caracteres"),
-  phone: z.string().optional(),
-  email: z.string().email("Email inválido").optional().or(z.literal('')),
-  suaNumber: z.string().optional(),
+  name:          z.string().min(2, "Mínimo 2 caracteres"),
+  contact:       z.string().min(2, "Mínimo 2 caracteres"),
+  phone:         z.string().optional(),
+  email:         z.string().email("Email inválido").optional().or(z.literal("")),
+  suaNumber:     z.string().optional(),
   suaValidUntil: z.string().optional(),
-  personnelCount: z.coerce.number().min(1, "Mínimo 1 persona").optional(),
-  vehicle: z.string().optional(),
+  personnelCount: z.coerce.number().min(1).optional(),
+  vehicle:       z.string().optional(),
 })
 
 interface EditCompanySheetProps {
@@ -46,6 +46,26 @@ interface EditCompanySheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpdated?: (updated: any) => void
+}
+
+function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+      </div>
+      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <FormLabel className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {children}
+    </FormLabel>
+  )
 }
 
 export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: EditCompanySheetProps) {
@@ -56,29 +76,24 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "",
-      contact: "",
-      phone: "",
-      email: "",
-      suaNumber: "",
-      suaValidUntil: "",
-      personnelCount: 1,
-      vehicle: "",
+      name: "", contact: "", phone: "", email: "",
+      suaNumber: "", suaValidUntil: "", personnelCount: 1, vehicle: "",
     },
   })
 
-  // Pre-fill when company changes
+  const personnelCount = form.watch("personnelCount") ?? 1
+
   React.useEffect(() => {
     if (company) {
       form.reset({
-        name: company.name || "",
-        contact: company.contact || "",
-        phone: company.phone || "",
-        email: company.email || "",
-        suaNumber: company.sua?.number || "",
+        name:          company.name          || "",
+        contact:       company.contact       || "",
+        phone:         company.phone         || "",
+        email:         company.email         || "",
+        suaNumber:     company.sua?.number   || "",
         suaValidUntil: company.sua?.validUntil || "",
         personnelCount: company.personnelCount || 1,
-        vehicle: company.vehicle || "",
+        vehicle:       company.vehicle       || "",
       })
     }
   }, [company, form])
@@ -88,13 +103,13 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
     setSaving(true)
 
     const updateData = {
-      name: values.name,
+      name:    values.name,
       contact: values.contact,
-      phone: values.phone || "",
-      email: values.email ? values.email.toLowerCase().trim() : null,
+      phone:   values.phone || "",
+      email:   values.email ? values.email.toLowerCase().trim() : null,
       sua: {
         ...company.sua,
-        number: values.suaNumber || company.sua?.number || "",
+        number:     values.suaNumber     || company.sua?.number     || "",
         validUntil: values.suaValidUntil || company.sua?.validUntil || "",
       },
       ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
@@ -106,22 +121,20 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       await updateDoc(companyRef, updateData)
       toast({ title: "Empresa actualizada", description: `${values.name} fue actualizada correctamente.` })
 
-      const oldDate = company.sua?.validUntil
-      const newDate = values.suaValidUntil
+      const oldDate  = company.sua?.validUntil
+      const newDate  = values.suaValidUntil
       const isRenewed = newDate && newDate !== oldDate && newDate > new Date().toISOString().slice(0, 10)
-      if (isRenewed) {
-        sendNotification({ type: 'sua_renewed', companyName: values.name })
-      }
+      if (isRenewed) sendNotification({ type: "sua_renewed", companyName: values.name })
 
       onUpdated?.({ ...company, ...updateData })
       onOpenChange(false)
     } catch {
       const permissionError = new FirestorePermissionError({
         path: companyRef.path,
-        operation: 'update',
+        operation: "update",
         requestResourceData: updateData,
       })
-      errorEmitter.emit('permission-error', permissionError)
+      errorEmitter.emit("permission-error", permissionError)
     } finally {
       setSaving(false)
     }
@@ -132,159 +145,152 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        className="w-full sm:max-w-md overflow-y-auto flex flex-col"
+        className="w-full sm:max-w-md flex flex-col overflow-y-auto"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <SheetHeader className="mb-6">
+        <SheetHeader className="mb-5">
           <SheetTitle>Editar Empresa</SheetTitle>
           <SheetDescription>Modifica los datos de {company.name}</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 gap-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 gap-5">
+
+            {/* ── Empresa ── */}
+            <div className="space-y-4">
+              <SectionLabel icon={Building2} label="Empresa" />
+
+              <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Razón Social</FormLabel>
+                  <FieldLabel>Razón Social</FieldLabel>
                   <FormControl>
-                    <Input placeholder="Ej. Constructora ABC" {...field} />
+                    <Input className="h-11" placeholder="Ej. Constructora ABC" autoCapitalize="words" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contact"
-              render={({ field }) => (
+              )} />
+
+              <FormField control={form.control} name="contact" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contacto Principal</FormLabel>
+                  <FieldLabel>Contacto Principal</FieldLabel>
                   <FormControl>
-                    <Input placeholder="Nombre del responsable" {...field} />
+                    <Input className="h-11" placeholder="Nombre del responsable" autoCapitalize="words" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
+              )} />
+            </div>
+
+            {/* ── Contacto ── */}
+            <div className="space-y-4">
+              <SectionLabel icon={Phone} label="Contacto" />
+
+              <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
+                  <FieldLabel>Teléfono</FieldLabel>
                   <FormControl>
-                    <Input placeholder="+52 442..." {...field} />
+                    <Input className="h-11" placeholder="+52 442..." type="tel" inputMode="tel" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
+              )} />
+
+              <FormField control={form.control} name="email" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Email del Contratista{" "}
-                  </FormLabel>
+                  <FieldLabel>Correo electrónico</FieldLabel>
                   <FormControl>
-                    <Input type="email" placeholder="proveedor@empresa.com" {...field} />
+                    <Input className="h-11" type="email" inputMode="email" placeholder="proveedor@empresa.com" {...field} />
                   </FormControl>
                   <p className="text-xs text-muted-foreground">
-                    Usado para vincular automáticamente su cuenta al portal.
+                    Vincula automáticamente la cuenta del contratista al portal.
                   </p>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-
-            <div className="border-t pt-4 mt-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Datos SUA
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="suaNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>N° de Póliza / SUA</FormLabel>
-                      <FormControl>
-                        <Input placeholder="P-123456" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="suaValidUntil"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vencimiento SUA</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              )} />
             </div>
 
-            <div className="border-t pt-4 mt-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Acceso a Planta
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="personnelCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Users className="w-4 h-4" /> Personas Autorizadas
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="number" min={1} placeholder="Ej. 5" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="vehicle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <Truck className="w-4 h-4" /> Placa de Vehículo
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. ABC-1234" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            {/* ── SUA ── */}
+            <div className="space-y-4">
+              <SectionLabel icon={ShieldCheck} label="Datos SUA" />
+
+              <FormField control={form.control} name="suaNumber" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>N° de Póliza / SUA</FieldLabel>
+                  <FormControl>
+                    <Input className="h-11" placeholder="P-123456" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="suaValidUntil" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>Fecha de Vencimiento</FieldLabel>
+                  <FormControl>
+                    <Input className="h-11" type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
-            <SheetFooter className="mt-auto pt-4">
+            {/* ── Acceso ── */}
+            <div className="space-y-4">
+              <SectionLabel icon={MapPin} label="Acceso a Planta" />
+
+              {/* Personnel counter */}
+              <FormField control={form.control} name="personnelCount" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>Personas Autorizadas</FieldLabel>
+                  <FormControl>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button" variant="outline" size="icon"
+                        className="h-11 w-11 rounded-xl text-lg shrink-0"
+                        onClick={() => field.onChange(Math.max(1, (personnelCount as number) - 1))}
+                      >−</Button>
+                      <div className="flex-1 h-11 rounded-xl border bg-muted/30 flex items-center justify-center">
+                        <span className="text-xl font-black">{personnelCount}</span>
+                      </div>
+                      <Button
+                        type="button" variant="outline" size="icon"
+                        className="h-11 w-11 rounded-xl text-lg shrink-0"
+                        onClick={() => field.onChange((personnelCount as number) + 1)}
+                      >+</Button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="vehicle" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>Placa de Vehículo</FieldLabel>
+                  <FormControl>
+                    <Input
+                      className="h-11 uppercase"
+                      placeholder="Ej. ABC-1234"
+                      autoCapitalize="characters"
+                      maxLength={10}
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
+            <SheetFooter className="mt-auto pt-4 flex-row gap-2 pb-safe">
               <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => onOpenChange(false)}
-                disabled={saving}
+                type="button" variant="outline" className="flex-1 h-11"
+                onClick={() => onOpenChange(false)} disabled={saving}
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="flex-1" disabled={saving}>
+              <Button type="submit" className="flex-1 h-11" disabled={saving}>
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Guardar cambios
+                Guardar
               </Button>
             </SheetFooter>
           </form>
