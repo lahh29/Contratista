@@ -52,6 +52,12 @@ export default function DashboardLayout({
   }
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
 
+  React.useEffect(() => {
+    document.title = PAGE_TITLES[pathname]
+      ? `${PAGE_TITLES[pathname]} — ViñoPlastic`
+      : 'ViñoPlastic'
+  }, [pathname])
+
   return (
     <>
     <NotificationBanner />
