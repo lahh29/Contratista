@@ -268,12 +268,9 @@ export default function ReportsPage() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-row items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Reportes y Auditoría</h2>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Historial de accesos y cumplimiento de contratistas.
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Reportes</h2>
         </div>
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" className="gap-2 relative" onClick={() => setFilterOpen(true)}>

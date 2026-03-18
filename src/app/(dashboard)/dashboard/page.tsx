@@ -78,10 +78,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-row items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Inicio</h2>
-          <p className="text-muted-foreground mt-1">Monitoreo en tiempo real de accesos.</p>
         </div>
         <div className="flex gap-2">
           <NewVisitModal trigger={

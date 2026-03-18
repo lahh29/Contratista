@@ -222,12 +222,9 @@ export default function ContractorsPage() {
   return (
     <div className="space-y-5 md:space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-row items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Proveedores</h2>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Gestión de visitas en Planta Querétaro.
-          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
 <Button asChild size="sm" className="bg-primary text-white gap-2">

@@ -471,18 +471,9 @@ export default function SettingsPage() {
 
       {/* Header */}
       <div className="flex items-start gap-3">
-        <div
-          className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5"
-          aria-hidden="true"
-        >
-          <Settings2 className="w-5 h-5 text-primary" />
-        </div>
         <div>
           {/* h1 semántico: es el heading principal de esta vista */}
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Configuración</h1>
-          <p className="text-muted-foreground mt-0.5 text-sm md:text-base">
-            Administra las áreas destino y supervisores internos del sistema.
-          </p>
         </div>
       </div>
 
