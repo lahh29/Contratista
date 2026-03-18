@@ -27,10 +27,23 @@ export default function DashboardLayout({
     } else if (appUser.role === 'contractor') {
       router.push("/portal")
     } else if (appUser.role === 'guard' && pathname !== '/scanner') {
-      // Guards only have access to /scanner
       router.replace("/scanner")
     }
   }, [appUser, loading, router, pathname])
+
+  useEffect(() => {
+    const PAGE_TITLES: Record<string, string> = {
+      '/dashboard':        'Inicio',
+      '/contractors':      'Proveedores',
+      '/contractors/new':  'Nueva Empresa',
+      '/scanner':          'Escáner de Acceso',
+      '/reports':          'Reportes',
+      '/settings':         'Configuración',
+    }
+    document.title = PAGE_TITLES[pathname]
+      ? `${PAGE_TITLES[pathname]} — ViñoPlastic`
+      : 'ViñoPlastic'
+  }, [pathname])
 
   if (loading) {
     return (
@@ -51,12 +64,6 @@ export default function DashboardLayout({
     '/settings':         'Configuración',
   }
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
-
-  React.useEffect(() => {
-    document.title = PAGE_TITLES[pathname]
-      ? `${PAGE_TITLES[pathname]} — ViñoPlastic`
-      : 'ViñoPlastic'
-  }, [pathname])
 
   return (
     <>

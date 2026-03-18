@@ -34,8 +34,12 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 export function CompanyDetailSheet({ company, open, onOpenChange }: CompanyDetailSheetProps) {
   if (!company) return null
 
-  const isValid = company.sua?.status === 'Valid'
-  const isExpired = company.sua?.status === 'Expired'
+  const today = new Date().toISOString().split('T')[0]
+  const effectiveStatus = company.sua?.validUntil
+    ? (company.sua.validUntil < today ? 'Expired' : 'Valid')
+    : (company.sua?.status ?? 'Pending')
+  const isValid   = effectiveStatus === 'Valid'
+  const isExpired = effectiveStatus === 'Expired'
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
