@@ -11,6 +11,8 @@ import {
   Loader2,
   Users,
   Truck,
+  MapPin,
+  UserCog,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,11 +25,12 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { extractDocumentData } from "@/ai/flows/automated-document-data-extraction"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
-import { collection, addDoc, updateDoc, serverTimestamp } from "firebase/firestore"
-import { useFirestore } from "@/firebase"
+import { collection, addDoc, updateDoc, serverTimestamp, query, limit } from "firebase/firestore"
+import { useFirestore, useCollection } from "@/firebase"
 import { useRouter } from "next/navigation"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
@@ -42,6 +45,8 @@ const contractorSchema = z.object({
   phone: z.string().optional(),
   personnelCount: z.coerce.number().min(1, "Mínimo 1 persona").optional(),
   vehicle: z.string().optional(),
+  defaultAreaId: z.string().optional(),
+  defaultSupervisorId: z.string().optional(),
 })
 
 export function ContractorForm() {
@@ -50,7 +55,12 @@ export function ContractorForm() {
   const { toast } = useToast()
   const db = useFirestore()
   const router = useRouter()
-  
+
+  const areasQuery       = React.useMemo(() => db ? query(collection(db, "areas"),       limit(100)) : null, [db])
+  const supervisorsQuery = React.useMemo(() => db ? query(collection(db, "supervisors"), limit(100)) : null, [db])
+  const { data: areas }       = useCollection(areasQuery)
+  const { data: supervisors } = useCollection(supervisorsQuery)
+
   const form = useForm<z.infer<typeof contractorSchema>>({
     resolver: zodResolver(contractorSchema),
     defaultValues: {
@@ -62,8 +72,19 @@ export function ContractorForm() {
       phone: "",
       personnelCount: 1,
       vehicle: "",
+      defaultAreaId: "",
+      defaultSupervisorId: "",
     },
   })
+
+  // Auto-fill supervisor when default area changes
+  const watchedAreaId = form.watch("defaultAreaId")
+  React.useEffect(() => {
+    const area = areas?.find((a: any) => a.id === watchedAreaId)
+    if (area?.supervisorId) {
+      form.setValue("defaultSupervisorId", area.supervisorId, { shouldValidate: true })
+    }
+  }, [watchedAreaId, areas, form])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -127,6 +148,8 @@ export function ContractorForm() {
       },
       ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
       ...(values.vehicle ? { vehicle: values.vehicle.toUpperCase().trim() } : {}),
+      ...(values.defaultAreaId ? { defaultAreaId: values.defaultAreaId } : {}),
+      ...(values.defaultSupervisorId ? { defaultSupervisorId: values.defaultSupervisorId } : {}),
       createdAt: serverTimestamp(),
     }
 
@@ -333,6 +356,60 @@ export function ContractorForm() {
                   )}
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="defaultAreaId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" /> Área Destino
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Área habitual…" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {areas?.map((a: any) => (
+                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="defaultSupervisorId"
+                  render={({ field }) => {
+                    const sup = supervisors?.find((s: any) => s.id === field.value)
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <UserCog className="w-4 h-4" /> Encargado
+                        </FormLabel>
+                        <div className="h-10 rounded-md border bg-muted/40 px-3 flex items-center gap-2">
+                          {sup ? (
+                            <>
+                              <span className="text-sm font-medium flex-1">{sup.name}</span>
+                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">Auto</span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/60">
+                              {watchedAreaId ? "Sin encargado en esta área" : "Selecciona un área primero"}
+                            </span>
+                          )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )
+                  }}
+                />
+              </div>
+
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-6 h-auto">
                 Completar Alta
               </Button>

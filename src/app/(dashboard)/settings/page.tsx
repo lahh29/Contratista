@@ -428,6 +428,221 @@ function UserManager({ db, companies }: UserManagerProps) {
   )
 }
 
+// ── AreaManager ───────────────────────────────────────────────────────────────
+//  Versión especializada de CollectionManager para áreas, que permite ligar
+//  un encargado por defecto a cada área (guardado como supervisorId en Firestore).
+
+interface AreaManagerProps {
+  db: Firestore | null
+  areas: DocumentData[] | null | undefined
+  supervisors: DocumentData[] | null | undefined
+  loading: boolean
+}
+
+function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
+  const [newName,         setNewName]         = React.useState("")
+  const [newSupervisorId, setNewSupervisorId] = React.useState("")
+  const [editId,          setEditId]          = React.useState<string | null>(null)
+  const [editName,        setEditName]        = React.useState("")
+  const [editSupervisorId,setEditSupervisorId]= React.useState("")
+  const { toast } = useToast()
+
+  const handleAdd = async () => {
+    if (!db || !newName.trim()) return
+    try {
+      await addDoc(collection(db, "areas"), {
+        name:         newName.trim(),
+        supervisorId: newSupervisorId || null,
+        restricted:   false,
+      })
+      setNewName("")
+      setNewSupervisorId("")
+      toast({ title: "Área agregada" })
+    } catch {
+      toast({ variant: "destructive", title: "Error al agregar" })
+    }
+  }
+
+  const handleToggleRestricted = async (id: string, current: boolean) => {
+    if (!db) return
+    try {
+      await updateDoc(doc(db, "areas", id), { restricted: !current })
+    } catch {
+      toast({ variant: "destructive", title: "Error al actualizar" })
+    }
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!db) return
+    if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
+    try {
+      await deleteDoc(doc(db, "areas", id))
+      toast({ title: "Eliminado correctamente" })
+    } catch {
+      toast({ variant: "destructive", title: "Error al eliminar" })
+    }
+  }
+
+  const handleUpdate = async (id: string) => {
+    if (!db || !editName.trim()) return
+    try {
+      await updateDoc(doc(db, "areas", id), {
+        name:         editName.trim(),
+        supervisorId: editSupervisorId || null,
+      })
+      setEditId(null)
+      toast({ title: "Actualizado correctamente" })
+    } catch {
+      toast({ variant: "destructive", title: "Error al actualizar" })
+    }
+  }
+
+  return (
+    <Card className="border-none shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <MapPin className="w-4 h-4 text-primary" aria-hidden="true" />
+          </div>
+          Áreas Destino
+        </CardTitle>
+        <CardDescription>
+          Agrega las zonas de la planta y asigna el encargado de cada una. Al registrar una visita el encargado se auto-seleccionará.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Add row */}
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Nombre del área…"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              className="h-10"
+              autoCapitalize="words"
+            />
+            <Button
+              onClick={handleAdd}
+              disabled={!newName.trim()}
+              size="sm"
+              className="gap-1.5 shrink-0 h-10 px-3 md:px-4"
+              aria-label="Agregar área"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Agregar</span>
+            </Button>
+          </div>
+          <Select value={newSupervisorId} onValueChange={setNewSupervisorId}>
+            <SelectTrigger className="h-9 text-sm" aria-label="Encargado del área">
+              <SelectValue placeholder="Encargado del área (opcional)…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sin encargado asignado</SelectItem>
+              {supervisors?.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* List */}
+        <div className="space-y-2 min-h-[80px]">
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : areas?.length ? (
+            areas.map((item) => {
+              const linked = supervisors?.find((s) => s.id === item.supervisorId)
+              return (
+                <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group">
+                  {editId === item.id ? (
+                    <>
+                      <div className="flex-1 space-y-1.5 min-w-0">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="h-8"
+                          autoFocus
+                          autoCapitalize="words"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter")  handleUpdate(item.id)
+                            if (e.key === "Escape") setEditId(null)
+                          }}
+                        />
+                        <Select value={editSupervisorId} onValueChange={setEditSupervisorId}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Encargado…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">Sin encargado</SelectItem>
+                            {supervisors?.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => handleUpdate(item.id)} aria-label="Guardar">
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0"
+                        onClick={() => setEditId(null)} aria-label="Cancelar">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.name}</p>
+                        {linked ? (
+                          <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                            <UserCog className="w-3 h-3 shrink-0" aria-hidden="true" />
+                            {linked.name}
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground/50 mt-0.5">Sin encargado</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleToggleRestricted(item.id, !!item.restricted)}
+                        title={item.restricted ? "Zona restringida (click para quitar)" : "Marcar como restringida"}
+                        aria-label={item.restricted ? "Quitar restricción" : "Marcar como restringida"}
+                        className="shrink-0"
+                      >
+                        <ShieldAlert className={`w-4 h-4 transition-colors ${item.restricted ? "text-destructive" : "text-muted-foreground/30 hover:text-muted-foreground"}`} />
+                      </button>
+                      <Button size="icon" variant="ghost"
+                        className="h-8 w-8 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                        onClick={() => { setEditId(item.id); setEditName(item.name); setEditSupervisorId(item.supervisorId ?? "__none__") }}
+                        aria-label={`Editar ${item.name}`}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost"
+                        className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                        onClick={() => handleDelete(item.id, item.name)}
+                        aria-label={`Eliminar ${item.name}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )
+            })
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+              <MapPin className="w-8 h-8 opacity-20" />
+              <p className="text-sm">Sin áreas. Agrega la primera arriba.</p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 // ── SettingsPage ──────────────────────────────────────────────────────────────
 //
 //  Cambios respecto al original:
@@ -474,19 +689,15 @@ export default function SettingsPage() {
 
       {/* Managers grid */}
       <div className="grid gap-5 md:gap-6 md:grid-cols-2">
-        <CollectionManager
-          title="Áreas Destino"
-          description="Departamentos o zonas de la planta. Marca con el escudo las areas restringidas."
-          icon={MapPin}
-          collectionName="areas"
+        <AreaManager
           db={db}
-          items={areas}
+          areas={areas}
+          supervisors={supervisors}
           loading={areasLoading}
-          showRestrictedToggle
         />
         <CollectionManager
           title="Encargados de Departamento"
-          description="Encargados."
+          description="Personas responsables de recibir a los contratistas en cada área."
           icon={UserCog}
           collectionName="supervisors"
           db={db}

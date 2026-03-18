@@ -49,6 +49,15 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, onClose, is
     defaultValues: { companyId: "", areaId: "", supervisorId: "", personnelCount: 1, activity: "", vehicle: "" },
   })
 
+  // Auto-fill supervisor when area changes
+  const watchedAreaId = form.watch("areaId")
+  React.useEffect(() => {
+    const area = areas?.find((a: any) => a.id === watchedAreaId)
+    if (area?.supervisorId) {
+      form.setValue("supervisorId", area.supervisorId, { shouldValidate: true })
+    }
+  }, [watchedAreaId, areas, form])
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -112,25 +121,29 @@ export function VisitForm({ companies, areas, supervisors, onSubmit, onClose, is
           <FormField
             control={form.control}
             name="supervisorId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <UserCog className="w-3.5 h-3.5" /> Encargado
-                </FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Selecciona encargado" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="rounded-xl">
-                    {supervisors?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    {!supervisors?.length && <p className="text-sm text-muted-foreground text-center py-3 px-2">Sin encargados. Agrega en Configuración.</p>}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const sup = supervisors?.find((s: any) => s.id === field.value)
+              return (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <UserCog className="w-3.5 h-3.5" /> Encargado
+                  </FormLabel>
+                  <div className="h-11 rounded-xl border bg-muted/40 px-3 flex items-center gap-2">
+                    {sup ? (
+                      <>
+                        <span className="text-sm font-medium flex-1">{sup.name}</span>
+                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">Auto</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-muted-foreground/60">
+                        {watchedAreaId ? "Sin encargado en esta área" : "Selecciona un área primero"}
+                      </span>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
         </div>
 

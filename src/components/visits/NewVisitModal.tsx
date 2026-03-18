@@ -76,9 +76,31 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
   const [vehicle,        setVehicle]        = React.useState("")
   const [activity,       setActivity]       = React.useState("")
 
-  const selectedCompany    = companies?.find(c => c.id === companyId)   ?? null
-  const selectedArea       = areas?.find(a => a.id === areaId)          ?? null
+  const selectedCompany = companies?.find(c => c.id === companyId) ?? null
+
+  // When company changes, pre-fill area & supervisor from company defaults
+  const handleCompanyChange = (id: string) => {
+    setCompanyId(id)
+    const company = companies?.find(c => c.id === id)
+    if (company?.defaultAreaId) {
+      setAreaId(company.defaultAreaId)
+      const area = areas?.find((a: any) => a.id === company.defaultAreaId)
+      setSupervisorId(company.defaultSupervisorId || area?.supervisorId || "")
+    }
+  }
+  const selectedArea       = areas?.find(a => a.id === areaId)             ?? null
   const selectedSupervisor = supervisors?.find(s => s.id === supervisorId) ?? null
+
+  // Auto-fill supervisor when area changes
+  const handleAreaChange = (id: string) => {
+    setAreaId(id)
+    const area = areas?.find(a => a.id === id)
+    if (area?.supervisorId) {
+      setSupervisorId(area.supervisorId)
+    } else {
+      setSupervisorId("")
+    }
+  }
 
   // Per-step validation
   const canNext = [
@@ -131,7 +153,7 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
   const stepContent = [
     // Step 0 — Empresa
     <div key="s0" className="space-y-4">
-      <Select value={companyId} onValueChange={setCompanyId}>
+      <Select value={companyId} onValueChange={handleCompanyChange}>
         <SelectTrigger className="h-12 rounded-xl border-border bg-background focus:ring-0 focus:ring-offset-0">
           <SelectValue placeholder="Selecciona empresa registrada" />
         </SelectTrigger>
@@ -183,12 +205,22 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5" /> Área Destino
         </label>
-        <Select value={areaId} onValueChange={setAreaId}>
+        <Select value={areaId} onValueChange={handleAreaChange}>
           <SelectTrigger className="h-12 rounded-xl border-border bg-background focus:ring-0 focus:ring-offset-0">
             <SelectValue placeholder="Selecciona área" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            {areas?.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+            {areas?.map(a => {
+              const linked = supervisors?.find(s => s.id === a.supervisorId)
+              return (
+                <SelectItem key={a.id} value={a.id}>
+                  <div className="flex items-center gap-2">
+                    <span>{a.name}</span>
+                    {linked && <span className="text-[10px] text-muted-foreground">· {linked.name}</span>}
+                  </div>
+                </SelectItem>
+              )
+            })}
             {!areas?.length && <p className="text-sm text-muted-foreground text-center py-3">Sin áreas. Agrega en Configuración.</p>}
           </SelectContent>
         </Select>
@@ -198,15 +230,18 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <UserCog className="w-3.5 h-3.5" /> Encargado
         </label>
-        <Select value={supervisorId} onValueChange={setSupervisorId}>
-          <SelectTrigger className="h-12 rounded-xl border-border bg-background focus:ring-0 focus:ring-offset-0">
-            <SelectValue placeholder="Selecciona encargado" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl">
-            {supervisors?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-            {!supervisors?.length && <p className="text-sm text-muted-foreground text-center py-3">Sin encargados. Agrega en Configuración.</p>}
-          </SelectContent>
-        </Select>
+        <div className="h-12 rounded-xl border bg-muted/40 px-3 flex items-center gap-2">
+          {selectedSupervisor ? (
+            <>
+              <span className="text-sm font-medium flex-1">{selectedSupervisor.name}</span>
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">Auto</span>
+            </>
+          ) : (
+            <span className="text-sm text-muted-foreground/60">
+              {areaId ? "Sin encargado asignado en esta área" : "Selecciona un área primero"}
+            </span>
+          )}
+        </div>
       </div>
     </div>,
 

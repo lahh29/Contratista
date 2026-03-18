@@ -26,6 +26,8 @@ export interface Company {
   }
   qrCode?: string
   createdAt?: Timestamp
+  defaultAreaId?: string
+  defaultSupervisorId?: string
 }
 
 export interface Visit {
@@ -50,6 +52,7 @@ export interface Area {
   id: string
   name: string
   restricted?: boolean
+  supervisorId?: string   // Encargado por defecto del área
 }
 
 export interface Supervisor {

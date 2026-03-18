@@ -12,13 +12,6 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useFirestore, useCollection } from "@/firebase"
 import { collection, doc, query, limit, updateDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
@@ -55,15 +48,8 @@ export function EditVisitSheet({ visit, open, onOpenChange }: EditVisitSheetProp
     if (!db || !visit) return
     setSaving(true)
 
-    const area       = areas?.find(a => a.id === areaId)
-    const supervisor = supervisors?.find(s => s.id === supervisorId)
-
     try {
       await updateDoc(doc(db, "visits", visit.id), {
-        areaId,
-        areaName:       area?.name       ?? visit.areaName       ?? "—",
-        supervisorId,
-        supervisorName: supervisor?.name ?? visit.supervisorName ?? "—",
         personnelCount,
       })
       toast({ title: "Visita actualizada", description: `Datos de ${visit.companyName} actualizados.` })
@@ -86,38 +72,25 @@ export function EditVisitSheet({ visit, open, onOpenChange }: EditVisitSheetProp
         </SheetHeader>
 
         <div className="flex-1 space-y-5">
-          {/* Área */}
+          {/* Área — solo lectura */}
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
               <MapPin className="w-3.5 h-3.5" /> Área Destino
             </Label>
-            <Select value={areaId} onValueChange={setAreaId}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Selecciona un área" />
-              </SelectTrigger>
-              <SelectContent>
-                {areas?.map(a => (
-                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="h-11 rounded-lg border bg-muted/40 px-3 flex items-center">
+              <span className="text-sm font-medium">{areas?.find(a => a.id === areaId)?.name ?? visit.areaName ?? "—"}</span>
+            </div>
           </div>
 
-          {/* Supervisor */}
+          {/* Supervisor — solo lectura */}
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              <UserCog className="w-3.5 h-3.5" /> Supervisor Interno
+              <UserCog className="w-3.5 h-3.5" /> Encargado
             </Label>
-            <Select value={supervisorId} onValueChange={setSupervisorId}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Selecciona supervisor" />
-              </SelectTrigger>
-              <SelectContent>
-                {supervisors?.map(s => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="h-11 rounded-lg border bg-muted/40 px-3 flex items-center gap-2">
+              <span className="text-sm font-medium flex-1">{supervisors?.find(s => s.id === supervisorId)?.name ?? visit.supervisorName ?? "—"}</span>
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full shrink-0">Auto</span>
+            </div>
           </div>
 
           {/* Personal */}
@@ -155,7 +128,7 @@ export function EditVisitSheet({ visit, open, onOpenChange }: EditVisitSheetProp
           <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
-          <Button className="flex-1" onClick={handleSave} disabled={saving || !areaId || !supervisorId}>
+          <Button className="flex-1" onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Guardar
           </Button>
