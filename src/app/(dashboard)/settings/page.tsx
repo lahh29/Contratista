@@ -8,21 +8,26 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Settings2, Users, Loader2, ShieldAlert } from "lucide-react"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
+import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Users, Loader2, ShieldAlert, User, MoreHorizontal } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Firestore, DocumentData } from "firebase/firestore"
 
-// ── CollectionManager ─────────────────────────────────────────────────────────
-//
-//  Cambios respecto al original:
-//  • Sin tipos TypeScript (proyecto JS)
-//  • Botones de acción siempre visibles en mobile (sm:opacity-0 solo aplica
-//    en pantallas ≥ sm donde existe hover; en touch los botones son siempre
-//    visibles para que el usuario pueda interactuar)
-//  • Confirmación antes de borrar (ventana nativa confirm) — evita borrados
-//    accidentales en mobile donde los taps son menos precisos
-//  • Input con inputMode adecuado para mobile
-//  • aria-label en botones icon-only para lectores de pantalla
+// ── Helpers ────────────────────────────────────────────────────────────────────
+// "BRAVO GARCIA JESUS FERNANDO" → "Bravo Jesus"
+// "HERNANDEZ GUDIÑO NOEMI"      → "Hernandez Noemi"
+// "JUAN PEREZ"                  → "Juan Perez"   (≤2 words: show as-is title-cased)
+function shortName(full: string): string {
+  const words = full.trim().split(/\s+/)
+  const picked = words.length >= 3 ? [words[0], words[2]] : words
+  return picked
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ")
+}
+
+// ── CollectionManager ──────────────────────────────────────────────────────────
 
 interface CollectionManagerProps {
   title: string
@@ -32,10 +37,10 @@ interface CollectionManagerProps {
   db: Firestore | null
   items: DocumentData[] | null | undefined
   loading: boolean
-  showRestrictedToggle?: boolean
+  placeholder?: string
 }
 
-function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading, showRestrictedToggle }: CollectionManagerProps) {
+function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading, placeholder }: CollectionManagerProps) {
   const [newName,  setNewName]  = React.useState("")
   const [editId,   setEditId]   = React.useState<string | null>(null)
   const [editName, setEditName] = React.useState("")
@@ -44,9 +49,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   const handleAdd = async () => {
     if (!db || !newName.trim()) return
     try {
-      const data: Record<string, unknown> = { name: newName.trim() }
-      if (showRestrictedToggle) data.restricted = false
-      await addDoc(collection(db, collectionName), data)
+      await addDoc(collection(db, collectionName), { name: newName.trim() })
       setNewName("")
       toast({ title: "Agregado correctamente" })
     } catch {
@@ -54,19 +57,8 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
     }
   }
 
-  const handleToggleRestricted = async (id: string, current: boolean) => {
-    if (!db) return
-    try {
-      await updateDoc(doc(db, collectionName, id), { restricted: !current })
-      toast({ title: !current ? "Área marcada como restringida" : "Área sin restricción" })
-    } catch {
-      toast({ variant: "destructive", title: "Error al actualizar" })
-    }
-  }
-
   const handleDelete = async (id: string, name: string) => {
     if (!db) return
-    // Confirmación nativa: evita borrados accidentales en touch
     if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
     try {
       await deleteDoc(doc(db, collectionName, id))
@@ -88,7 +80,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   }
 
   return (
-    <Card className="border-none shadow-sm">
+    <Card className="border-none shadow-sm overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -103,13 +95,11 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
         {/* Add row */}
         <div className="flex gap-2">
           <Input
-            placeholder={`Nuevo ${title.toLowerCase()}…`}
+            placeholder={placeholder ?? `Nuevo ${title.toLowerCase()}…`}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             className="h-10"
-            // inputMode="text" es el default pero lo dejamos explícito
-            // para que quede documentado el patrón del proyecto
             inputMode="text"
             autoCapitalize="words"
           />
@@ -129,92 +119,59 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
         <div className="space-y-2 min-h-[80px]">
           {loading ? (
             <div className="flex justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-label="Cargando…" />
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
           ) : items?.length ? (
             items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group"
-              >
+              <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0">
                 {editId === item.id ? (
                   <>
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="h-8"
+                      className="h-8 flex-1"
                       autoFocus
-                      inputMode="text"
                       autoCapitalize="words"
                       onKeyDown={(e) => {
                         if (e.key === "Enter")  handleUpdate(item.id)
                         if (e.key === "Escape") setEditId(null)
                       }}
                     />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                      onClick={() => handleUpdate(item.id)}
-                      aria-label="Guardar cambio"
-                    >
-                      <Check className="w-4 h-4" aria-hidden="true" />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                      onClick={() => handleUpdate(item.id)} aria-label="Guardar">
+                      <Check className="w-4 h-4" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => setEditId(null)}
-                      aria-label="Cancelar edición"
-                    >
-                      <X className="w-4 h-4" aria-hidden="true" />
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0"
+                      onClick={() => setEditId(null)} aria-label="Cancelar">
+                      <X className="w-4 h-4" />
                     </Button>
                   </>
                 ) : (
                   <>
-                    <span className="flex-1 text-sm font-medium truncate">{item.name}</span>
-                    {showRestrictedToggle && (
-                      <button
-                        onClick={() => handleToggleRestricted(item.id, !!item.restricted)}
-                        title={item.restricted ? "Zona restringida (click para quitar)" : "Marcar como restringida"}
-                        className="shrink-0"
-                        aria-label={item.restricted ? "Quitar restricción" : "Marcar como restringida"}
-                      >
-                        <ShieldAlert
-                          className={`w-4 h-4 transition-colors ${item.restricted ? "text-destructive" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    )}
-                    {/*
-                      Botones siempre visibles en mobile (touch no tiene hover).
-                      En desktop (≥sm) se ocultan hasta hover para no saturar la UI.
-                    */}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                      onClick={() => { setEditId(item.id); setEditName(item.name) }}
-                      aria-label={`Editar ${item.name}`}
-                    >
-                      <Pencil className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                      onClick={() => handleDelete(item.id, item.name)}
-                      aria-label={`Eliminar ${item.name}`}
-                    >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
-                    </Button>
+                    <span className="flex-1 min-w-0 text-sm font-medium truncate">{shortName(item.name)}</span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Opciones">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-36">
+                        <DropdownMenuItem onClick={() => { setEditId(item.id); setEditName(item.name) }}>
+                          <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(item.id, item.name)}>
+                          <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </>
                 )}
               </div>
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-              <Icon className="w-8 h-8 opacity-20" aria-hidden="true" />
+              <Icon className="w-8 h-8 opacity-20" />
               <p className="text-sm">Sin registros. Agrega el primero arriba.</p>
             </div>
           )}
@@ -224,213 +181,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   )
 }
 
-// ── UserManager ───────────────────────────────────────────────────────────────
-//
-//  Cambios respecto al original:
-//  • Sin tipos TypeScript
-//  • useCallback sin toast como dependencia — toast de shadcn no es estable
-//    entre renders; incluirlo puede causar loops de efecto. Se saca de deps
-//    y se referencia via ref estable para evitar el problema sin perder
-//    la referencia actualizada
-//  • Botones siempre visibles en mobile (mismo patrón que CollectionManager)
-//  • aria-labels en todos los botones icon-only
-//  • truncate + title en email para no romper layout en móviles con emails largos
-
-interface UserManagerProps {
-  db: Firestore | null
-  companies: DocumentData[] | null | undefined
-}
-
-function UserManager({ db, companies }: UserManagerProps) {
-  const [users,       setUsers]       = React.useState<DocumentData[]>([])
-  const [loading,     setLoading]     = React.useState(true)
-  const [editUid,     setEditUid]     = React.useState<string | null>(null)
-  const [editRole,    setEditRole]    = React.useState("contractor")
-  const [editCompany, setEditCompany] = React.useState("")
-  const { toast } = useToast()
-
-  // Ref estable para toast — evita que sea dependencia de useCallback
-  // y prevenga loops de efecto sin perder la referencia actualizada
-  const toastRef = React.useRef(toast)
-  React.useEffect(() => { toastRef.current = toast }, [toast])
-
-  const loadUsers = React.useCallback(async () => {
-    if (!db) return
-    setLoading(true)
-    try {
-      const snap = await getDocs(collection(db, "users"))
-      const list = snap.docs.map((d) => ({ uid: d.id, ...d.data() }))
-      setUsers(list)
-    } catch {
-      toastRef.current({ variant: "destructive", title: "Error al cargar usuarios" })
-    } finally {
-      setLoading(false)
-    }
-  }, [db]) // toast fuera de deps — se accede via ref estable
-
-  React.useEffect(() => { loadUsers() }, [loadUsers])
-
-  const startEdit = (u: DocumentData) => {
-    setEditUid(u.uid)
-    setEditRole(u.role)
-    setEditCompany(u.companyId ?? "")
-  }
-
-  const saveEdit = async (uid: string) => {
-    if (!db) return
-    try {
-      await setDoc(
-        doc(db, "users", uid),
-        {
-          role:      editRole,
-          companyId: editRole === "contractor" ? editCompany || null : null,
-        },
-        { merge: true }
-      )
-      setEditUid(null)
-      await loadUsers()
-      toastRef.current({ title: "Usuario actualizado" })
-    } catch {
-      toastRef.current({ variant: "destructive", title: "Error al actualizar usuario" })
-    }
-  }
-
-  return (
-    <Card className="border-none shadow-sm md:col-span-2">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Users className="w-4 h-4 text-primary" aria-hidden="true" />
-          </div>
-          Usuarios del sistema
-        </CardTitle>
-        <CardDescription>
-          Asigna roles y empresa a cada usuario. Los contratistas acceden a su portal; los guardias solo al escáner.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-label="Cargando usuarios…" />
-          </div>
-        ) : users.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            Sin usuarios registrados aún.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {users.map((u) => (
-              <div
-                key={u.uid}
-                className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg flex-wrap group"
-              >
-                {editUid === u.uid ? (
-                  <>
-                    {/* Email — no editable, solo referencia */}
-                    <span
-                      className="text-sm font-medium flex-1 min-w-[120px] truncate"
-                      title={u.email ?? u.uid}
-                    >
-                      {u.email ?? u.uid.slice(0, 12) + "…"}
-                    </span>
-
-                    <Select
-                      value={editRole}
-                      onValueChange={(v) => setEditRole(v)}
-                    >
-                      <SelectTrigger className="h-8 w-32" aria-label="Rol del usuario">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="contractor">Contratista</SelectItem>
-                        <SelectItem value="guard">Guardia</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {editRole === "contractor" && (
-                      <Select value={editCompany} onValueChange={setEditCompany}>
-                        <SelectTrigger className="h-8 w-40" aria-label="Empresa del contratista">
-                          <SelectValue placeholder="Asignar empresa…" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {companies?.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-green-600 hover:text-green-700"
-                      onClick={() => saveEdit(u.uid)}
-                      aria-label="Guardar cambios del usuario"
-                    >
-                      <Check className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={() => setEditUid(null)}
-                      aria-label="Cancelar edición"
-                    >
-                      <X className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <span
-                      className="text-sm font-medium flex-1 min-w-[120px] truncate"
-                      title={u.email ?? u.uid}
-                    >
-                      {u.email ?? u.uid.slice(0, 12) + "…"}
-                    </span>
-
-                    <Badge
-                      variant={u.role === "admin" ? "default" : u.role === "guard" ? "outline" : "secondary"}
-                      className="text-xs shrink-0"
-                    >
-                      {u.role === "admin" ? "Admin" : u.role === "guard" ? "Guardia" : "Contratista"}
-                    </Badge>
-
-                    {u.role === "contractor" && u.companyId && (
-                      <span
-                        className="text-xs text-muted-foreground truncate max-w-[120px]"
-                        title={companies?.find((c) => c.id === u.companyId)?.name ?? u.companyId}
-                      >
-                        {companies?.find((c) => c.id === u.companyId)?.name ?? u.companyId.slice(0, 8) + "…"}
-                      </span>
-                    )}
-
-                    {/* ml-auto empuja el botón al extremo derecho en todos los
-                        tamaños. Siempre visible en mobile, hover en desktop. */}
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 ml-auto transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                      onClick={() => startEdit(u)}
-                      aria-label={`Editar usuario ${u.email ?? u.uid}`}
-                    >
-                      <Pencil className="w-4 h-4" aria-hidden="true" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-// ── AreaManager ───────────────────────────────────────────────────────────────
-//  Versión especializada de CollectionManager para áreas, que permite ligar
-//  un encargado por defecto a cada área (guardado como supervisorId en Firestore).
+// ── AreaManager ────────────────────────────────────────────────────────────────
 
 interface AreaManagerProps {
   db: Firestore | null
@@ -440,11 +191,11 @@ interface AreaManagerProps {
 }
 
 function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
-  const [newName,         setNewName]         = React.useState("")
-  const [newSupervisorId, setNewSupervisorId] = React.useState("")
-  const [editId,          setEditId]          = React.useState<string | null>(null)
-  const [editName,        setEditName]        = React.useState("")
-  const [editSupervisorId,setEditSupervisorId]= React.useState("")
+  const [newName,          setNewName]          = React.useState("")
+  const [newSupervisorId,  setNewSupervisorId]  = React.useState("")
+  const [editId,           setEditId]           = React.useState<string | null>(null)
+  const [editName,         setEditName]         = React.useState("")
+  const [editSupervisorId, setEditSupervisorId] = React.useState("")
   const { toast } = useToast()
 
   const handleAdd = async () => {
@@ -488,7 +239,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
     try {
       await updateDoc(doc(db, "areas", id), {
         name:         editName.trim(),
-        supervisorId: editSupervisorId || null,
+        supervisorId: editSupervisorId === "__none__" ? null : editSupervisorId || null,
       })
       setEditId(null)
       toast({ title: "Actualizado correctamente" })
@@ -498,7 +249,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
   }
 
   return (
-    <Card className="border-none shadow-sm">
+    <Card className="border-none shadow-sm overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -507,12 +258,12 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
           Áreas Destino
         </CardTitle>
         <CardDescription>
-          Agrega las zonas de la planta y asigna el encargado de cada una. Al registrar una visita el encargado se auto-seleccionará.
+          Agrega las zonas de la planta y asigna el encargado. Se auto-selecciona al registrar visitas.
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Add row */}
+        {/* Add form */}
         <div className="space-y-2">
           <div className="flex gap-2">
             <Input
@@ -523,20 +274,15 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
               className="h-10"
               autoCapitalize="words"
             />
-            <Button
-              onClick={handleAdd}
-              disabled={!newName.trim()}
-              size="sm"
-              className="gap-1.5 shrink-0 h-10 px-3 md:px-4"
-              aria-label="Agregar área"
-            >
-              <Plus className="w-4 h-4" aria-hidden="true" />
+            <Button onClick={handleAdd} disabled={!newName.trim()} size="sm"
+              className="gap-1.5 shrink-0 h-10 px-3 md:px-4" aria-label="Agregar área">
+              <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Agregar</span>
             </Button>
           </div>
           <Select value={newSupervisorId} onValueChange={setNewSupervisorId}>
-            <SelectTrigger className="h-9 text-sm" aria-label="Encargado del área">
-              <SelectValue placeholder="Encargado del área (opcional)…" />
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Encargado (opcional)" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">Sin encargado asignado</SelectItem>
@@ -557,16 +303,12 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
             areas.map((item) => {
               const linked = supervisors?.find((s) => s.id === item.supervisorId)
               return (
-                <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group">
+                <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0">
                   {editId === item.id ? (
                     <>
                       <div className="flex-1 space-y-1.5 min-w-0">
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="h-8"
-                          autoFocus
-                          autoCapitalize="words"
+                        <Input value={editName} onChange={(e) => setEditName(e.target.value)}
+                          className="h-8" autoFocus autoCapitalize="words"
                           onKeyDown={(e) => {
                             if (e.key === "Enter")  handleUpdate(item.id)
                             if (e.key === "Escape") setEditId(null)
@@ -583,6 +325,15 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
                             ))}
                           </SelectContent>
                         </Select>
+                        {/* Restricted toggle — solo en modo edición */}
+                        <button
+                          onClick={() => handleToggleRestricted(item.id, !!item.restricted)}
+                          className={`flex items-center gap-1.5 text-[11px] mt-1 transition-colors ${item.restricted ? "text-destructive" : "text-muted-foreground hover:text-foreground"}`}
+                          aria-label={item.restricted ? "Quitar restricción" : "Marcar como restringida"}
+                        >
+                          <ShieldAlert className="w-3 h-3" />
+                          {item.restricted ? "Zona restringida (toca para quitar)" : "Marcar como zona restringida"}
+                        </button>
                       </div>
                       <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                         onClick={() => handleUpdate(item.id)} aria-label="Guardar">
@@ -595,37 +346,38 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
                     </>
                   ) : (
                     <>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.name}</p>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <p className="text-sm font-medium truncate min-w-0">{item.name}</p>
+                          {item.restricted && (
+                            <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-destructive" aria-label="Zona restringida" />
+                          )}
+                        </div>
                         {linked ? (
                           <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                            <UserCog className="w-3 h-3 shrink-0" aria-hidden="true" />
-                            {linked.name}
+                            <UserCog className="w-3 h-3 shrink-0" />
+                            {shortName(linked.name)}
                           </p>
                         ) : (
                           <p className="text-[11px] text-muted-foreground/50 mt-0.5">Sin encargado</p>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleToggleRestricted(item.id, !!item.restricted)}
-                        title={item.restricted ? "Zona restringida (click para quitar)" : "Marcar como restringida"}
-                        aria-label={item.restricted ? "Quitar restricción" : "Marcar como restringida"}
-                        className="shrink-0"
-                      >
-                        <ShieldAlert className={`w-4 h-4 transition-colors ${item.restricted ? "text-destructive" : "text-muted-foreground/30 hover:text-muted-foreground"}`} />
-                      </button>
-                      <Button size="icon" variant="ghost"
-                        className="h-8 w-8 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                        onClick={() => { setEditId(item.id); setEditName(item.name); setEditSupervisorId(item.supervisorId ?? "__none__") }}
-                        aria-label={`Editar ${item.name}`}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost"
-                        className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                        onClick={() => handleDelete(item.id, item.name)}
-                        aria-label={`Eliminar ${item.name}`}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Opciones">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-36">
+                          <DropdownMenuItem onClick={() => { setEditId(item.id); setEditName(item.name); setEditSupervisorId(item.supervisorId ?? "__none__") }}>
+                            <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDelete(item.id, item.name)}>
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </>
                   )}
                 </div>
@@ -643,69 +395,258 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
   )
 }
 
-// ── SettingsPage ──────────────────────────────────────────────────────────────
-//
-//  Cambios respecto al original:
-//  • Sin tipos TypeScript
-//  • pb-safe-area: padding inferior para home indicator en iOS/Android
-//  • h2 → h1 semántico (es el heading principal de la página)
-//  • aria-hidden en el ícono decorativo del header
+// ── UserManager ────────────────────────────────────────────────────────────────
+
+interface UserManagerProps {
+  db: Firestore | null
+  companies: DocumentData[] | null | undefined
+}
+
+function UserManager({ db, companies }: UserManagerProps) {
+  const [users,       setUsers]       = React.useState<DocumentData[]>([])
+  const [loading,     setLoading]     = React.useState(true)
+  const [editUid,     setEditUid]     = React.useState<string | null>(null)
+  const [editUser,    setEditUser]    = React.useState<DocumentData | null>(null)
+  const [editRole,    setEditRole]    = React.useState("contractor")
+  const [editCompany, setEditCompany] = React.useState("")
+  const { toast } = useToast()
+
+  const toastRef = React.useRef(toast)
+  React.useEffect(() => { toastRef.current = toast }, [toast])
+
+  const loadUsers = React.useCallback(async () => {
+    if (!db) return
+    setLoading(true)
+    try {
+      const snap = await getDocs(collection(db, "users"))
+      setUsers(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
+    } catch {
+      toastRef.current({ variant: "destructive", title: "Error al cargar usuarios" })
+    } finally {
+      setLoading(false)
+    }
+  }, [db])
+
+  React.useEffect(() => { loadUsers() }, [loadUsers])
+
+  const startEdit = (u: DocumentData) => {
+    setEditUid(u.uid)
+    setEditUser(u)
+    setEditRole(u.role ?? "contractor")
+    setEditCompany(u.companyId ?? "")
+  }
+
+  const saveEdit = async (uid: string) => {
+    if (!db) return
+    try {
+      await setDoc(doc(db, "users", uid), {
+        role:      editRole,
+        companyId: editRole === "contractor" ? editCompany || null : null,
+      }, { merge: true })
+      setEditUid(null)
+      setEditUser(null)
+      await loadUsers()
+      toastRef.current({ title: "Usuario actualizado" })
+    } catch {
+      toastRef.current({ variant: "destructive", title: "Error al actualizar usuario" })
+    }
+  }
+
+  const ROLE_LABEL: Record<string, string> = {
+    admin:      "Admin",
+    guard:      "Guardia",
+    contractor: "Contratista",
+  }
+
+  const ROLE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
+    admin:      "default",
+    guard:      "outline",
+    contractor: "secondary",
+  }
+
+  return (
+    <>
+      <Card className="border-none shadow-sm overflow-hidden">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4 text-primary" />
+            </div>
+            Usuarios del sistema
+          </CardTitle>
+          <CardDescription>
+            Asigna roles y empresa. Los contratistas acceden a su portal; los guardias solo al escáner.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : users.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Sin usuarios registrados aún.</p>
+          ) : (
+            <div className="space-y-2">
+              {users.map((u) => (
+                <div key={u.uid} className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg group">
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {u.name ?? u.email ?? u.uid.slice(0, 12) + "…"}
+                    </p>
+                    {u.role === "contractor" && u.companyId && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        {companies?.find((c) => c.id === u.companyId)?.name ?? "—"}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Role badge */}
+                  <Badge variant={ROLE_VARIANT[u.role] ?? "secondary"} className="text-xs shrink-0">
+                    {ROLE_LABEL[u.role] ?? u.role}
+                  </Badge>
+
+                  {/* Edit */}
+                  <Button size="icon" variant="ghost"
+                    className="h-8 w-8 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+                    onClick={() => startEdit(u)} aria-label={`Editar ${u.name ?? u.email}`}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Sheet */}
+      <Sheet open={!!editUid} onOpenChange={(open) => { if (!open) { setEditUid(null); setEditUser(null) } }}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
+          <SheetHeader className="mb-5">
+            <SheetTitle>{editUser?.name ?? editUser?.email ?? "Usuario"}</SheetTitle>
+            <SheetDescription>Modifica el rol y empresa asignada.</SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Rol</p>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger className="h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="contractor">Contratista</SelectItem>
+                  <SelectItem value="guard">Guardia</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {editRole === "contractor" && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Empresa</p>
+                <Select value={editCompany} onValueChange={setEditCompany}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Asignar empresa…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies?.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <SheetFooter className="mt-6 flex-row gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => { setEditUid(null); setEditUser(null) }}>
+              Cancelar
+            </Button>
+            <Button className="flex-1" onClick={() => editUid && saveEdit(editUid)}>
+              Guardar
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+    </>
+  )
+}
+
+// ── SettingsPage ───────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const db = useFirestore()
 
   const areasQuery = React.useMemo(
-    () => (db ? query(collection(db, "areas"),       limit(100)) : null),
-    [db]
+    () => (db ? query(collection(db, "areas"),       limit(100)) : null), [db]
   )
   const supervisorsQuery = React.useMemo(
-    () => (db ? query(collection(db, "supervisors"), limit(100)) : null),
-    [db]
+    () => (db ? query(collection(db, "supervisors"), limit(100)) : null), [db]
   )
   const companiesQuery = React.useMemo(
-    () => (db ? query(collection(db, "companies"),   limit(200)) : null),
-    [db]
+    () => (db ? query(collection(db, "companies"),   limit(200)) : null), [db]
   )
 
   const { data: areas,       loading: areasLoading }       = useCollection(areasQuery)
   const { data: supervisors, loading: supervisorsLoading } = useCollection(supervisorsQuery)
   const { data: companies }                                 = useCollection(companiesQuery)
 
+  const supervisorsCard = (
+    <CollectionManager
+      title="Encargados de Departamento"
+      description="Personas responsables de recibir a los contratistas en cada área."
+      icon={UserCog}
+      collectionName="supervisors"
+      placeholder="Nombre del encargado…"
+      db={db}
+      items={supervisors}
+      loading={supervisorsLoading}
+    />
+  )
+
+  const areasCard = (
+    <AreaManager db={db} areas={areas} supervisors={supervisors} loading={areasLoading} />
+  )
+
+  const usersCard = (
+    <UserManager db={db} companies={companies} />
+  )
+
   return (
-    /*
-      supports-[padding:env(safe-area-inset-bottom)] → padding para home
-      indicator en iOS y Android. El layout padre puede no manejarlo,
-      así que lo aseguramos aquí también.
-    */
     <div className="
-      space-y-6 md:space-y-8
-      animate-in fade-in duration-500
+      animate-in fade-in duration-500 overflow-x-hidden w-full
       pb-8
       supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]
     ">
-
-      {/* User manager — ocupa las 2 columnas en desktop */}
-      <UserManager db={db} companies={companies} />
-
-      {/* Managers grid */}
-      <div className="grid gap-5 md:gap-6 md:grid-cols-2">
-        <AreaManager
-          db={db}
-          areas={areas}
-          supervisors={supervisors}
-          loading={areasLoading}
-        />
-        <CollectionManager
-          title="Encargados de Departamento"
-          description="Personas responsables de recibir a los contratistas en cada área."
-          icon={UserCog}
-          collectionName="supervisors"
-          db={db}
-          items={supervisors}
-          loading={supervisorsLoading}
-        />
+      {/* ── Mobile: tabs ── */}
+      <div className="md:hidden">
+        <Tabs defaultValue="users" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-5">
+            <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
+            <TabsTrigger value="areas" className="text-xs">Áreas</TabsTrigger>
+            <TabsTrigger value="supervisors" className="text-xs">Encargados</TabsTrigger>
+          </TabsList>
+          <TabsContent value="users"       className="mt-0">{usersCard}</TabsContent>
+          <TabsContent value="areas"       className="mt-0">{areasCard}</TabsContent>
+          <TabsContent value="supervisors" className="mt-0">{supervisorsCard}</TabsContent>
+        </Tabs>
       </div>
 
+      {/* ── Desktop: grid (sin cambios) ── */}
+      <div className="hidden md:block space-y-6 md:space-y-8">
+        {usersCard}
+        <div className="grid gap-5 md:gap-6 md:grid-cols-2">
+          {areasCard}
+          {supervisorsCard}
+        </div>
+      </div>
     </div>
   )
 }
