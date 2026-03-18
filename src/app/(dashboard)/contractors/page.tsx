@@ -64,7 +64,18 @@ import { Plus } from "lucide-react"
 
 type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
 
-function SuaBadge({ status }: { status?: string }) {
+function effectiveSuaStatus(sua?: { status?: string; validUntil?: string }): 'Valid' | 'Expired' | 'Pending' {
+  if (sua?.validUntil) {
+    const today = new Date().toISOString().slice(0, 10)
+    if (sua.validUntil < today) return 'Expired'
+    return 'Valid'
+  }
+  if (sua?.status === 'Valid' || sua?.status === 'Expired') return sua.status
+  return 'Pending'
+}
+
+function SuaBadge({ sua }: { sua?: { status?: string; validUntil?: string } }) {
+  const status = effectiveSuaStatus(sua)
   const isValid = status === 'Valid'
   const isExpired = status === 'Expired'
   return (
@@ -262,7 +273,7 @@ export default function ContractorsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-semibold text-sm leading-snug truncate">{company.name}</span>
-                        <SuaBadge status={company.sua?.status} />
+                        <SuaBadge sua={company.sua} />
                       </div>
                       {company.contact && (
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">{company.contact}</p>
@@ -318,7 +329,7 @@ export default function ContractorsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <SuaBadge status={company.sua?.status} />
+                          <SuaBadge sua={company.sua} />
                         </TableCell>
                         <TableCell className="text-muted-foreground font-mono text-xs">
                           {company.sua?.validUntil || 'N/A'}

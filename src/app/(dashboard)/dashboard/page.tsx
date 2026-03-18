@@ -57,15 +57,23 @@ export default function DashboardPage() {
     [activeVisits]
   )
 
+  const isSuaExpired = (c: any) => {
+    if (c.sua?.validUntil) {
+      const today = new Date().toISOString().slice(0, 10)
+      return c.sua.validUntil < today
+    }
+    return c.sua?.status !== 'Valid'
+  }
+
   const complianceRate = React.useMemo(() => {
     if (!companies?.length) return 0
-    const valid = companies.filter(c => c.sua?.status === 'Valid').length
+    const valid = companies.filter(c => !isSuaExpired(c)).length
     return Math.round((valid / companies.length) * 100)
   }, [companies])
 
   const alertsCount = React.useMemo(() => {
     if (!companies?.length) return 0
-    return companies.filter(c => c.sua?.status !== 'Valid').length
+    return companies.filter(isSuaExpired).length
   }, [companies])
 
   return (

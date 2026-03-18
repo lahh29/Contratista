@@ -244,7 +244,15 @@ export default function ScannerPage() {
 
   // ── MODO: VERIFICANDO / CONFIRMANDO ──────────────────────────
   if (mode === 'VERIFYING') {
-    const isExpired = currentCompany?.sua?.status !== 'Valid'
+    const sua = currentCompany?.sua
+    const isExpired = (() => {
+      if (sua?.validUntil) {
+        const today = new Date().toISOString().slice(0, 10)
+        if (sua.validUntil < today) return true
+        return false
+      }
+      return sua?.status !== 'Valid'
+    })()
 
     return (
       <div className="max-w-sm mx-auto space-y-4 animate-in slide-in-from-bottom-6 duration-400">

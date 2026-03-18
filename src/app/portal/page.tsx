@@ -46,14 +46,23 @@ import type { Company, Visit } from "@/types"
 // ── Sub-components ─────────────────────────────────────────
 
 function SuaStatusCard({ company }: { company: Company }) {
-  const status     = company.sua?.status
   const validUntil = company.sua?.validUntil
+
+  const status: 'Valid' | 'Expired' | 'Pending' = useMemo(() => {
+    if (validUntil) {
+      const today = new Date().toISOString().slice(0, 10)
+      return validUntil < today ? 'Expired' : 'Valid'
+    }
+    const s = company.sua?.status
+    if (s === 'Valid' || s === 'Expired') return s
+    return 'Pending'
+  }, [validUntil, company.sua?.status])
 
   const config = {
     Valid:   { bg: 'bg-green-50',   border: 'border-green-200',  text: 'text-green-800',   muted: 'text-green-600',  label: 'Vigente',   icon: ShieldCheck  },
     Expired: { bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-800',     muted: 'text-red-600',    label: 'Vencido',   icon: ShieldX      },
     Pending: { bg: 'bg-orange-50',  border: 'border-orange-200', text: 'text-orange-800',  muted: 'text-orange-600', label: 'Pendiente', icon: ShieldAlert  },
-  }[status ?? 'Pending']
+  }[status]
 
   const Icon = config.icon
 
