@@ -5,10 +5,12 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { 
-  ShieldCheck, 
-  UploadCloud, 
-  Loader2, 
+import {
+  ShieldCheck,
+  UploadCloud,
+  Loader2,
+  Users,
+  Truck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,6 +40,8 @@ const contractorSchema = z.object({
   suaExpiration: z.string().min(1, "La fecha de expiración es requerida"),
   policyNumber: z.string().min(1, "El número de póliza es requerido"),
   phone: z.string().optional(),
+  personnelCount: z.coerce.number().min(1, "Mínimo 1 persona").optional(),
+  vehicle: z.string().optional(),
 })
 
 export function ContractorForm() {
@@ -56,6 +60,8 @@ export function ContractorForm() {
       suaExpiration: "",
       policyNumber: "",
       phone: "",
+      personnelCount: 1,
+      vehicle: "",
     },
   })
 
@@ -119,6 +125,8 @@ export function ContractorForm() {
         validUntil: values.suaExpiration,
         status: "Valid"
       },
+      ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
+      ...(values.vehicle ? { vehicle: values.vehicle.toUpperCase().trim() } : {}),
       createdAt: serverTimestamp(),
     }
 
@@ -213,9 +221,9 @@ export function ContractorForm() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre Completo (Responsable)</FormLabel>
+                    <FormLabel>Nombre Completo (Encargado)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Juan Pérez" {...field} />
+                      <Input placeholder="Apellidos y Nombres" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -228,7 +236,7 @@ export function ContractorForm() {
                   <FormItem>
                     <FormLabel>Empresa</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej. Constructora ABC" {...field} />
+                      <Input placeholder="Ej. ViñoPlastic" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -253,13 +261,13 @@ export function ContractorForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email del Contratista{" "}
+                      Email del Proveedor{" "}
                     </FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="proveedor@empresa.com" {...field} />
                     </FormControl>
                     <p className="text-xs text-muted-foreground">
-                      El contratista usará este email para acceder a su portal automáticamente.
+                      Si el contratista quiere su /portal de contratistas, ingresa su email.
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -271,9 +279,9 @@ export function ContractorForm() {
                   name="policyNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nº de Póliza / SUA</FormLabel>
+                      <FormLabel>Poliza / SUA</FormLabel>
                       <FormControl>
-                        <Input placeholder="P-123456" {...field} />
+                        <Input placeholder="SUA" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -293,8 +301,40 @@ export function ContractorForm() {
                   )}
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="personnelCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Personas Autorizadas
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min={1} placeholder="Ej. 5" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vehicle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Truck className="w-4 h-4" /> Placa de Vehículo
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: QRO-00-00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-white font-semibold py-6 h-auto">
-                Completar Registro
+                Completar Alta
               </Button>
             </form>
           </Form>

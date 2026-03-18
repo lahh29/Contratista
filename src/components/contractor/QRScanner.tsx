@@ -61,7 +61,7 @@ export function QRScanner({ onQRDetected, isProcessing }: QRScannerProps) {
   return (
     <div className="max-w-sm mx-auto space-y-5 animate-in fade-in duration-500">
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">Escáner de Acceso</h2>
+        <h2 className="text-2xl font-bold tracking-tight">QR</h2>
         <p className="text-muted-foreground text-sm">
           Apunta la cámara al código QR del contratista
         </p>
@@ -110,7 +110,7 @@ export function QRScanner({ onQRDetected, isProcessing }: QRScannerProps) {
             ) : (
               <Scan className="w-5 h-5" />
             )}
-            {isProcessing ? 'Procesando...' : 'Iniciar Escaneo'}
+            {isProcessing ? 'Procesando...' : 'Escanear'}
           </Button>
         ) : (
           <Button

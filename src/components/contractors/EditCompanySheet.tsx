@@ -4,7 +4,7 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2 } from "lucide-react"
+import { Loader2, Users, Truck } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -37,6 +37,8 @@ const schema = z.object({
   email: z.string().email("Email inválido").optional().or(z.literal('')),
   suaNumber: z.string().optional(),
   suaValidUntil: z.string().optional(),
+  personnelCount: z.coerce.number().min(1, "Mínimo 1 persona").optional(),
+  vehicle: z.string().optional(),
 })
 
 interface EditCompanySheetProps {
@@ -60,6 +62,8 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       email: "",
       suaNumber: "",
       suaValidUntil: "",
+      personnelCount: 1,
+      vehicle: "",
     },
   })
 
@@ -73,6 +77,8 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
         email: company.email || "",
         suaNumber: company.sua?.number || "",
         suaValidUntil: company.sua?.validUntil || "",
+        personnelCount: company.personnelCount || 1,
+        vehicle: company.vehicle || "",
       })
     }
   }, [company, form])
@@ -91,6 +97,8 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
         number: values.suaNumber || company.sua?.number || "",
         validUntil: values.suaValidUntil || company.sua?.validUntil || "",
       },
+      ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
+      vehicle: values.vehicle ? values.vehicle.toUpperCase().trim() : "",
     }
 
     const companyRef = doc(db, "companies", company.id)
@@ -218,6 +226,44 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                       <FormLabel>Vencimiento SUA</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="border-t pt-4 mt-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Acceso a Planta
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="personnelCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Personas Autorizadas
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min={1} placeholder="Ej. 5" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vehicle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Truck className="w-4 h-4" /> Placa de Vehículo
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej. ABC-1234" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

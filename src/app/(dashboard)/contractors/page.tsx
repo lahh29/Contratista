@@ -60,6 +60,7 @@ import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
 import type { Company } from "@/types"
+import { Plus } from "lucide-react"
 
 type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
 
@@ -147,7 +148,7 @@ export default function ContractorsPage() {
     return companies.filter(c =>
       c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.contact?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    ) as Company[]
   }, [companies, searchTerm])
 
   function openAction(company: Company, type: ActiveDialog) {
@@ -212,16 +213,15 @@ export default function ContractorsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Empresas Contratistas</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Proveedores</h2>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Gestión de cumplimiento y registros maestros de empresas.
+            Gestión de visitas en Planta Querétaro.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
 <Button asChild size="sm" className="bg-primary text-white gap-2">
             <Link href="/contractors/new">
-              <Building2 className="w-4 h-4" />
-              <span>Nueva Empresa</span>
+              <Plus className="w-4 h-4" /> 
             </Link>
           </Button>
         </div>

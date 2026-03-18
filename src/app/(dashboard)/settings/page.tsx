@@ -305,7 +305,7 @@ function UserManager({ db, companies }: UserManagerProps) {
           Usuarios del sistema
         </CardTitle>
         <CardDescription>
-          Asigna roles y empresa a cada usuario. Los contratistas solo verán su portal.
+          Asigna roles y empresa a cada usuario. Los contratistas acceden a su portal; los guardias solo al escáner.
         </CardDescription>
       </CardHeader>
 
@@ -345,6 +345,7 @@ function UserManager({ db, companies }: UserManagerProps) {
                       <SelectContent>
                         <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="contractor">Contratista</SelectItem>
+                        <SelectItem value="guard">Guardia</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -390,10 +391,10 @@ function UserManager({ db, companies }: UserManagerProps) {
                     </span>
 
                     <Badge
-                      variant={u.role === "admin" ? "default" : "secondary"}
+                      variant={u.role === "admin" ? "default" : u.role === "guard" ? "outline" : "secondary"}
                       className="text-xs shrink-0"
                     >
-                      {u.role === "admin" ? "Admin" : "Contratista"}
+                      {u.role === "admin" ? "Admin" : u.role === "guard" ? "Guardia" : "Contratista"}
                     </Badge>
 
                     {u.role === "contractor" && u.companyId && (

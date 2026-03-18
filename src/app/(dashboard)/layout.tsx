@@ -4,7 +4,7 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { Separator } from "@/components/ui/separator"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { NotificationBanner } from "@/components/PWASetup"
@@ -17,17 +17,20 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { appUser, loading } = useAppUser()
-  const router = useRouter()
+  const router   = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (loading) return
     if (!appUser) {
       router.push("/login")
     } else if (appUser.role === 'contractor') {
-      // Contractors have their own portal
       router.push("/portal")
+    } else if (appUser.role === 'guard' && pathname !== '/scanner') {
+      // Guards only have access to /scanner
+      router.replace("/scanner")
     }
-  }, [appUser, loading, router])
+  }, [appUser, loading, router, pathname])
 
   if (loading) {
     return (
@@ -54,10 +57,7 @@ export default function DashboardLayout({
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationBell />
-            <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold ring-2 ring-accent/20 ring-offset-2 ring-offset-background cursor-pointer hover:scale-110 transition-transform">
-              {appUser.email?.slice(0, 2).toUpperCase()}
-            </div>
+            {appUser.role !== 'guard' && <NotificationBell />}
           </div>
         </header>
         <main className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">

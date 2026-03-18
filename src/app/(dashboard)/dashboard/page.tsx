@@ -72,13 +72,13 @@ export default function DashboardPage() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Panel de Control</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Inicio</h2>
           <p className="text-muted-foreground mt-1">Monitoreo en tiempo real de accesos.</p>
         </div>
         <div className="flex gap-2">
           <NewVisitModal trigger={
             <Button className="bg-primary text-white gap-2 shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4" /> Nueva Visita
+              <Plus className="w-4 h-4" /> 
             </Button>
           } />
         </div>
@@ -94,7 +94,7 @@ export default function DashboardPage() {
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <CardTitle>Contratistas</CardTitle>
+            <CardTitle>Proveedores</CardTitle>
             <CardDescription>Personal trabajando actualmente en planta.</CardDescription>
           </div>
           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1 self-start sm:self-auto">

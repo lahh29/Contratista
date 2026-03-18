@@ -31,7 +31,9 @@ export function useAppUser() {
       async (snap) => {
         if (snap.exists()) {
           const data = snap.data()
-          const role = data.role === 'contractor' ? 'contractor' : 'admin'
+          const role: AppUser['role'] =
+            data.role === 'contractor' ? 'contractor' :
+            data.role === 'guard'      ? 'guard'      : 'admin'
           let companyId: string | undefined = data.companyId ?? undefined
 
           // If contractor has no companyId yet, try to auto-link by email
@@ -58,6 +60,8 @@ export function useAppUser() {
             role,
             companyId,
             displayName: data.displayName ?? undefined,
+            name:        data.name       ?? undefined,
+            position:    data.position   ?? undefined,
           })
         } else {
           // First login — try to auto-link by email to an existing company

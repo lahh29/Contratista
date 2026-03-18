@@ -60,6 +60,7 @@ async function generateExcel(visits: any[]) {
     'Supervisor':           v.supervisorName   || '—',
     'Personal':             v.personnelCount   ?? 1,
     'Placas':               v.vehiclePlates    || '—',
+    'Placas Verificadas':   v.platesVerified   ? 'Sí' : 'No',
     'Zapatos Seguridad':    v.safetyEquipment?.shoes ? 'Sí' : 'No',
     'Chaleco Seguridad':    v.safetyEquipment?.vest  ? 'Sí' : 'No',
     'Estado':               v.status === 'Active' ? 'Activo' : 'Completado',
@@ -88,7 +89,7 @@ async function generatePDF(visits: any[]) {
 
   autoTable(doc, {
     startY: 40,
-    head: [['Fecha', 'Empresa', 'Área', 'Supervisor', 'Personal', 'Placas', 'Zapatos', 'Chaleco', 'Estado', 'Salida']],
+    head: [['Fecha', 'Empresa', 'Área', 'Supervisor', 'Personal', 'Placas', 'Plc. Ver.', 'Zapatos', 'Chaleco', 'Estado', 'Salida']],
     body: visits.map(v => [
       fmtDate(v.entryTime),
       v.companyName    || '—',
@@ -96,6 +97,7 @@ async function generatePDF(visits: any[]) {
       v.supervisorName || '—',
       String(v.personnelCount ?? 1),
       v.vehiclePlates  || '—',
+      v.platesVerified ? 'Sí' : 'No',
       v.safetyEquipment?.shoes ? 'Sí' : 'No',
       v.safetyEquipment?.vest  ? 'Sí' : 'No',
       v.status === 'Active' ? 'Activo' : 'Completado',
@@ -131,6 +133,7 @@ async function generateVisitPDF(visit: any) {
     ['Supervisor',        visit.supervisorName || '—'],
     ['Personal',          String(visit.personnelCount ?? 1)],
     ['Placas',            visit.vehiclePlates  || '—'],
+    ['Placas verificadas', visit.platesVerified ? 'Sí' : 'No'],
     ['Zapatos seguridad', visit.safetyEquipment?.shoes ? 'Sí' : 'No'],
     ['Chaleco seguridad', visit.safetyEquipment?.vest  ? 'Sí' : 'No'],
     ['Fecha Entrada',     fmtDateTime(visit.entryTime)],
@@ -275,7 +278,6 @@ export default function ReportsPage() {
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" className="gap-2 relative" onClick={() => setFilterOpen(true)}>
             <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Filtros</span>
             {activeFilters > 0 && (
               <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
                 {activeFilters}
@@ -284,7 +286,6 @@ export default function ReportsPage() {
           </Button>
           <Button className="bg-primary text-white gap-2" onClick={handleAll} disabled={genAll || loading}>
             {genAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            <span className="hidden sm:inline">Descargar todo</span>
           </Button>
         </div>
       </div>
@@ -296,7 +297,7 @@ export default function ReportsPage() {
             <CardTitle className="text-base flex items-center gap-2">
               <FileSpreadsheet className="w-5 h-5 text-green-600" /> Exportar Excel
             </CardTitle>
-            <CardDescription className="text-xs">Registros detallados en formato .xlsx.</CardDescription>
+            <CardDescription className="text-xs">Registros en formato .xlsx.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="secondary" className="w-full" onClick={handleExcel} disabled={genXlsx || loading}>
@@ -309,7 +310,7 @@ export default function ReportsPage() {
         <Card className="border-none shadow-sm hover:ring-2 hover:ring-primary/20 transition-all">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="w-5 h-5 text-red-600" /> Auditoría PDF
+              <FileText className="w-5 h-5 text-red-600" /> Reporte PDF
             </CardTitle>
             <CardDescription className="text-xs">Reporte formal de cumplimiento con tabla de accesos.</CardDescription>
           </CardHeader>
@@ -324,7 +325,7 @@ export default function ReportsPage() {
         <Card className="border-none shadow-sm hover:ring-2 hover:ring-primary/20 transition-all">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-accent" /> Resumen Mensual
+              <BarChart3 className="w-5 h-5 text-accent" /> Detalle Mensual
             </CardTitle>
             <CardDescription className="text-xs">Tendencias visuales y estadísticas de ocupación.</CardDescription>
           </CardHeader>

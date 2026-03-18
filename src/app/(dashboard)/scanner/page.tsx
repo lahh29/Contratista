@@ -22,7 +22,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { useFirestore, useCollection, useUser } from "@/firebase"
+import { useFirestore, useUser } from "@/firebase"
+import { useCollection } from "@/firebase/firestore/use-collection"
 import {
   collection,
   addDoc,
@@ -52,6 +53,7 @@ export default function ScannerPage() {
   const [selectedSupervisor, setSelectedSupervisor] = React.useState('')
   const [vehiclePlates, setVehiclePlates] = React.useState('')
   const [confirmedPersonnel, setConfirmedPersonnel] = React.useState<number>(1)
+  const [platesVerified, setPlatesVerified] = React.useState(false)
   const [safetyShoes, setSafetyShoes] = React.useState(false)
   const [safetyVest,  setSafetyVest]  = React.useState(false)
   const [scanHistory, setScanHistory] = React.useState<
@@ -82,7 +84,7 @@ export default function ScannerPage() {
         return
       }
 
-      const company = { id: companySnap.id, ...companySnap.data() }
+      const company = { id: companySnap.id, ...companySnap.data() } as import('@/types').Company
       setCurrentCompany(company)
       setConfirmedPersonnel(Number(company.personnelCount) || 1)
 
@@ -94,7 +96,7 @@ export default function ScannerPage() {
       )
       const activeSnap = await getDocs(activeVisitQuery)
       if (!activeSnap.empty) {
-        setActiveVisit({ id: activeSnap.docs[0].id, ...activeSnap.docs[0].data() })
+        setActiveVisit({ id: activeSnap.docs[0].id, ...activeSnap.docs[0].data() } as import('@/types').Visit)
       } else {
         setActiveVisit(null)
       }
@@ -124,6 +126,7 @@ export default function ScannerPage() {
         supervisorName: supervisor?.name || '—',
         personnelCount: confirmedPersonnel,
         vehiclePlates: vehiclePlates.trim().toUpperCase(),
+        platesVerified,
         safetyEquipment: { shoes: safetyShoes, vest: safetyVest },
         status: 'Active',
         entryTime: serverTimestamp(),
@@ -134,6 +137,7 @@ export default function ScannerPage() {
       setScanHistory(h => [{ companyName: currentCompany.name, action: 'entry' as const, time: new Date() }, ...h].slice(0, 5))
       setActiveVisit({
         id: visitRef.id,
+        status: 'Active',
         areaName: area?.name,
         supervisorName: supervisor?.name,
         personnelCount: confirmedPersonnel,
@@ -202,6 +206,7 @@ export default function ScannerPage() {
     setSelectedSupervisor('')
     setVehiclePlates('')
     setConfirmedPersonnel(1)
+    setPlatesVerified(false)
     setSafetyShoes(false)
     setSafetyVest(false)
   }
@@ -303,13 +308,38 @@ export default function ScannerPage() {
                   <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Car className="w-3.5 h-3.5" /> Placas del Vehículo
                   </label>
+                  {currentCompany?.vehicle && (
+                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm">
+                      <span className="text-muted-foreground">Registradas en QR:</span>
+                      <span className="font-black font-mono text-primary tracking-widest">
+                        {currentCompany.vehicle}
+                      </span>
+                    </div>
+                  )}
                   <Input
                     placeholder="Ej. ABC-123-D"
                     value={vehiclePlates}
-                    onChange={(e) => setVehiclePlates(e.target.value.toUpperCase())}
+                    onChange={(e) => {
+                      setVehiclePlates(e.target.value.toUpperCase())
+                      setPlatesVerified(false)
+                    }}
                     className="h-11 font-mono tracking-widest uppercase"
                     maxLength={10}
                   />
+                  {vehiclePlates.trim().length > 0 && (
+                    <label className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 ${platesVerified ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}`}>
+                      <Checkbox
+                        id="plates-verified"
+                        checked={platesVerified}
+                        onCheckedChange={(v) => setPlatesVerified(!!v)}
+                        className="h-5 w-5"
+                      />
+                      <div>
+                        <p className="text-sm font-semibold leading-tight">Placas verificadas</p>
+                        <p className="text-xs text-muted-foreground">Confirmo que las placas visibles coinciden con el vehículo</p>
+                      </div>
+                    </label>
+                  )}
                 </div>
 
                 {/* Confirmación de personal */}
@@ -442,7 +472,7 @@ export default function ScannerPage() {
                 <Button
                   className="w-full h-14 text-lg font-black rounded-2xl gap-2 bg-primary text-white shadow-xl shadow-primary/20 mt-2"
                   onClick={handleConfirmEntry}
-                  disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || !safetyShoes || !safetyVest || isProcessing}
+                  disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || !platesVerified || !safetyShoes || !safetyVest || isProcessing}
                 >
                   {isProcessing ? <Loader2 className="animate-spin" /> : <UserCheck className="w-5 h-5" />}
                   CONFIRMAR ENTRADA

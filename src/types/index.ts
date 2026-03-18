@@ -3,9 +3,11 @@ import type { Timestamp } from 'firebase/firestore'
 export interface AppUser {
   uid: string
   email: string | null
-  role: 'admin' | 'contractor'
+  role: 'admin' | 'contractor' | 'guard'
   companyId?: string   // Only for contractors — links to companies/{companyId}
   displayName?: string
+  name?: string
+  position?: string
 }
 
 export interface Company {
@@ -16,6 +18,7 @@ export interface Company {
   email?: string   // Email del contratista — usado para auto-vincular su cuenta al portal
   status?: 'Active' | 'Blocked'
   personnelCount?: number
+  vehicle?: string
   sua?: {
     status?: 'Valid' | 'Expired' | 'Pending'
     validUntil?: string
