@@ -3,13 +3,13 @@
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Separator } from "@/components/ui/separator"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { NotificationBanner } from "@/components/PWASetup"
 import { useAppUser } from "@/hooks/use-app-user"
 import { NotificationBell } from "@/components/layout/NotificationBell"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function DashboardLayout({
   children,
@@ -42,24 +42,57 @@ export default function DashboardLayout({
 
   if (!appUser || appUser.role === 'contractor') return null
 
+  const PAGE_TITLES: Record<string, string> = {
+    '/dashboard':   'Inicio',
+    '/contractors': 'Proveedores',
+    '/scanner':     'Escáner de Acceso',
+    '/reports':     'Reportes',
+    '/settings':    'Configuración',
+  }
+  const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
+
   return (
     <>
     <NotificationBanner />
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white/50 backdrop-blur-md sticky top-0 z-10 px-6">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="flex-1">
-            <h1 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              ViñoPlastic
-            </h1>
+        <motion.header
+          initial={{ y: -4, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="flex h-14 shrink-0 items-center gap-3 border-b border-border/60 bg-background/80 backdrop-blur-md sticky top-0 z-10 px-4"
+        >
+          {/* Sidebar toggle */}
+          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+          </motion.div>
+
+          {/* Divider */}
+          <div className="w-px h-4 bg-border/80 shrink-0" />
+
+          {/* Dynamic page title */}
+          <div className="flex-1 overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h1
+                key={pathname}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                className="text-sm font-semibold text-foreground/70 uppercase tracking-wider truncate"
+              >
+                {pageTitle}
+              </motion.h1>
+            </AnimatePresence>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Actions */}
+          <div className="flex items-center gap-1 shrink-0">
             {appUser.role !== 'guard' && <NotificationBell />}
           </div>
-        </header>
+        </motion.header>
+
         <main className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
           {children}
         </main>
