@@ -1,8 +1,80 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function isAuthed() {
+      return request.auth != null;
     }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin()      { return isAuthed() && myRole() == 'admin';      }
+    function isGuard()      { return isAuthed() && myRole() == 'guard';      }
+    function isContractor() { return isAuthed() && myRole() == 'contractor'; }
+
+    function myCompanyId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
+    }
+
+    // ── Users ──────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      // Cada usuario lee su propio doc; el admin lee todos
+      allow read: if isAuthed() && (request.auth.uid == userId || isAdmin());
+      // Solo el admin puede cambiar roles / empresa asignada
+      allow write: if isAdmin();
+      // El propio usuario puede crear su documento inicial (registro)
+      allow create: if isAuthed() && request.auth.uid == userId;
+
+      // FCM tokens — el usuario gestiona los suyos
+      match /fcmTokens/{tokenId} {
+        allow read, write: if isAuthed() && request.auth.uid == userId;
+      }
+    }
+
+    // ── Companies ──────────────────────────────────────────────────────────────
+    match /companies/{companyId} {
+      // Admin y guardia: acceso total de lectura
+      // Contratista: solo su propia empresa
+      allow read: if isAdmin() || isGuard() ||
+                    (isContractor() && myCompanyId() == companyId);
+      // Solo admin puede crear / editar / borrar empresas
+      allow write: if isAdmin();
+    }
+
+    // ── Visits ─────────────────────────────────────────────────────────────────
+    match /visits/{visitId} {
+      // Admin: todo
+      // Guardia: leer y crear / actualizar (registrar entrada/salida)
+      // Contratista: solo leer visitas de su empresa
+      allow read: if isAdmin() || isGuard() ||
+                    (isContractor() && resource.data.companyId == myCompanyId());
+      allow create: if isAdmin() || isGuard();
+      allow update: if isAdmin() || isGuard();
+      allow delete: if isAdmin();
+    }
+
+    // ── Areas ──────────────────────────────────────────────────────────────────
+    match /areas/{areaId} {
+      // Todos los usuarios autenticados necesitan leer las áreas (wizard, escáner, portal)
+      allow read: if isAuthed();
+      // Solo admin configura áreas
+      allow write: if isAdmin();
+    }
+
+    // ── Supervisors ────────────────────────────────────────────────────────────
+    match /supervisors/{supervisorId} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    // ── Notifications (FCM / banners) ──────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
   }
 }
