@@ -57,7 +57,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               variant="ghost"
               size="sm"
               className="text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
-              onClick={() => auth && signOut(auth)}
+              onClick={() => {
+                document.cookie = "vp_session=; path=/; max-age=0"
+                auth && signOut(auth)
+              }}
             >
               Cerrar sesión
             </Button>

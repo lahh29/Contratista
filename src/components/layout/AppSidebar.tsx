@@ -141,6 +141,7 @@ export function AppSidebar() {
           await deleteDoc(doc(db, 'users', user.uid, 'fcmTokens', token)).catch(() => {})
         }
       }
+      document.cookie = "vp_session=; path=/; max-age=0"
       await signOut(auth)
     } catch (error) {
       console.error("Error signing out:", error)

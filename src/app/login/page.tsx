@@ -37,6 +37,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password)
+      document.cookie = "vp_session=1; path=/; SameSite=Strict"
       router.push("/dashboard")
     } catch {
       toast({
