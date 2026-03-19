@@ -8,7 +8,6 @@ import {
   ShieldAlert,
   ClipboardList,
   RefreshCw,
-  Filter,
   LogIn,
   LogOut,
   Plus,
@@ -22,8 +21,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useFirestore } from "@/firebase"
 import { useCollection } from "@/firebase/firestore/use-collection"
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
@@ -226,22 +225,19 @@ function AuditLog() {
         </TabsList>
 
         <TabsContent value="registro" className="mt-4 space-y-3">
-          {/* Filters — fila scrolleable sin wrap */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
-            {FILTER_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setFilter(opt.value)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  filter === opt.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+          {/* Filtro */}
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-full h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FILTER_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* List */}
           {loading ? (
