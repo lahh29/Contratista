@@ -36,11 +36,20 @@ import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
 import { sendNotification } from '@/app/actions/notify'
 
+/** Convierte "DD/MM/AAAA" → "YYYY-MM-DD" para guardar en Firestore */
+function toISODate(val: string): string {
+  const [d, m, y] = val.split('/')
+  if (!d || !m || !y) return val
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+}
+
 const contractorSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   company: z.string().min(2, "La empresa debe tener al menos 2 caracteres"),
   email: z.string().email("Email inválido").optional().or(z.literal('')),
-  suaExpiration: z.string().min(1, "La fecha de expiración es requerida"),
+  suaExpiration: z.string()
+    .min(1, "La fecha de expiración es requerida")
+    .regex(/^\d{2}\/\d{2}\/\d{4}$/, "Formato inválido, usa DD/MM/AAAA"),
   policyNumber: z.string().min(1, "El número de póliza es requerido"),
   phone: z.string().optional(),
   personnelCount: z.coerce.number().min(1, "Mínimo 1 persona").optional(),
@@ -143,7 +152,7 @@ export function ContractorForm() {
       status: "Active",
       sua: {
         number: values.policyNumber,
-        validUntil: values.suaExpiration,
+        validUntil: toISODate(values.suaExpiration),
         status: "Valid"
       },
       ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
@@ -317,7 +326,13 @@ export function ContractorForm() {
                     <FormItem>
                       <FormLabel>Vencimiento SUA</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

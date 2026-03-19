@@ -30,6 +30,20 @@ import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
 
+/** "DD/MM/AAAA" → "YYYY-MM-DD" para Firestore */
+function toISODate(val: string): string {
+  const [d, m, y] = val.split('/')
+  if (!d || !m || !y) return val
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+}
+
+/** "YYYY-MM-DD" → "DD/MM/AAAA" para mostrar en el input */
+function toDisplayDate(val: string): string {
+  const [y, m, d] = val.split('-')
+  if (!y || !m || !d) return val
+  return `${d}/${m}/${y}`
+}
+
 const schema = z.object({
   name:          z.string().min(2, "Mínimo 2 caracteres"),
   contact:       z.string().min(2, "Mínimo 2 caracteres"),
@@ -91,7 +105,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
         phone:         company.phone         || "",
         email:         company.email         || "",
         suaNumber:     company.sua?.number   || "",
-        suaValidUntil: company.sua?.validUntil || "",
+        suaValidUntil: company.sua?.validUntil ? toDisplayDate(company.sua.validUntil) : "",
         personnelCount: company.personnelCount || 1,
         vehicle:       company.vehicle       || "",
       })
@@ -110,7 +124,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       sua: {
         ...company.sua,
         number:     values.suaNumber     || company.sua?.number     || "",
-        validUntil: values.suaValidUntil || company.sua?.validUntil || "",
+        validUntil: values.suaValidUntil ? toISODate(values.suaValidUntil) : (company.sua?.validUntil || ""),
       },
       ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
       vehicle: values.vehicle ? values.vehicle.toUpperCase().trim() : "",
@@ -122,7 +136,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       toast({ title: "Empresa actualizada", description: `${values.name} fue actualizada correctamente.` })
 
       const oldDate  = company.sua?.validUntil
-      const newDate  = values.suaValidUntil
+      const newDate  = values.suaValidUntil ? toISODate(values.suaValidUntil) : ""
       const isRenewed = newDate && newDate !== oldDate && newDate > new Date().toISOString().slice(0, 10)
       if (isRenewed) sendNotification({ type: "sua_renewed", companyName: values.name })
 
@@ -227,7 +241,14 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                 <FormItem>
                   <FieldLabel>Fecha de Vencimiento</FieldLabel>
                   <FormControl>
-                    <Input className="h-11" type="date" {...field} />
+                    <Input
+                      className="h-11"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="DD/MM/AAAA"
+                      maxLength={10}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
