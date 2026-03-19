@@ -12,6 +12,8 @@ import {
   Shield,
   Briefcase,
   ClipboardList,
+  HardHat,
+  Package,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -36,11 +38,13 @@ import { AnimatePresence } from "framer-motion"
 import type { AppUser } from "@/types"
 
 // ── Role config ───────────────────────────────────────────────
-const ROLE_CONFIG = {
-  admin:      { Icon: ShieldCheck, ring: 'ring-blue-400/60',  glow: 'shadow-blue-500/30',  label: 'Administrador'      },
-  guard:      { Icon: Shield,      ring: 'ring-green-400/60', glow: 'shadow-green-500/30', label: 'Guardia de Seguridad' },
-  contractor: { Icon: Briefcase,   ring: 'ring-orange-400/60',glow: 'shadow-orange-500/30',label: 'Contratista'        },
-} as const
+const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow: string; label: string }> = {
+  admin:      { Icon: ShieldCheck, ring: 'ring-blue-400/60',   glow: 'shadow-blue-500/30',   label: 'Administrador'        },
+  guard:      { Icon: Shield,      ring: 'ring-green-400/60',  glow: 'shadow-green-500/30',  label: 'Guardia de Seguridad' },
+  contractor: { Icon: Briefcase,   ring: 'ring-orange-400/60', glow: 'shadow-orange-500/30', label: 'Contratista'          },
+  seguridad:  { Icon: HardHat,     ring: 'ring-yellow-400/60', glow: 'shadow-yellow-500/30', label: 'Seguridad e Higiene'  },
+  logistica:  { Icon: Package,     ring: 'ring-purple-400/60', glow: 'shadow-purple-500/30', label: 'Logística'            },
+}
 
 // ── UserCard ──────────────────────────────────────────────────
 function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: () => void }) {
@@ -63,7 +67,7 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
   }
 
   const role   = appUser?.role ?? 'admin'
-  const config = ROLE_CONFIG[role] ?? ROLE_CONFIG.admin
+  const config = ROLE_CONFIG[role] ?? ROLE_CONFIG['admin']
   const { Icon } = config
 
   const displayName = appUser?.name || appUser?.email?.split('@')[0] || '—'
@@ -123,11 +127,13 @@ export function AppSidebar() {
   const db             = useFirestore()
   const { user }       = useUser()
   const { appUser }    = useAppUser()
-  const isGuard        = appUser?.role === 'guard'
+  const role           = appUser?.role ?? 'admin'
+  const isGuard        = role === 'guard'
+  const isStaffRole    = role === 'seguridad' || role === 'logistica'
 
   const activeVisitsQuery = React.useMemo(() => {
     if (!db) return null
-    return query(collection(db, 'visits'), where('status', '==', 'Active'))
+    return query(collection(db, 'visits'), where('status', '==', 'Activa'))
   }, [db])
 
   const { data: activeVisits } = useCollection(activeVisitsQuery)
@@ -151,10 +157,29 @@ export function AppSidebar() {
     }
   }
 
+  const contractorsLabel = 'Proveedores'
+
   const navigation = isGuard
     ? [
         {
           title: "Acceso",
+          items: [
+            { name: "Inicio",        href: "/dashboard", icon: LayoutDashboard, badge: null },
+            { name: "Escáner de QR", href: "/scanner",   icon: QrCode,          badge: null },
+          ],
+        },
+      ]
+    : isStaffRole
+    ? [
+        {
+          title: "General",
+          items: [
+            { name: "Inicio",           href: "/dashboard",   icon: LayoutDashboard, badge: activeCount || null },
+            { name: contractorsLabel,   href: "/contractors", icon: Users,            badge: null },
+          ],
+        },
+        {
+          title: "Operaciones",
           items: [
             { name: "Escáner de QR", href: "/scanner", icon: QrCode, badge: null },
           ],
@@ -164,17 +189,17 @@ export function AppSidebar() {
         {
           title: "General",
           items: [
-            { name: "Inicio", href: "/dashboard",   icon: LayoutDashboard, badge: activeCount || null },
-            { name: "Proveedores",     href: "/contractors", icon: Users,            badge: null },
+            { name: "Inicio",       href: "/dashboard",   icon: LayoutDashboard, badge: activeCount || null },
+            { name: "Empresas",     href: "/contractors", icon: Users,            badge: null },
           ],
         },
         {
           title: "Operaciones",
           items: [
-            { name: "Escáner de QR", href: "/scanner",  icon: QrCode,   badge: null },
-            { name: "Reportes",          href: "/reports",  icon: FileText, badge: null },
-            { name: "Configuración",     href: "/settings",  icon: Settings,       badge: null },
-            { name: "Logs",          href: "/bitacora",  icon: ClipboardList,  badge: null },
+            { name: "Escáner de QR",  href: "/scanner",  icon: QrCode,        badge: null },
+            { name: "Reportes",       href: "/reports",  icon: FileText,      badge: null },
+            { name: "Configuración",  href: "/settings", icon: Settings,      badge: null },
+            { name: "Logs",           href: "/bitacora", icon: ClipboardList, badge: null },
           ],
         },
       ]
@@ -275,7 +300,7 @@ export function AppSidebar() {
         </motion.nav>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 mt-auto border-t border-white/10">
+<SidebarFooter className="p-3 mt-auto border-t border-white/10">
         <UserCard appUser={appUser} onLogout={handleLogout} />
       </SidebarFooter>
     </Sidebar>

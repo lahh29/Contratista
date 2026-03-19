@@ -104,6 +104,8 @@ export function ContractorForm() {
   const { data: areas }       = useCollection(areasQuery)
   const { data: supervisors } = useCollection(supervisorsQuery)
 
+  const forcedType = appUser?.role === 'logistica' ? 'cliente' : appUser?.role === 'seguridad' ? 'proveedor' : undefined
+
   const form = useForm<FormValues>({
     resolver: zodResolver(contractorSchema),
     defaultValues: {
@@ -120,6 +122,11 @@ export function ContractorForm() {
       defaultSupervisorId: "",
     },
   })
+
+  // Sync forced type once appUser loads
+  React.useEffect(() => {
+    if (forcedType) form.setValue('type', forcedType)
+  }, [forcedType])
 
   // Auto-fill supervisor when area changes
   const watchedAreaId = form.watch("defaultAreaId")
@@ -318,27 +325,36 @@ export function ContractorForm() {
           <FormMessage />
         </FormItem>
       )} />
-      <FormField
-        control={form.control}
-        name="type"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tipo</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Selecciona el tipo..." />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="proveedor">Proveedor</SelectItem>
-                <SelectItem value="cliente">Cliente</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {forcedType ? (
+        <div className="flex items-center gap-2 h-11 px-3 border rounded-lg bg-muted/30">
+          <span className="text-sm text-muted-foreground flex-1">Tipo de empresa</span>
+          <Badge variant="outline" className={forcedType === 'cliente' ? 'border-blue-300 text-blue-700 bg-blue-50' : 'border-orange-300 text-orange-700 bg-orange-50'}>
+            {forcedType === 'cliente' ? 'Cliente' : 'Proveedor'}
+          </Badge>
+        </div>
+      ) : (
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tipo</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Selecciona el tipo..." />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="proveedor">Proveedor</SelectItem>
+                  <SelectItem value="cliente">Cliente</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
       <FormField control={form.control} name="phone" render={({ field }) => (
         <FormItem>
           <FormLabel>Teléfono <span className="text-muted-foreground font-normal text-xs">(opcional)</span></FormLabel>

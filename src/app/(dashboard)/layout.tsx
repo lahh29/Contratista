@@ -26,7 +26,7 @@ export default function DashboardLayout({
       router.push("/login")
     } else if (appUser.role === 'contractor') {
       router.push("/portal")
-    } else if (appUser.role === 'guard' && pathname !== '/scanner') {
+    } else if (appUser.role === 'guard' && pathname !== '/scanner' && pathname !== '/dashboard') {
       router.replace("/scanner")
     }
   }, [appUser, loading, router, pathname])
@@ -105,7 +105,7 @@ export default function DashboardLayout({
 
           {/* Actions */}
           <div className="flex items-center gap-1 shrink-0">
-            {appUser.role !== 'guard' && <NotificationBell />}
+            {appUser.role !== 'contractor' && <NotificationBell />}
           </div>
         </motion.header>
 

@@ -166,9 +166,16 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     [db]
   )
 
-  const { data: companies } = useCollection(companiesQuery)
+  const { data: allCompanies } = useCollection(companiesQuery)
   const { data: areas } = useCollection(areasQuery)
   const { data: supervisors } = useCollection(supervisorsQuery)
+
+  const companies = React.useMemo(() => {
+    if (!allCompanies) return allCompanies
+    if (appUser?.role === 'seguridad') return allCompanies.filter(c => !c.type || c.type === 'proveedor')
+    if (appUser?.role === 'logistica') return allCompanies.filter(c => c.type === 'cliente')
+    return allCompanies
+  }, [allCompanies, appUser?.role])
 
   const selectedCompany = companies?.find((c) => c.id === companyId) ?? null
   const selectedArea = areas?.find((a) => a.id === areaId) ?? null

@@ -42,7 +42,9 @@ export function useAppUser() {
           const data = snap.data()
           const role: AppUser['role'] =
             data.role === 'contractor' ? 'contractor' :
-            data.role === 'guard'      ? 'guard'      : 'admin'
+            data.role === 'guard'      ? 'guard'      :
+            data.role === 'seguridad'  ? 'seguridad'  :
+            data.role === 'logistica'  ? 'logistica'  : 'admin'
           let companyId: string | undefined = data.companyId ?? undefined
 
           // If contractor has no companyId yet, try to auto-link by email

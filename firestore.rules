@@ -14,6 +14,8 @@ service cloud.firestore {
     function isAdmin()      { return isAuthed() && myRole() == 'admin';      }
     function isGuard()      { return isAuthed() && myRole() == 'guard';      }
     function isContractor() { return isAuthed() && myRole() == 'contractor'; }
+    function isSeguridad()  { return isAuthed() && myRole() == 'seguridad';  }
+    function isLogistica()  { return isAuthed() && myRole() == 'logistica';  }
 
     function myCompanyId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
@@ -40,23 +42,38 @@ service cloud.firestore {
 
     // ── Companies ──────────────────────────────────────────────────────────────
     match /companies/{companyId} {
-      // Admin y guardia: acceso total de lectura
+      // Admin, guardia, seguridad y logística: lectura general
       // Contratista: solo su propia empresa
-      allow read: if isAdmin() || isGuard() ||
+      allow read: if isAdmin() || isGuard() || isSeguridad() || isLogistica() ||
                     (isContractor() && myCompanyId() == companyId);
-      // Solo admin puede crear / editar / borrar empresas
-      allow write: if isAdmin();
+      // Admin: control total
+      // Seguridad: solo proveedores
+      // Logística: solo clientes
+      allow create: if isAdmin() ||
+                      (isSeguridad() && request.resource.data.type == 'proveedor') ||
+                      (isLogistica() && request.resource.data.type == 'cliente');
+      allow update: if isAdmin() ||
+                      (isSeguridad() && resource.data.type == 'proveedor') ||
+                      (isLogistica() && resource.data.type == 'cliente');
+      allow delete: if isAdmin();
     }
 
     // ── Visits ─────────────────────────────────────────────────────────────────
     match /visits/{visitId} {
       // Admin: todo
-      // Guardia: leer y crear / actualizar (registrar entrada/salida)
-      // Contratista: solo leer visitas de su empresa
-      allow read: if isAdmin() || isGuard() ||
+      // Guardia, seguridad, logística: leer todo
+      // Contratista: solo visitas de su empresa
+      allow read: if isAdmin() || isGuard() || isSeguridad() || isLogistica() ||
                     (isContractor() && resource.data.companyId == myCompanyId());
-      allow create: if isAdmin() || isGuard();
-      allow update: if isAdmin() || isGuard();
+      // Guardia: crea/actualiza cualquier visita (scanner)
+      // Seguridad: solo visitas de proveedores
+      // Logística: solo visitas de clientes
+      allow create: if isAdmin() || isGuard() ||
+                      (isSeguridad() && request.resource.data.companyType == 'proveedor') ||
+                      (isLogistica() && request.resource.data.companyType == 'cliente');
+      allow update: if isAdmin() || isGuard() ||
+                      (isSeguridad() && resource.data.companyType == 'proveedor') ||
+                      (isLogistica() && resource.data.companyType == 'cliente');
       allow delete: if isAdmin();
     }
 
@@ -76,7 +93,7 @@ service cloud.firestore {
 
     // ── Notifications (FCM / banners) ──────────────────────────────────────────
     match /notifications/{notifId} {
-      allow read: if isAdmin();
+      allow read: if isAuthed();
       allow write: if isAdmin();
     }
 

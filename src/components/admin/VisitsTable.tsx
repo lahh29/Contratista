@@ -20,6 +20,7 @@ interface VisitsTableProps {
   loading: boolean
   onFinishVisit: (id: string) => void
   onEditVisit: (visit: any) => void
+  canEdit?: boolean
 }
 
 function formatScheduledTime(timeStr: string) {
@@ -30,7 +31,7 @@ function formatScheduledTime(timeStr: string) {
   return format(date, 'h:mm a')
 }
 
-export function VisitsTable({ visits, loading, onFinishVisit, onEditVisit }: VisitsTableProps) {
+export function VisitsTable({ visits, loading, onFinishVisit, onEditVisit, canEdit = true }: VisitsTableProps) {
   return (
     <TooltipProvider>
       <div className="overflow-x-auto -mx-6 px-6">
@@ -97,18 +98,20 @@ export function VisitsTable({ visits, loading, onFinishVisit, onEditVisit }: Vis
                   </TableCell>
                   <TableCell className="text-right py-3">
                     <div className="flex justify-end gap-1">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost" size="icon"
-                            className="h-9 w-9 text-muted-foreground hover:bg-muted rounded-full"
-                            onClick={() => onEditVisit(visit)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Editar visita</TooltipContent>
-                      </Tooltip>
+                      {canEdit && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost" size="icon"
+                              className="h-9 w-9 text-muted-foreground hover:bg-muted rounded-full"
+                              onClick={() => onEditVisit(visit)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar visita</TooltipContent>
+                        </Tooltip>
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button

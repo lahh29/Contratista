@@ -489,12 +489,16 @@ function UserManager({ db, companies }: UserManagerProps) {
     admin:      "Admin",
     guard:      "Guardia",
     contractor: "Contratista",
+    seguridad:  "Seg. e Higiene",
+    logistica:  "Logística",
   }
 
   const ROLE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
     admin:      "default",
     guard:      "outline",
     contractor: "secondary",
+    seguridad:  "secondary",
+    logistica:  "secondary",
   }
 
   return (
@@ -575,8 +579,10 @@ function UserManager({ db, companies }: UserManagerProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="contractor">Contratista</SelectItem>
+                  <SelectItem value="seguridad">Seguridad e Higiene</SelectItem>
+                  <SelectItem value="logistica">Logística</SelectItem>
                   <SelectItem value="guard">Guardia</SelectItem>
+                  <SelectItem value="contractor">Contratista</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -616,6 +622,16 @@ function UserManager({ db, companies }: UserManagerProps) {
 
 export default function SettingsPage() {
   const db = useFirestore()
+  const { appUser: currentUser } = useAppUser()
+
+  if (currentUser && currentUser.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
+        <ShieldAlert className="w-10 h-10 opacity-30" />
+        <p className="text-sm font-medium">Acceso restringido a administradores.</p>
+      </div>
+    )
+  }
 
   const areasQuery = React.useMemo(
     () => (db ? query(collection(db, "areas"),       limit(100)) : null), [db]

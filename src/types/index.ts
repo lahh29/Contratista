@@ -3,7 +3,7 @@ import type { Timestamp } from 'firebase/firestore'
 export interface AppUser {
   uid: string
   email: string | null
-  role: 'admin' | 'contractor' | 'guard'
+  role: 'admin' | 'contractor' | 'guard' | 'seguridad' | 'logistica'
   companyId?: string   // Only for contractors — links to companies/{companyId}
   displayName?: string
   name?: string

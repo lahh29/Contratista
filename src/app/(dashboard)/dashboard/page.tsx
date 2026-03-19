@@ -39,8 +39,16 @@ export default function DashboardPage() {
   }, [db, user, authLoading])
 
   const { data: allVisits, loading: dataLoading } = useCollection(activeVisitsQuery)
-  const activeVisits = React.useMemo(() => allVisits?.filter(v => v.status === "Activa") ?? null, [allVisits])
-  const scheduledVisits = React.useMemo(() => allVisits?.filter(v => v.status === "Programada") ?? null, [allVisits])
+
+  const visitsForRole = React.useMemo(() => {
+    if (!allVisits) return null
+    if (appUser?.role === 'seguridad') return allVisits.filter(v => !v.companyType || v.companyType === 'proveedor')
+    if (appUser?.role === 'logistica') return allVisits.filter(v => v.companyType === 'cliente')
+    return allVisits
+  }, [allVisits, appUser?.role])
+
+  const activeVisits = React.useMemo(() => visitsForRole?.filter(v => v.status === "Activa") ?? null, [visitsForRole])
+  const scheduledVisits = React.useMemo(() => visitsForRole?.filter(v => v.status === "Programada") ?? null, [visitsForRole])
   const { data: companies } = useCollection(companiesQuery)
 
   const handleFinishVisit = async (visitId: string) => {
@@ -99,6 +107,50 @@ export default function DashboardPage() {
     if (!companies?.length) return 0
     return companies.filter(isSuaExpired).length
   }, [companies])
+
+  const isRestrictedRole = appUser?.role === 'guard'
+
+  if (isRestrictedRole) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 py-3 px-4 md:px-6">
+            <div>
+              <CardTitle className="text-base font-semibold">Visitas Programadas</CardTitle>
+              <CardDescription className="text-xs">Próximas visitas agendadas.</CardDescription>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {(scheduledVisits?.length ?? 0) > 0 && (
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-2.5 py-0.5 text-xs font-semibold">
+                  {scheduledVisits!.length} Programada{scheduledVisits!.length !== 1 ? "s" : ""}
+                </Badge>
+              )}
+              <NewVisitModal trigger={
+                <Button size="sm" className="bg-primary text-white h-8 w-8 p-0 shadow-sm shadow-primary/20">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              } />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <VisitsTable
+              visits={scheduledVisits}
+              loading={dataLoading || authLoading}
+              onFinishVisit={handleFinishVisit}
+              onEditVisit={setEditingVisit}
+              canEdit={false}
+            />
+          </CardContent>
+        </Card>
+
+        <EditVisitSheet
+          visit={editingVisit}
+          open={!!editingVisit}
+          onOpenChange={(open) => { if (!open) setEditingVisit(null) }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

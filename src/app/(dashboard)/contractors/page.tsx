@@ -159,11 +159,17 @@ export default function ContractorsPage() {
 
   const filteredCompanies = React.useMemo(() => {
     if (!companies) return []
-    return companies.filter(c =>
+    let list = companies
+    if (appUser?.role === 'seguridad') {
+      list = list.filter(c => !c.type || c.type === 'proveedor')
+    } else if (appUser?.role === 'logistica') {
+      list = list.filter(c => c.type === 'cliente')
+    }
+    return list.filter(c =>
       c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.contact?.toLowerCase().includes(searchTerm.toLowerCase())
     ) as Company[]
-  }, [companies, searchTerm])
+  }, [companies, searchTerm, appUser?.role])
 
   function openAction(company: Company, type: ActiveDialog) {
     setSelectedCompany(company)
