@@ -431,34 +431,48 @@ export default function ScannerPage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                   <CalendarIcon className="w-3 h-3" /> Fecha
                 </label>
-                <div className="relative">
-                  <Input
-                    value={dateInput}
-                    onChange={e => handleDateInput(e.target.value)}
-                    placeholder="DD/MM/AAAA"
-                    className={`h-11 pl-8 font-mono text-sm tracking-widest focus-visible:ring-0 ${dateError ? 'border-destructive' : ''}`}
-                    maxLength={10}
-                    inputMode="numeric"
-                  />
-                  <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-                </div>
+                {appUser?.role === 'guard' ? (
+                  <div className="h-11 pl-8 relative rounded-md border bg-muted/40 flex items-center font-mono text-sm tracking-widest">
+                    <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    {dateInput}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Input
+                      value={dateInput}
+                      onChange={e => handleDateInput(e.target.value)}
+                      placeholder="DD/MM/AAAA"
+                      className={`h-11 pl-8 font-mono text-sm tracking-widest focus-visible:ring-0 ${dateError ? 'border-destructive' : ''}`}
+                      maxLength={10}
+                      inputMode="numeric"
+                    />
+                    <CalendarIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                  </div>
+                )}
                 {dateError && <p className="text-[10px] text-destructive">{dateError}</p>}
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" /> Hora <span className="normal-case font-normal">(opc.)</span>
                 </label>
-                <div className="relative">
-                  <Input
-                    value={timeInput}
-                    onChange={e => handleTimeInput(e.target.value)}
-                    placeholder="HH:MM"
-                    className={`h-11 pl-8 font-mono text-sm tracking-widest focus-visible:ring-0 ${timeError ? 'border-destructive' : ''}`}
-                    maxLength={5}
-                    inputMode="numeric"
-                  />
-                  <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-                </div>
+                {appUser?.role === 'guard' ? (
+                  <div className="h-11 pl-8 relative rounded-md border bg-muted/40 flex items-center font-mono text-sm tracking-widest">
+                    <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    {timeInput || <span className="text-muted-foreground/50 text-xs">—</span>}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Input
+                      value={timeInput}
+                      onChange={e => handleTimeInput(e.target.value)}
+                      placeholder="HH:MM"
+                      className={`h-11 pl-8 font-mono text-sm tracking-widest focus-visible:ring-0 ${timeError ? 'border-destructive' : ''}`}
+                      maxLength={5}
+                      inputMode="numeric"
+                    />
+                    <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                  </div>
+                )}
                 {timeError && <p className="text-[10px] text-destructive">{timeError}</p>}
               </div>
             </div>

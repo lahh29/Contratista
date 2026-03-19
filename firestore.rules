@@ -94,7 +94,12 @@ service cloud.firestore {
     // ── Notifications (FCM / banners) ──────────────────────────────────────────
     match /notifications/{notifId} {
       allow read: if isAuthed();
+      // Admin: control total. Cualquier usuario autenticado puede marcar como leída
+      // (solo puede modificar el campo readBy y solo añadir, no quitar)
       allow write: if isAdmin();
+      allow update: if isAuthed()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+                    && request.resource.data.readBy.hasAll(resource.data.readBy);
     }
 
     // ── Audit Log ───────────────────────────────────────────────────────────────
