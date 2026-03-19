@@ -23,6 +23,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useFirestore } from "@/firebase"
 import { doc, updateDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
@@ -56,6 +63,7 @@ function formatDisplayDate(value: string): string {
 
 const schema = z.object({
   name:          z.string().min(2, "Mínimo 2 caracteres"),
+  type:          z.enum(["proveedor", "cliente"]),
   contact:       z.string().min(2, "Mínimo 2 caracteres"),
   phone:         z.string().optional(),
   email:         z.string().email("Email inválido").optional().or(z.literal("")),
@@ -101,8 +109,15 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: "", contact: "", phone: "", email: "",
-      suaNumber: "", suaValidUntil: "", personnelCount: 1, vehicle: "",
+      name: "",
+      type: "proveedor",
+      contact: "",
+      phone: "",
+      email: "",
+      suaNumber: "",
+      suaValidUntil: "",
+      personnelCount: 1,
+      vehicle: "",
     },
   })
 
@@ -112,6 +127,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
     if (company) {
       form.reset({
         name:          company.name          || "",
+        type:          company.type          || "proveedor",
         contact:       company.contact       || "",
         phone:         company.phone         || "",
         email:         company.email         || "",
@@ -129,6 +145,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
 
     const updateData = {
       name:    values.name,
+      type:    values.type,
       contact: values.contact,
       phone:   values.phone || "",
       email:   values.email ? values.email.toLowerCase().trim() : null,
@@ -148,7 +165,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
 
       // Auditoría de actualización
       logAudit({
-        action: 'company.unblocked', // Si estaba bloqueada y se edita, se asume intención de actualizar/desbloquear
+        action: 'company.updated',
         actorUid:  appUser.uid,
         actorName: appUser.name || appUser.email || "Usuario",
         actorRole: appUser.role,
@@ -206,6 +223,28 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                 </FormItem>
               )} />
 
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel>Tipo</FieldLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder="Selecciona el tipo..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="proveedor">Proveedor</SelectItem>
+                        <SelectItem value="cliente">Cliente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField control={form.control} name="contact" render={({ field }) => (
                 <FormItem>
                   <FieldLabel>Contacto Principal</FieldLabel>
@@ -238,7 +277,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                     <Input className="h-11" type="email" inputMode="email" placeholder="proveedor@empresa.com" {...field} />
                   </FormControl>
                   <p className="text-xs text-muted-foreground">
-                    Vincula automáticamente la cuenta del contratista al portal.
+                    Vincula la cuenta del portal del contratista.
                   </p>
                   <FormMessage />
                 </FormItem>

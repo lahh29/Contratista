@@ -50,6 +50,7 @@ function formatDisplayDate(value: string): string {
 const contractorSchema = z.object({
   name:               z.string().min(2, "Mínimo 2 caracteres"),
   company:            z.string().min(2, "Mínimo 2 caracteres"),
+  type:               z.enum(["proveedor", "cliente"]),
   email:              z.string().email("Email inválido").optional().or(z.literal("")),
   suaExpiration:      z.string().min(1, "Requerida").regex(/^\d{2}\/\d{2}\/\d{4}$/, "Usa DD/MM/AAAA"),
   policyNumber:       z.string().min(1, "Requerido"),
@@ -72,7 +73,7 @@ const STEPS = [
 
 const STEP_REQUIRED_FIELDS: (keyof FormValues)[][] = [
   [],                               // step 0 — siempre puede avanzar
-  ["name", "company"],              // step 1
+  ["name", "company", "type"],     // step 1
   ["policyNumber", "suaExpiration"],// step 2
   [],                               // step 3 — todo opcional
 ]
@@ -106,9 +107,17 @@ export function ContractorForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(contractorSchema),
     defaultValues: {
-      name: "", company: "", email: "", suaExpiration: "",
-      policyNumber: "", phone: "", personnelCount: 1,
-      vehicle: "", defaultAreaId: "", defaultSupervisorId: "",
+      name: "",
+      company: "",
+      type: "proveedor",
+      email: "",
+      suaExpiration: "",
+      policyNumber: "",
+      phone: "",
+      personnelCount: 1,
+      vehicle: "",
+      defaultAreaId: "",
+      defaultSupervisorId: "",
     },
   })
 
@@ -174,6 +183,7 @@ export function ContractorForm() {
     setSubmitting(true)
     const companyData = {
       name:    values.company,
+      type:    values.type,
       contact: values.name,
       phone:   values.phone || "",
       ...(values.email ? { email: values.email.toLowerCase().trim() } : {}),
@@ -308,6 +318,27 @@ export function ContractorForm() {
           <FormMessage />
         </FormItem>
       )} />
+      <FormField
+        control={form.control}
+        name="type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tipo</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Selecciona el tipo..." />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="proveedor">Proveedor</SelectItem>
+                <SelectItem value="cliente">Cliente</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       <FormField control={form.control} name="phone" render={({ field }) => (
         <FormItem>
           <FormLabel>Teléfono <span className="text-muted-foreground font-normal text-xs">(opcional)</span></FormLabel>
