@@ -143,6 +143,8 @@ export function AppSidebar() {
         }
       }
       document.cookie = "vp_session=; path=/; max-age=0"
+      sessionStorage.removeItem('vp_login_recorded')
+      sessionStorage.removeItem('vp_audit_unlocked')
       await signOut(auth)
     } catch (error) {
       console.error("Error signing out:", error)
@@ -172,7 +174,7 @@ export function AppSidebar() {
             { name: "Escáner de QR", href: "/scanner",  icon: QrCode,   badge: null },
             { name: "Reportes",          href: "/reports",  icon: FileText, badge: null },
             { name: "Configuración",     href: "/settings",  icon: Settings,       badge: null },
-            { name: "Bitácora",          href: "/bitacora",  icon: ClipboardList,  badge: null },
+            { name: "Logs",          href: "/bitacora",  icon: ClipboardList,  badge: null },
           ],
         },
       ]

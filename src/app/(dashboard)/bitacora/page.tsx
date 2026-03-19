@@ -107,7 +107,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           <div>
             <h1 className="text-xl font-bold">Acceso Restringido</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Ingresa la contraseña para ver la bitácora de auditoría
+              Ingresa la contraseña para ver los logs de auditoría
             </p>
           </div>
         </div>
@@ -159,51 +159,30 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
   const date = ts?.toDate ? ts.toDate() : null
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-border/50 last:border-0">
-      {/* Action icon */}
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${cfg?.bg ?? "bg-muted"}`}>
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      {/* Icon */}
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg?.bg ?? "bg-muted"}`}>
         <ActionIcon className={`w-4 h-4 ${cfg?.color ?? "text-muted-foreground"}`} />
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-xs font-semibold ${cfg?.color ?? "text-foreground"}`}>
-            {cfg?.label ?? entry.action}
-          </span>
-          {entry.targetName && (
-            <span className="text-xs text-muted-foreground truncate">
-              — {entry.targetName}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          <span className="text-[11px] text-muted-foreground">
-            por <span className="font-medium text-foreground/70">{entry.actorName}</span>
-          </span>
-          <Badge variant="outline" className="text-[9px] h-4 px-1 py-0">
-            {entry.actorRole}
-          </Badge>
-        </div>
-        {/* Details */}
-        {entry.details && Object.keys(entry.details).length > 0 && (
-          <div className="mt-1 text-[10px] text-muted-foreground font-mono bg-muted/40 rounded px-2 py-1">
-            {Object.entries(entry.details).map(([k, v]) => (
-              <span key={k} className="mr-3">
-                <span className="text-foreground/50">{k}:</span> {String(v)}
-              </span>
-            ))}
-          </div>
-        )}
+        <p className={`text-sm font-semibold leading-tight ${cfg?.color ?? "text-foreground"}`}>
+          {cfg?.label ?? entry.action}
+        </p>
+        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+          {entry.targetName ? `${entry.targetName} · ` : ""}
+          {entry.actorName}
+        </p>
       </div>
 
-      {/* Timestamp */}
+      {/* Time */}
       {date && (
         <div className="text-right shrink-0">
-          <p className="text-[11px] font-medium text-foreground/60">
+          <p className="text-xs font-medium text-foreground/60 leading-tight">
             {format(date, "dd MMM", { locale: es })}
           </p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             {format(date, "HH:mm")}
           </p>
         </div>
@@ -235,20 +214,7 @@ function AuditLog() {
   }, [entries, filter])
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <ClipboardList className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold">Bitácora de Auditoría</h1>
-          <p className="text-xs text-muted-foreground">
-            Registro de todas las acciones en la plataforma
-          </p>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       <Tabs defaultValue="registro">
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="registro" className="flex items-center gap-1.5">
@@ -259,49 +225,48 @@ function AuditLog() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="registro" className="mt-4 space-y-4">
-          {/* Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <TabsContent value="registro" className="mt-4 space-y-3">
+          {/* Filters — fila scrolleable sin wrap */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
             {FILTER_OPTIONS.map(opt => (
               <button
                 key={opt.value}
                 onClick={() => setFilter(opt.value)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   filter === opt.value
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {opt.label}
               </button>
             ))}
-            <Badge variant="secondary" className="font-mono ml-auto">
-              {filtered.length} registros
-            </Badge>
           </div>
 
           {/* List */}
-          <div className="rounded-xl border bg-card">
-            {loading ? (
-              <div className="flex items-center justify-center py-16 text-muted-foreground">
-                <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-                <span className="text-sm">Cargando registros…</span>
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-                <ClipboardList className="w-8 h-8 opacity-30" />
-                <p className="text-sm">Sin registros todavía</p>
-                <p className="text-xs opacity-60">Las acciones del sistema aparecerán aquí</p>
-              </div>
-            ) : (
-              <div className="px-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-20 text-muted-foreground">
+              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+              <span className="text-sm">Cargando…</span>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-2 text-muted-foreground">
+              <ClipboardList className="w-7 h-7 opacity-25" />
+              <p className="text-sm">Sin registros todavía</p>
+              <p className="text-[11px] opacity-50">Las acciones del sistema aparecerán aquí</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-[11px] text-muted-foreground px-0.5">
+                {filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}
+              </p>
+              <div className="rounded-xl border bg-card divide-y divide-border/60">
                 {filtered.map(entry => (
                   <AuditRow key={entry.id} entry={entry} />
                 ))}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="accesos" className="mt-4">
@@ -313,15 +278,68 @@ function AuditLog() {
 }
 
 // ── Last Access ───────────────────────────────────────────────────────────────
+const ROLE_META: Record<string, { label: string; avatar: string; chip: string }> = {
+  admin:      { label: "Admin",      avatar: "bg-blue-100 text-blue-700",    chip: "bg-blue-50 text-blue-700 border-blue-200"    },
+  guard:      { label: "Guardia",    avatar: "bg-orange-100 text-orange-700", chip: "bg-orange-50 text-orange-700 border-orange-200" },
+  contractor: { label: "Contratista",avatar: "bg-teal-100 text-teal-700",    chip: "bg-teal-50 text-teal-700 border-teal-200"    },
+}
+
+type AccessUser = {
+  uid: string
+  name?: string
+  email?: string
+  role?: string
+  lastLoginAt?: { toDate: () => Date }
+}
+
+function AccessRow({ u }: { u: AccessUser }) {
+  const meta  = ROLE_META[u.role ?? ''] ?? { label: u.role ?? '—', avatar: "bg-muted text-muted-foreground", chip: "bg-muted text-muted-foreground border-border" }
+  const date  = u.lastLoginAt?.toDate?.()
+  const label = u.name ?? u.email ?? u.uid.slice(0, 8)
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      {/* Avatar */}
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${meta.avatar}`}>
+        {label[0].toUpperCase()}
+      </div>
+
+      {/* Name + role */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate leading-tight">{label}</p>
+        <span className={`inline-block mt-0.5 text-[10px] font-medium px-1.5 py-px rounded-full border ${meta.chip}`}>
+          {meta.label}
+        </span>
+      </div>
+
+      {/* Time */}
+      <div className="text-right shrink-0">
+        {date ? (
+          <>
+            <p className="text-xs font-medium text-foreground/70 leading-tight">
+              {formatDistanceToNow(date, { addSuffix: true, locale: es })}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {format(date, "dd/MM/yy · HH:mm")}
+            </p>
+          </>
+        ) : (
+          <span className="text-[11px] text-muted-foreground/50 italic">Sin acceso</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function LastAccess() {
   const db = useFirestore()
-  const [users, setUsers] = React.useState<{ uid: string; name?: string; email?: string; role?: string; lastLoginAt?: { toDate: () => Date } }[]>([])
+  const [users, setUsers] = React.useState<AccessUser[]>([])
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
     if (!db) return
     getDocs(collection(db, "users")).then(snap => {
-      const data = snap.docs.map(d => ({ uid: d.id, ...d.data() })) as typeof users
+      const data = snap.docs.map(d => ({ uid: d.id, ...d.data() })) as AccessUser[]
       data.sort((a, b) => {
         const ta = a.lastLoginAt?.toDate?.()?.getTime() ?? 0
         const tb = b.lastLoginAt?.toDate?.()?.getTime() ?? 0
@@ -332,53 +350,46 @@ function LastAccess() {
     }).catch(() => setLoading(false))
   }, [db])
 
-  const ROLE_LABEL: Record<string, string> = { admin: 'Admin', guard: 'Guardia', contractor: 'Contratista' }
+  const withAccess    = users.filter(u => u.lastLoginAt)
+  const withoutAccess = users.filter(u => !u.lastLoginAt)
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-16 text-muted-foreground">
+      <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+      <span className="text-sm">Cargando…</span>
+    </div>
+  )
+
+  if (users.length === 0) return (
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
+      <Clock className="w-8 h-8 opacity-30" />
+      <p className="text-sm">Sin registros todavía</p>
+    </div>
+  )
 
   return (
-    <div className="rounded-xl border bg-card">
-      {loading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground">
-          <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-          <span className="text-sm">Cargando…</span>
+    <div className="space-y-3">
+      {/* Usuarios con acceso */}
+      {withAccess.length > 0 && (
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 pt-3 pb-1">
+            Accedieron recientemente
+          </p>
+          <div className="divide-y divide-border/60">
+            {withAccess.map(u => <AccessRow key={u.uid} u={u} />)}
+          </div>
         </div>
-      ) : users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-          <Clock className="w-8 h-8 opacity-30" />
-          <p className="text-sm">Sin registros de acceso todavía</p>
-        </div>
-      ) : (
-        <div className="divide-y">
-          {users.map(u => {
-            const date = u.lastLoginAt?.toDate?.()
-            return (
-              <div key={u.uid} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary">
-                  {(u.name ?? u.email ?? '?')[0].toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{u.name ?? u.email ?? u.uid.slice(0, 8)}</p>
-                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                </div>
-                <Badge variant="outline" className="text-[10px] shrink-0">
-                  {ROLE_LABEL[u.role ?? ''] ?? u.role ?? '—'}
-                </Badge>
-                <div className="text-right shrink-0 ml-1">
-                  {date ? (
-                    <>
-                      <p className="text-[11px] font-medium text-foreground/60">
-                        {formatDistanceToNow(date, { addSuffix: true, locale: es })}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {format(date, "dd/MM/yy HH:mm")}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-[11px] text-muted-foreground">Sin acceso registrado</p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+      )}
+
+      {/* Usuarios sin acceso */}
+      {withoutAccess.length > 0 && (
+        <div className="rounded-xl border bg-card overflow-hidden opacity-70">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 pt-3 pb-1">
+            Sin acceso registrado
+          </p>
+          <div className="divide-y divide-border/60">
+            {withoutAccess.map(u => <AccessRow key={u.uid} u={u} />)}
+          </div>
         </div>
       )}
     </div>

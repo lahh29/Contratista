@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { doc, onSnapshot, setDoc, collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { useState, useEffect, useRef } from 'react'
+import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, limit } from 'firebase/firestore'
 import { useFirestore, useUser } from '@/firebase'
 import type { AppUser } from '@/types'
 
@@ -15,6 +15,9 @@ export function useAppUser() {
   const db = useFirestore()
   const [appUser, setAppUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const loginRecorded = useRef(
+    typeof sessionStorage !== 'undefined' && sessionStorage.getItem('vp_login_recorded') === '1'
+  )
 
   useEffect(() => {
     if (authLoading) return
@@ -30,6 +33,12 @@ export function useAppUser() {
       ref,
       async (snap) => {
         if (snap.exists()) {
+          // Registrar lastLoginAt una sola vez por sesión
+          if (!loginRecorded.current) {
+            loginRecorded.current = true
+            sessionStorage.setItem('vp_login_recorded', '1')
+            updateDoc(ref, { lastLoginAt: serverTimestamp() }).catch(() => {})
+          }
           const data = snap.data()
           const role: AppUser['role'] =
             data.role === 'contractor' ? 'contractor' :

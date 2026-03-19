@@ -27,6 +27,10 @@ service cloud.firestore {
       allow write: if isAdmin();
       // El propio usuario puede crear su documento inicial (registro)
       allow create: if isAuthed() && request.auth.uid == userId;
+      // El usuario puede actualizar lastLoginAt y companyId en su propio doc
+      allow update: if isAuthed() && request.auth.uid == userId
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['lastLoginAt', 'companyId']);
 
       // FCM tokens — el usuario gestiona los suyos
       match /fcmTokens/{tokenId} {
