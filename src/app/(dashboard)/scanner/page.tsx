@@ -17,7 +17,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { useFirestore, useUser } from "@/firebase"
 import { useCollection } from "@/firebase/firestore/use-collection"
@@ -301,31 +300,21 @@ export default function ScannerPage() {
           /* ── Nueva entrada ── */
           <div className="space-y-3">
 
-            {/* Área */}
-            <Select onValueChange={handleAreaChange} value={selectedArea}>
-              <SelectTrigger className="h-11">
-                <div className="flex items-center gap-2 min-w-0">
-                  <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                  <SelectValue placeholder="Área destino" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {areas?.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {/* Área — solo lectura */}
+            <div className="h-11 rounded-md border border-input bg-muted/40 px-3 flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="text-sm truncate">
+                {selectedArea ? (areas?.find(a => a.id === selectedArea)?.name ?? '—') : <span className="text-muted-foreground">Sin área asignada</span>}
+              </span>
+            </div>
 
-            {/* Supervisor */}
-            <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor}>
-              <SelectTrigger className="h-11">
-                <div className="flex items-center gap-2 min-w-0">
-                  <UserCog className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                  <SelectValue placeholder="Supervisor" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {supervisors?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {/* Supervisor — solo lectura */}
+            <div className="h-11 rounded-md border border-input bg-muted/40 px-3 flex items-center gap-2">
+              <UserCog className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="text-sm truncate">
+                {selectedSupervisor ? (supervisors?.find(s => s.id === selectedSupervisor)?.name ?? '—') : <span className="text-muted-foreground">Sin supervisor asignado</span>}
+              </span>
+            </div>
 
             {/* Placas */}
             <div className="space-y-2">
@@ -374,8 +363,6 @@ export default function ScannerPage() {
                   }`}>{confirmedPersonnel}</span>
                   <span className="text-xs text-muted-foreground">personas</span>
                 </div>
-                <Button type="button" variant="outline" size="icon" className="h-11 w-11 rounded-xl text-lg shrink-0"
-                  onClick={() => setConfirmedPersonnel(p => p + 1)}>+</Button>
               </div>
               {confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1) && (
                 <p className="text-xs text-orange-600 flex items-center gap-1.5 px-1">
