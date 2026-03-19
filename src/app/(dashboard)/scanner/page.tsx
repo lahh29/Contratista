@@ -7,18 +7,15 @@ import {
   MapPin,
   Loader2,
   XCircle,
-  Building2,
   Users,
   UserCog,
   LogOut,
   Car,
   AlertTriangle,
   HardHat,
+  ShieldCheck,
 } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
@@ -58,7 +55,7 @@ export default function ScannerPage() {
   const [confirmedPersonnel, setConfirmedPersonnel] = React.useState<number>(1)
   const [platesVerified, setPlatesVerified] = React.useState(false)
   const [safetyShoes, setSafetyShoes] = React.useState(false)
-  const [safetyVest,  setSafetyVest]  = React.useState(false)
+  const [safetyVest, setSafetyVest] = React.useState(false)
   const [scanHistory, setScanHistory] = React.useState<
     { companyName: string; action: 'entry' | 'exit'; time: Date }[]
   >([])
@@ -68,21 +65,25 @@ export default function ScannerPage() {
   const { data: areas } = useCollection(areasQuery)
   const { data: supervisors } = useCollection(supervisorsQuery)
 
+  const handleAreaChange = React.useCallback(async (areaId: string) => {
+    setSelectedArea(areaId)
+    if (!db || !areaId) return
+    try {
+      const areaSnap = await getDoc(doc(db, 'areas', areaId))
+      const supervisorId = areaSnap.data()?.supervisorId
+      if (supervisorId) setSelectedSupervisor(supervisorId)
+    } catch { /* non-critical */ }
+  }, [db])
+
   const handleQRDetected = async (qrText: string) => {
     if (!db) return
     setIsProcessing(true)
-
     try {
-      // Buscar empresa por ID (el QR contiene el ID de la empresa)
       const companyRef = doc(db, 'companies', qrText.trim())
       const companySnap = await getDoc(companyRef)
 
       if (!companySnap.exists()) {
-        toast({
-          variant: 'destructive',
-          title: 'QR no reconocido',
-          description: 'No se encontró ninguna empresa con este código.',
-        })
+        toast({ variant: 'destructive', title: 'QR no reconocido', description: 'No se encontró ninguna empresa con este código.' })
         setIsProcessing(false)
         return
       }
@@ -91,21 +92,33 @@ export default function ScannerPage() {
       setCurrentCompany(company)
       setConfirmedPersonnel(Number(company.personnelCount) || 1)
 
-      // Verificar si tiene una visita activa
-      const activeVisitQuery = query(
+      // Auto-llenar placas si están registradas
+      if (company.vehicle) {
+        setVehiclePlates(company.vehicle)
+      }
+
+      // Auto-llenar área y supervisor desde defaults
+      const areaId = (company as any).defaultAreaId
+      if (areaId) {
+        setSelectedArea(areaId)
+        try {
+          const areaSnap = await getDoc(doc(db, 'areas', areaId))
+          const supervisorId = areaSnap.data()?.supervisorId ?? (company as any).defaultSupervisorId
+          if (supervisorId) setSelectedSupervisor(supervisorId)
+        } catch { /* non-critical */ }
+      } else if ((company as any).defaultSupervisorId) {
+        setSelectedSupervisor((company as any).defaultSupervisorId)
+      }
+
+      // Verificar visita activa
+      const activeSnap = await getDocs(query(
         collection(db, 'visits'),
         where('companyId', '==', qrText.trim()),
         where('status', '==', 'Active')
-      )
-      const activeSnap = await getDocs(activeVisitQuery)
-      if (!activeSnap.empty) {
-        setActiveVisit({ id: activeSnap.docs[0].id, ...activeSnap.docs[0].data() } as import('@/types').Visit)
-      } else {
-        setActiveVisit(null)
-      }
-
+      ))
+      setActiveVisit(activeSnap.empty ? null : { id: activeSnap.docs[0].id, ...activeSnap.docs[0].data() } as import('@/types').Visit)
       setMode('VERIFYING')
-    } catch (err) {
+    } catch {
       toast({ variant: 'destructive', title: 'Error al buscar empresa' })
     } finally {
       setIsProcessing(false)
@@ -115,10 +128,8 @@ export default function ScannerPage() {
   const handleConfirmEntry = async () => {
     if (!db || !currentCompany || !selectedArea || !selectedSupervisor || !vehiclePlates.trim()) return
     setIsProcessing(true)
-
     const area = areas?.find(a => a.id === selectedArea)
     const supervisor = supervisors?.find(s => s.id === selectedSupervisor)
-
     try {
       const visitRef = await addDoc(collection(db, 'visits'), {
         companyId: currentCompany.id,
@@ -145,46 +156,21 @@ export default function ScannerPage() {
         targetType: 'visit',
         targetId:   visitRef.id,
         targetName: currentCompany.name,
-        details: {
-          área: area?.name ?? '—',
-          personal: confirmedPersonnel,
-          placas: vehiclePlates.trim().toUpperCase(),
-        },
+        details: { área: area?.name ?? '—', personal: confirmedPersonnel, placas: vehiclePlates.trim().toUpperCase() },
       })
       setScanHistory(h => [{ companyName: currentCompany.name, action: 'entry' as const, time: new Date() }, ...h].slice(0, 5))
       setActiveVisit({
-        id: visitRef.id,
-        status: 'Active',
-        areaName: area?.name,
-        supervisorName: supervisor?.name,
-        personnelCount: confirmedPersonnel,
-        vehiclePlates: vehiclePlates.trim().toUpperCase(),
+        id: visitRef.id, status: 'Active',
+        areaName: area?.name, supervisorName: supervisor?.name,
+        personnelCount: confirmedPersonnel, vehiclePlates: vehiclePlates.trim().toUpperCase(),
       })
       setMode('ON_SITE')
-      sendNotification({
-        type: 'entry',
-        companyName: currentCompany.name,
-        areaName: area?.name || '—',
-        personnelCount: confirmedPersonnel,
-        vehiclePlates: vehiclePlates.trim().toUpperCase(),
-      })
+      sendNotification({ type: 'entry', companyName: currentCompany.name, areaName: area?.name || '—', personnelCount: confirmedPersonnel, vehiclePlates: vehiclePlates.trim().toUpperCase() })
       const authorized = Number(currentCompany.personnelCount) || 0
-      if (authorized > 0 && confirmedPersonnel > authorized) {
-        sendNotification({
-          type: 'over_capacity',
-          companyName: currentCompany.name,
-          areaName: area?.name || '—',
-          authorized,
-          actual: confirmedPersonnel,
-        })
-      }
-      if ((area as any)?.restricted) {
-        sendNotification({
-          type: 'restricted_area',
-          companyName: currentCompany.name,
-          areaName: area?.name || '—',
-        })
-      }
+      if (authorized > 0 && confirmedPersonnel > authorized)
+        sendNotification({ type: 'over_capacity', companyName: currentCompany.name, areaName: area?.name || '—', authorized, actual: confirmedPersonnel })
+      if ((area as any)?.restricted)
+        sendNotification({ type: 'restricted_area', companyName: currentCompany.name, areaName: area?.name || '—' })
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar entrada' })
     } finally {
@@ -196,27 +182,19 @@ export default function ScannerPage() {
     if (!db || !activeVisit) return
     setIsProcessing(true)
     try {
-      await updateDoc(doc(db, 'visits', activeVisit.id), {
-        status: 'Completed',
-        exitTime: serverTimestamp(),
-      })
+      await updateDoc(doc(db, 'visits', activeVisit.id), { status: 'Completed', exitTime: serverTimestamp() })
       toast({ title: 'Salida registrada', description: `${currentCompany?.name} ha salido.` })
       logAudit({
         action: 'visit.completed',
         actorUid:  appUser?.uid  ?? user?.uid ?? '',
         actorName: appUser?.name ?? appUser?.email ?? 'Guardia',
         actorRole: appUser?.role ?? 'guard',
-        targetType: 'visit',
-        targetId:   activeVisit.id,
+        targetType: 'visit', targetId: activeVisit.id,
         targetName: currentCompany?.name ?? '—',
         details: { área: activeVisit.areaName ?? '—' },
       })
       setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 5))
-      sendNotification({
-        type: 'exit',
-        companyName: currentCompany?.name || '—',
-        areaName: activeVisit.areaName || '—',
-      })
+      sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—' })
       resetScanner()
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar salida' })
@@ -238,25 +216,20 @@ export default function ScannerPage() {
     setSafetyVest(false)
   }
 
-  // ── MODO: ESCANEANDO ──────────────────────────────────────────
+  // ── SCANNING ──────────────────────────────────────────────────
   if (mode === 'SCANNING') {
     return (
       <div className="space-y-4">
         <QRScanner onQRDetected={handleQRDetected} isProcessing={isProcessing} />
-
         {scanHistory.length > 0 && (
           <div className="max-w-sm mx-auto space-y-2">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
-              Últimos escaneos
-            </p>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Últimos escaneos</p>
             <div className="divide-y rounded-xl border bg-card overflow-hidden">
               {scanHistory.map((entry, i) => (
                 <div key={i} className="flex items-center gap-3 px-3 py-2.5">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${entry.action === 'entry' ? 'bg-green-500' : 'bg-orange-400'}`} />
                   <span className="text-sm font-medium flex-1 truncate">{entry.companyName}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {entry.action === 'entry' ? 'Ingreso' : 'Salida'}
-                  </span>
+                  <span className="text-xs text-muted-foreground shrink-0">{entry.action === 'entry' ? 'Ingreso' : 'Salida'}</span>
                   <span className="text-[11px] text-muted-foreground/60 shrink-0">
                     {entry.time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -269,330 +242,253 @@ export default function ScannerPage() {
     )
   }
 
-  // ── MODO: VERIFICANDO / CONFIRMANDO ──────────────────────────
+  // ── VERIFYING ─────────────────────────────────────────────────
   if (mode === 'VERIFYING') {
     const sua = currentCompany?.sua
-    const isExpired = (() => {
-      if (sua?.validUntil) {
-        const today = new Date().toISOString().slice(0, 10)
-        if (sua.validUntil < today) return true
-        return false
-      }
-      return sua?.status !== 'Valid'
-    })()
+    const isExpired = sua?.validUntil
+      ? sua.validUntil < new Date().toISOString().slice(0, 10)
+      : sua?.status !== 'Valid'
 
     return (
-      <div className="max-w-sm mx-auto space-y-4 animate-in slide-in-from-bottom-6 duration-400">
-        {/* Estado SUA */}
-        <div className={`p-4 rounded-2xl flex items-center gap-3 ${isExpired ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+      <div className="max-w-sm mx-auto space-y-4 pb-6 animate-in slide-in-from-bottom-6 duration-400">
+
+        {/* SUA status */}
+        <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold ${
+          isExpired ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
+        }`}>
           {isExpired
-            ? <XCircle className="w-7 h-7 shrink-0" />
-            : <CheckCircle2 className="w-7 h-7 shrink-0" />
-          }
-          <div>
-            <p className="font-bold">{isExpired ? 'SUA Vencido o Pendiente' : 'Empresa Autorizada'}</p>
-            <p className="text-xs opacity-75 font-semibold uppercase tracking-wide">
-              SUA válido hasta: {currentCompany?.sua?.validUntil || 'N/A'}
-            </p>
+            ? <XCircle className="w-4 h-4 shrink-0" />
+            : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+          <span>{isExpired ? 'SUA Vencido' : 'SUA Vigente'}</span>
+          {sua?.validUntil && (
+            <span className="ml-auto text-xs font-normal opacity-60">hasta {sua.validUntil}</span>
+          )}
+        </div>
+
+        {/* Company identity */}
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xl shrink-0">
+            {currentCompany?.name?.[0]}
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-base leading-tight truncate">{currentCompany?.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{currentCompany?.contact || '—'}</p>
           </div>
         </div>
 
-        {/* Info empresa */}
-        <Card className="border-none shadow-lg">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl shrink-0">
-                {currentCompany?.name?.[0]}
-              </div>
-              <div className="min-w-0">
-                <CardTitle className="text-xl truncate">{currentCompany?.name}</CardTitle>
-                <CardDescription className="flex items-center gap-1 mt-0.5">
-                  <Building2 className="w-3 h-3" />
-                  Contacto: {currentCompany?.contact || '—'}
-                </CardDescription>
-              </div>
+        {activeVisit ? (
+          /* ── Salida ── */
+          <div className="space-y-3">
+            <div className="rounded-xl border bg-amber-50 border-amber-200 px-4 py-3 space-y-1">
+              <p className="text-amber-800 font-semibold text-sm flex items-center gap-2">
+                <MapPin className="w-4 h-4 shrink-0" /> Visita activa
+              </p>
+              <p className="text-sm text-amber-700">
+                <span className="font-bold">{activeVisit.areaName}</span>
+                {activeVisit.supervisorName && <span className="opacity-70"> · {activeVisit.supervisorName}</span>}
+              </p>
             </div>
-          </CardHeader>
+            <Button
+              className="w-full h-12 font-bold rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={handleRegisterExit}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+              Registrar Salida
+            </Button>
+          </div>
+        ) : (
+          /* ── Nueva entrada ── */
+          <div className="space-y-3">
 
-          <CardContent className="space-y-4">
-            {activeVisit ? (
-              /* Ya tiene visita activa → mostrar opción de salida */
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                <p className="text-amber-800 font-semibold text-sm flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> Ya tiene una visita activa
-                </p>
-                <div className="text-sm text-amber-700 space-y-1">
-                  <p>Área: <span className="font-bold">{activeVisit.areaName}</span></p>
-                  <p>Supervisor: <span className="font-bold">{activeVisit.supervisorName}</span></p>
+            {/* Área */}
+            <Select onValueChange={handleAreaChange} value={selectedArea}>
+              <SelectTrigger className="h-11">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Área destino" />
                 </div>
-                <Button
-                  className="w-full h-12 font-bold rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white"
-                  onClick={handleRegisterExit}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? <Loader2 className="animate-spin" /> : <LogOut className="w-4 h-4" />}
-                  Registrar Salida
-                </Button>
+              </SelectTrigger>
+              <SelectContent>
+                {areas?.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            {/* Supervisor */}
+            <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor}>
+              <SelectTrigger className="h-11">
+                <div className="flex items-center gap-2 min-w-0">
+                  <UserCog className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <SelectValue placeholder="Supervisor" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {supervisors?.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            {/* Placas */}
+            <div className="space-y-2">
+              <div className="relative">
+                <Car className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Placas del vehículo"
+                  value={vehiclePlates}
+                  onChange={e => { setVehiclePlates(e.target.value.toUpperCase()); setPlatesVerified(false) }}
+                  className="h-11 pl-9 font-mono tracking-widest uppercase"
+                  maxLength={10}
+                />
               </div>
-            ) : (
-              /* Nueva entrada → capturar datos y confirmar */
-              <div className="space-y-3">
-
-                {/* Placas del vehículo */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Car className="w-3.5 h-3.5" /> Placas del Vehículo
-                  </label>
-                  {currentCompany?.vehicle && (
-                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm">
-                      <span className="text-muted-foreground">Registradas en QR:</span>
-                      <span className="font-black font-mono text-primary tracking-widest">
-                        {currentCompany.vehicle}
-                      </span>
-                    </div>
-                  )}
-                  <Input
-                    placeholder="Ej. ABC-123-D"
-                    value={vehiclePlates}
-                    onChange={(e) => {
-                      setVehiclePlates(e.target.value.toUpperCase())
-                      setPlatesVerified(false)
-                    }}
-                    className="h-11 font-mono tracking-widest uppercase"
-                    maxLength={10}
-                  />
-                  {vehiclePlates.trim().length > 0 && (
-                    <label className={`flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 ${platesVerified ? 'border-green-200 bg-green-50' : 'border-orange-200 bg-orange-50'}`}>
-                      <Checkbox
-                        id="plates-verified"
-                        checked={platesVerified}
-                        onCheckedChange={(v) => setPlatesVerified(!!v)}
-                        className="h-5 w-5"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">Placas verificadas</p>
-                        <p className="text-xs text-muted-foreground">Confirmo que las placas visibles coinciden con el vehículo</p>
-                      </div>
-                    </label>
-                  )}
-                </div>
-
-                {/* Confirmación de personal */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5" /> Personas que Ingresan
-                  </label>
-                  {/* Registrado en el QR */}
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2 text-sm">
-                    <span className="text-muted-foreground">Registrado en QR:</span>
-                    <span className="font-black text-primary">
-                      {Number(currentCompany?.personnelCount) || 1}
-                    </span>
-                  </div>
-                  {/* Contador para confirmar */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-11 w-11 rounded-xl text-lg shrink-0"
-                      onClick={() => setConfirmedPersonnel(p => Math.max(1, p - 1))}
-                    >−</Button>
-                    <div className={`flex-1 h-11 rounded-xl border flex items-center justify-center text-xl font-black ${
-                      confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
-                        ? 'border-orange-400 bg-orange-50 text-orange-700'
-                        : 'border-green-400 bg-green-50 text-green-700'
-                    }`}>
-                      {confirmedPersonnel}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-11 w-11 rounded-xl text-lg shrink-0"
-                      onClick={() => setConfirmedPersonnel(p => p + 1)}
-                    >+</Button>
-                  </div>
-                  {/* Alerta si el número no coincide */}
-                  {confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1) && (
-                    <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-                      <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-orange-700 font-medium">
-                        La cantidad no coincide con el QR. Asegúrate de que sea correcta.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Área destino */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5" /> Área Destino
-                  </label>
-                  <Select onValueChange={setSelectedArea} value={selectedArea}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Selecciona un área" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areas?.map(a => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Supervisor */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <UserCog className="w-3.5 h-3.5" /> Supervisor Interno
-                  </label>
-                  <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Selecciona supervisor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supervisors?.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Equipo de seguridad */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <HardHat className="w-3.5 h-3.5" /> Equipo de Seguridad
-                  </label>
-                  <div className={`rounded-xl border px-4 py-3 space-y-3 ${(!safetyShoes || !safetyVest) ? 'border-orange-200 bg-orange-50' : 'border-green-200 bg-green-50'}`}>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox
-                        id="safety-shoes"
-                        checked={safetyShoes}
-                        onCheckedChange={(v) => setSafetyShoes(!!v)}
-                        className="h-5 w-5"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">Zapatos de seguridad</p>
-                        <p className="text-xs text-muted-foreground">El personal porta calzado de protección</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox
-                        id="safety-vest"
-                        checked={safetyVest}
-                        onCheckedChange={(v) => setSafetyVest(!!v)}
-                        className="h-5 w-5"
-                      />
-                      <div>
-                        <p className="text-sm font-semibold leading-tight">Chaleco de seguridad</p>
-                        <p className="text-xs text-muted-foreground">El personal porta chaleco reflectivo</p>
-                      </div>
-                    </label>
-                    {(!safetyShoes || !safetyVest) && (
-                      <p className="text-xs text-orange-700 font-medium">
-                        Verifica que el personal porte todo el equipo antes de autorizar el acceso.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {isExpired && (
-                  <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">
-                    <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-xs text-destructive font-medium">
-                      No se puede autorizar el ingreso. El SUA de esta empresa está vencido o pendiente de validación.
-                    </p>
-                  </div>
-                )}
-                <Button
-                  className="w-full h-14 text-lg font-black rounded-2xl gap-2 bg-primary text-white shadow-xl shadow-primary/20 mt-2"
-                  onClick={handleConfirmEntry}
-                  disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || !platesVerified || !safetyShoes || !safetyVest || isProcessing}
+              {vehiclePlates.trim().length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPlatesVerified(v => !v)}
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    platesVerified
+                      ? 'border-green-300 bg-green-50 text-green-700'
+                      : 'border-orange-200 bg-orange-50 text-orange-700'
+                  }`}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin" /> : <UserCheck className="w-5 h-5" />}
-                  CONFIRMAR ENTRADA
-                </Button>
+                  {platesVerified
+                    ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                  {platesVerified ? 'Placas verificadas' : 'Toca para verificar placas'}
+                </button>
+              )}
+            </div>
+
+            {/* Personal */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="icon" className="h-11 w-11 rounded-xl text-lg shrink-0"
+                  onClick={() => setConfirmedPersonnel(p => Math.max(1, p - 1))}>−</Button>
+                <div className={`flex-1 h-11 rounded-xl border flex items-center justify-center gap-2 ${
+                  confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
+                    ? 'border-orange-400 bg-orange-50'
+                    : 'border-green-400 bg-green-50'
+                }`}>
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <span className={`text-xl font-black ${
+                    confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
+                      ? 'text-orange-700' : 'text-green-700'
+                  }`}>{confirmedPersonnel}</span>
+                  <span className="text-xs text-muted-foreground">personas</span>
+                </div>
+                <Button type="button" variant="outline" size="icon" className="h-11 w-11 rounded-xl text-lg shrink-0"
+                  onClick={() => setConfirmedPersonnel(p => p + 1)}>+</Button>
+              </div>
+              {confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1) && (
+                <p className="text-xs text-orange-600 flex items-center gap-1.5 px-1">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  Difiere del QR ({Number(currentCompany?.personnelCount) || 1} registradas)
+                </p>
+              )}
+            </div>
+
+            {/* Equipo de seguridad — toggles */}
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setSafetyShoes(v => !v)}
+                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                  safetyShoes ? 'border-green-400 bg-green-50 text-green-700' : 'border-border bg-background text-muted-foreground'
+                }`}>
+                <HardHat className="w-5 h-5" />
+                Zapatos
+              </button>
+              <button type="button" onClick={() => setSafetyVest(v => !v)}
+                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                  safetyVest ? 'border-green-400 bg-green-50 text-green-700' : 'border-border bg-background text-muted-foreground'
+                }`}>
+                <ShieldCheck className="w-5 h-5" />
+                Chaleco
+              </button>
+            </div>
+
+            {isExpired && (
+              <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">
+                <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive font-medium">SUA vencido — no se puede autorizar el ingreso.</p>
               </div>
             )}
 
-            <Button variant="ghost" className="w-full text-muted-foreground" onClick={resetScanner}>
-              Cancelar
+            <Button
+              className="w-full h-14 text-base font-black rounded-2xl gap-2 shadow-lg shadow-primary/20"
+              onClick={handleConfirmEntry}
+              disabled={isExpired || !selectedArea || !selectedSupervisor || !vehiclePlates.trim() || !platesVerified || !safetyShoes || !safetyVest || isProcessing}
+            >
+              {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <UserCheck className="w-5 h-5" />}
+              Confirmar Entrada
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        )}
+
+        <Button variant="ghost" className="w-full text-muted-foreground text-sm" onClick={resetScanner}>
+          Cancelar
+        </Button>
       </div>
     )
   }
 
-  // ── MODO: EN SITIO ────────────────────────────────────────────
+  // ── ON SITE ───────────────────────────────────────────────────
   return (
-    <div className="max-w-sm mx-auto space-y-6 animate-in zoom-in-95 duration-400">
-      <div className="text-center space-y-3">
-        <div className="w-20 h-20 rounded-full bg-primary mx-auto flex items-center justify-center text-white text-3xl font-black shadow-xl ring-4 ring-primary/20">
+    <div className="max-w-sm mx-auto space-y-4 pb-6 animate-in zoom-in-95 duration-400">
+      {/* Header */}
+      <div className="flex flex-col items-center gap-2 pt-2 text-center">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-black ring-4 ring-emerald-50">
           {currentCompany?.name?.[0]}
         </div>
-        <div>
-          <h2 className="text-2xl font-black">¡Acceso Autorizado!</h2>
-          <Badge className="mt-2 bg-green-100 text-green-700 hover:bg-green-100 px-4 py-1 text-xs font-bold">
-            EN SITIO TRABAJANDO
-          </Badge>
+        <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Acceso Autorizado</p>
+        <h2 className="text-lg font-black leading-tight">{currentCompany?.name}</h2>
+      </div>
+
+      {/* Details grid */}
+      <div className="rounded-xl border bg-card divide-y overflow-hidden">
+        <div className="grid grid-cols-2 divide-x">
+          <div className="flex items-center gap-2.5 px-4 py-3">
+            <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wide">Área</p>
+              <p className="text-sm font-bold truncate">{activeVisit?.areaName || '—'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 px-4 py-3">
+            <UserCog className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wide">Supervisor</p>
+              <p className="text-sm font-bold truncate">{activeVisit?.supervisorName || '—'}</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 divide-x">
+          <div className="flex items-center gap-2.5 px-4 py-3">
+            <Users className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wide">Personal</p>
+              <p className="text-sm font-bold">{activeVisit?.personnelCount ?? '—'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 px-4 py-3">
+            <Car className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wide">Placas</p>
+              <p className="text-sm font-bold font-mono truncate">{activeVisit?.vehiclePlates || '—'}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <Card className="border-none shadow-lg">
-        <CardContent className="pt-5 space-y-4">
-          <div className="flex justify-between items-center border-b pb-4">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Área</p>
-                <p className="font-bold">{activeVisit?.areaName || '—'}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase">Supervisor</p>
-              <p className="font-bold">{activeVisit?.supervisorName || '—'}</p>
-            </div>
-          </div>
+      <Button
+        variant="outline"
+        className="w-full h-12 rounded-xl border-2 text-destructive border-red-100 hover:bg-red-50 gap-2 font-bold"
+        onClick={handleRegisterExit}
+        disabled={isProcessing}
+      >
+        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+        Registrar Salida
+      </Button>
 
-          <div className="flex justify-between items-center border-b pb-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary" />
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Personal</p>
-                <p className="font-bold">{activeVisit?.personnelCount ?? currentCompany?.personnelCount ?? '—'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Car className="w-4 h-4 text-primary" />
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Placas</p>
-                <p className="font-bold font-mono">{activeVisit?.vehiclePlates || '—'}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              SUA: {currentCompany?.sua?.validUntil || 'N/A'}
-            </Badge>
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full h-12 rounded-xl border-2 text-destructive border-red-100 hover:bg-red-50 gap-2 font-bold"
-            onClick={handleRegisterExit}
-            disabled={isProcessing}
-          >
-            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-            Registrar Salida
-          </Button>
-
-          <Button variant="ghost" className="w-full text-muted-foreground" onClick={resetScanner}>
-            Escanear otro
-          </Button>
-        </CardContent>
-      </Card>
+      <Button variant="ghost" className="w-full text-muted-foreground text-sm" onClick={resetScanner}>
+        Escanear otro
+      </Button>
     </div>
   )
 }
