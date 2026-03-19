@@ -322,14 +322,12 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
             return (
               <React.Fragment key={s.label}>
                 <div className="flex items-center gap-1.5">
-                  <motion.div
+                <motion.div
                     animate={{
-                      backgroundColor: done || current ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
                       scale: current ? 1.1 : 1,
                     }}
                     transition={{ duration: 0.2 }}
-                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                  >
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${done || current ? 'bg-primary' : 'bg-muted'}`}>
                     {done
                       ? <CheckCircle2 className="w-4 h-4 text-white" />
                       : <span className={`text-xs font-bold ${current ? 'text-white' : 'text-muted-foreground'}`}>{i + 1}</span>
@@ -340,11 +338,9 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
                   </span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <motion.div
-                    className="flex-1 h-px mx-2"
-                    animate={{ backgroundColor: i < step ? 'hsl(var(--primary))' : 'hsl(var(--border))' }}
-                    transition={{ duration: 0.3 }}
-                  />
+                  <div
+                  className={`flex-1 h-px mx-2 transition-colors duration-300 ${i < step ? 'bg-primary' : 'bg-border'}`}
+                />
                 )}
               </React.Fragment>
             )

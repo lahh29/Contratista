@@ -449,15 +449,11 @@ export function ContractorForm() {
                   <React.Fragment key={label}>
                     <div className="flex flex-col items-center gap-1 shrink-0">
                       <motion.div
-                        animate={{
-                          backgroundColor: done || current
-                            ? "hsl(var(--primary))"
-                            : "hsl(var(--muted))",
-                          scale: current ? 1.1 : 1,
-                        }}
+                        animate={{ scale: current ? 1.1 : 1 }}
                         transition={{ duration: 0.2 }}
-                        className="w-8 h-8 rounded-full flex items-center justify-center"
-                      >
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                          done || current ? "bg-primary" : "bg-muted" 
+                        }`}>
                         {done
                           ? <CheckCircle2 className="w-4 h-4 text-white" />
                           : <Icon className={`w-4 h-4 ${current ? "text-white" : "text-muted-foreground"}`} />
@@ -468,11 +464,9 @@ export function ContractorForm() {
                       </span>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <motion.div
-                        className="flex-1 h-px mx-1.5 mb-4"
-                        animate={{ backgroundColor: i < step ? "hsl(var(--primary))" : "hsl(var(--border))" }}
-                        transition={{ duration: 0.3 }}
-                      />
+                      <div className={`flex-1 h-px mx-1.5 mb-4 transition-colors duration-300 ${
+                        i < step ? "bg-primary" : "bg-border"
+                      }`} />
                     )}
                   </React.Fragment>
                 )
