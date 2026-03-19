@@ -16,13 +16,16 @@ import { DashboardStats } from "@/components/admin/DashboardStats"
 import { VisitsTable } from "@/components/admin/VisitsTable"
 import { EditVisitSheet } from "@/components/admin/EditVisitSheet"
 import { useFirestore, useCollection, useUser } from "@/firebase"
-import { collection, query, where, limit, updateDoc, doc, serverTimestamp } from "firebase/firestore"
+import { collection, query, where, limit, updateDoc, doc, serverTimestamp, getDoc } from "firebase/firestore"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
+import { logAudit } from "@/app/actions/audit"
+import { useAppUser } from "@/hooks/use-app-user"
 
 export default function DashboardPage() {
   const db = useFirestore()
   const { user, loading: authLoading } = useUser()
+  const { appUser } = useAppUser()
   const [editingVisit, setEditingVisit] = React.useState<any | null>(null)
 
   const activeVisitsQuery = React.useMemo(() => {
@@ -38,18 +41,37 @@ export default function DashboardPage() {
   const { data: activeVisits, loading: dataLoading } = useCollection(activeVisitsQuery)
   const { data: companies } = useCollection(companiesQuery)
 
-  const handleFinishVisit = (visitId: string) => {
-    if (!db) return
+  const handleFinishVisit = async (visitId: string) => {
+    if (!db || !appUser) return
+    
+    // Obtener datos de la visita antes de cerrarla para la auditoría
+    const visitSnap = await getDoc(doc(db, "visits", visitId))
+    const visitData = visitSnap.data()
+
     const visitRef = doc(db, "visits", visitId)
     const updateData = { status: "Completed", exitTime: serverTimestamp() }
-    updateDoc(visitRef, updateData).catch(async () => {
-      const permissionError = new FirestorePermissionError({
-        path: visitRef.path,
-        operation: 'update',
-        requestResourceData: updateData,
+    
+    updateDoc(visitRef, updateData)
+      .then(() => {
+        // Registrar Auditoría de Salida
+        logAudit({
+          action: "visit.completed",
+          actorUid: appUser.uid,
+          actorName: appUser.name || appUser.email || "Usuario",
+          actorRole: appUser.role,
+          targetType: "visit",
+          targetId: visitId,
+          targetName: visitData?.companyName || "Visita",
+        })
       })
-      errorEmitter.emit('permission-error', permissionError)
-    })
+      .catch(async () => {
+        const permissionError = new FirestorePermissionError({
+          path: visitRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        })
+        errorEmitter.emit('permission-error', permissionError)
+      })
   }
 
   const activePeople = React.useMemo(

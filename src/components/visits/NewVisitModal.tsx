@@ -23,6 +23,8 @@ import { useFirestore, useCollection } from "@/firebase"
 import { collection, addDoc, serverTimestamp, query, limit } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { sendNotification } from "@/app/actions/notify"
+import { logAudit } from "@/app/actions/audit"
+import { useAppUser } from "@/hooks/use-app-user"
 
 // ── Responsive hook ────────────────────────────────────────────
 function useIsMobile() {
@@ -63,6 +65,7 @@ interface WizardProps {
 function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
   const { toast } = useToast()
   const db = useFirestore()
+  const { appUser } = useAppUser()
 
   const [step,      setStep]      = React.useState(0)
   const [direction, setDirection] = React.useState(1)
@@ -115,10 +118,10 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
   }
 
   const handleSubmit = async () => {
-    if (!db || !selectedCompany || !selectedArea || !selectedSupervisor) return
+    if (!db || !selectedCompany || !selectedArea || !selectedSupervisor || !appUser) return
     setSubmitting(true)
     try {
-      await addDoc(collection(db, "visits"), {
+      const visitRef = await addDoc(collection(db, "visits"), {
         companyId,
         companyName:    selectedCompany.name,
         areaId,
@@ -133,6 +136,21 @@ function VisitWizard({ onClose, companies, areas, supervisors }: WizardProps) {
         createdAt: serverTimestamp(),
         qrCode: `VIS-${Math.random().toString(36).substring(7).toUpperCase()}`,
       })
+
+      logAudit({
+        action: "visit.created",
+        actorUid: appUser.uid,
+        actorName: appUser.name || appUser.email || "Usuario",
+        actorRole: appUser.role,
+        targetType: "visit",
+        targetId: visitRef.id,
+        targetName: selectedCompany.name,
+        details: {
+          area: selectedArea.name,
+          supervisor: selectedSupervisor.name,
+        }
+      })
+
       sendNotification({
         type: "entry",
         companyName: selectedCompany.name,

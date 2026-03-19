@@ -283,11 +283,6 @@ export default function ContractorsPage() {
                         <span className="font-semibold text-sm truncate">{company.name}</span>
                         <SuaBadge sua={company.sua} />
                       </div>
-                      {(company.contact || company.phone) && (
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                          {[company.contact, company.phone].filter(Boolean).join(' · ')}
-                        </p>
-                      )}
                     </div>
                     <CompanyActions onAction={(type) => openAction(company, type)} />
                   </div>
