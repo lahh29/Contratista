@@ -60,6 +60,19 @@ export interface Supervisor {
   name: string
 }
 
+export interface AuditEntry {
+  id: string
+  action: string
+  actorUid: string
+  actorName: string
+  actorRole: string
+  targetType: string
+  targetId: string
+  targetName?: string
+  details?: Record<string, unknown>
+  timestamp: Timestamp
+}
+
 export interface AppNotification {
   id: string
   type: string

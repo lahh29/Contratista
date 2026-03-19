@@ -38,6 +38,8 @@ import {
 } from "firebase/firestore"
 import { QRScanner } from "@/components/contractor/QRScanner"
 import { sendNotification } from '@/app/actions/notify'
+import { logAudit } from '@/app/actions/audit'
+import { useAppUser } from '@/hooks/use-app-user'
 
 type ScannerMode = 'SCANNING' | 'VERIFYING' | 'ON_SITE'
 
@@ -45,6 +47,7 @@ export default function ScannerPage() {
   const { toast } = useToast()
   const db = useFirestore()
   const { user } = useUser()
+  const { appUser } = useAppUser()
   const [mode, setMode] = React.useState<ScannerMode>('SCANNING')
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [currentCompany, setCurrentCompany] = React.useState<import('@/types').Company | null>(null)
@@ -134,6 +137,20 @@ export default function ScannerPage() {
         qrCode: `VIS-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
       })
       toast({ title: 'Acceso autorizado', description: `${currentCompany.name} ha ingresado.` })
+      logAudit({
+        action: 'visit.created',
+        actorUid:  appUser?.uid  ?? user?.uid ?? '',
+        actorName: appUser?.name ?? appUser?.email ?? 'Guardia',
+        actorRole: appUser?.role ?? 'guard',
+        targetType: 'visit',
+        targetId:   visitRef.id,
+        targetName: currentCompany.name,
+        details: {
+          área: area?.name ?? '—',
+          personal: confirmedPersonnel,
+          placas: vehiclePlates.trim().toUpperCase(),
+        },
+      })
       setScanHistory(h => [{ companyName: currentCompany.name, action: 'entry' as const, time: new Date() }, ...h].slice(0, 5))
       setActiveVisit({
         id: visitRef.id,
@@ -184,6 +201,16 @@ export default function ScannerPage() {
         exitTime: serverTimestamp(),
       })
       toast({ title: 'Salida registrada', description: `${currentCompany?.name} ha salido.` })
+      logAudit({
+        action: 'visit.completed',
+        actorUid:  appUser?.uid  ?? user?.uid ?? '',
+        actorName: appUser?.name ?? appUser?.email ?? 'Guardia',
+        actorRole: appUser?.role ?? 'guard',
+        targetType: 'visit',
+        targetId:   activeVisit.id,
+        targetName: currentCompany?.name ?? '—',
+        details: { área: activeVisit.areaName ?? '—' },
+      })
       setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 5))
       sendNotification({
         type: 'exit',

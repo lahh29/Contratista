@@ -76,5 +76,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── Audit Log ───────────────────────────────────────────────────────────────
+    match /auditLog/{entryId} {
+      // Solo el admin puede leer; escritura solo via Admin SDK (server-side)
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
   }
 }

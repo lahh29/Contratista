@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Users, Loader2, ShieldAlert, User, MoreHorizontal } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useAppUser } from "@/hooks/use-app-user"
+import { logAudit } from "@/app/actions/audit"
 import { Firestore, DocumentData } from "firebase/firestore"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -45,11 +47,19 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   const [editId,   setEditId]   = React.useState<string | null>(null)
   const [editName, setEditName] = React.useState("")
   const { toast } = useToast()
+  const { appUser } = useAppUser()
+
+  const actor = () => ({
+    actorUid:  appUser?.uid   ?? '',
+    actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
+    actorRole: appUser?.role  ?? 'admin',
+  })
 
   const handleAdd = async () => {
     if (!db || !newName.trim()) return
     try {
-      await addDoc(collection(db, collectionName), { name: newName.trim() })
+      const ref = await addDoc(collection(db, collectionName), { name: newName.trim() })
+      logAudit({ action: `${collectionName.replace(/s$/, '')}.created`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: ref.id, targetName: newName.trim() })
       setNewName("")
       toast({ title: "Agregado correctamente" })
     } catch {
@@ -62,6 +72,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
     if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
     try {
       await deleteDoc(doc(db, collectionName, id))
+      logAudit({ action: `${collectionName.replace(/s$/, '')}.deleted`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: id, targetName: name })
       toast({ title: "Eliminado correctamente" })
     } catch {
       toast({ variant: "destructive", title: "Error al eliminar" })
@@ -72,6 +83,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
     if (!db || !editName.trim()) return
     try {
       await updateDoc(doc(db, collectionName, id), { name: editName.trim() })
+      logAudit({ action: `${collectionName.replace(/s$/, '')}.updated`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: id, targetName: editName.trim() })
       setEditId(null)
       toast({ title: "Actualizado correctamente" })
     } catch {
@@ -197,15 +209,23 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
   const [editName,         setEditName]         = React.useState("")
   const [editSupervisorId, setEditSupervisorId] = React.useState("")
   const { toast } = useToast()
+  const { appUser } = useAppUser()
+
+  const actor = () => ({
+    actorUid:  appUser?.uid   ?? '',
+    actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
+    actorRole: appUser?.role  ?? 'admin',
+  })
 
   const handleAdd = async () => {
     if (!db || !newName.trim()) return
     try {
-      await addDoc(collection(db, "areas"), {
+      const ref = await addDoc(collection(db, "areas"), {
         name:         newName.trim(),
         supervisorId: newSupervisorId || null,
         restricted:   false,
       })
+      logAudit({ action: 'area.created', ...actor(), targetType: 'area', targetId: ref.id, targetName: newName.trim() })
       setNewName("")
       setNewSupervisorId("")
       toast({ title: "Área agregada" })
@@ -228,6 +248,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
     if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
     try {
       await deleteDoc(doc(db, "areas", id))
+      logAudit({ action: 'area.deleted', ...actor(), targetType: 'area', targetId: id, targetName: name })
       toast({ title: "Eliminado correctamente" })
     } catch {
       toast({ variant: "destructive", title: "Error al eliminar" })
@@ -241,6 +262,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
         name:         editName.trim(),
         supervisorId: editSupervisorId === "__none__" ? null : editSupervisorId || null,
       })
+      logAudit({ action: 'area.updated', ...actor(), targetType: 'area', targetId: id, targetName: editName.trim() })
       setEditId(null)
       toast({ title: "Actualizado correctamente" })
     } catch {
@@ -410,6 +432,7 @@ function UserManager({ db, companies }: UserManagerProps) {
   const [editRole,    setEditRole]    = React.useState("contractor")
   const [editCompany, setEditCompany] = React.useState("")
   const { toast } = useToast()
+  const { appUser } = useAppUser()
 
   const toastRef = React.useRef(toast)
   React.useEffect(() => { toastRef.current = toast }, [toast])
@@ -443,6 +466,16 @@ function UserManager({ db, companies }: UserManagerProps) {
         role:      editRole,
         companyId: editRole === "contractor" ? editCompany || null : null,
       }, { merge: true })
+      logAudit({
+        action: 'user.roleChanged',
+        actorUid:  appUser?.uid   ?? '',
+        actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
+        actorRole: appUser?.role  ?? 'admin',
+        targetType: 'user',
+        targetId:   uid,
+        targetName: editUser?.name ?? editUser?.email ?? uid,
+        details: { nuevoRol: editRole },
+      })
       setEditUid(null)
       setEditUser(null)
       await loadUsers()

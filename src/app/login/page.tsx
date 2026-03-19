@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
 import { PWAInstallBanner } from "@/components/PWAInstallBanner"
+import { recordLogin } from "@/app/actions/audit"
 
 const schema = z.object({
   email:    z.string().email("Correo inválido"),
@@ -36,7 +37,8 @@ export default function LoginPage() {
     if (!auth) return
     setLoading(true)
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password)
+      const credential = await signInWithEmailAndPassword(auth, values.email, values.password)
+      recordLogin(credential.user.uid, values.email)
       document.cookie = "vp_session=1; path=/; SameSite=Strict"
       router.push("/dashboard")
     } catch {

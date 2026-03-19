@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Shield,
   Briefcase,
+  ClipboardList,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -170,7 +171,8 @@ export function AppSidebar() {
           items: [
             { name: "Escáner de QR", href: "/scanner",  icon: QrCode,   badge: null },
             { name: "Reportes",          href: "/reports",  icon: FileText, badge: null },
-            { name: "Configuración",     href: "/settings", icon: Settings, badge: null },
+            { name: "Configuración",     href: "/settings",  icon: Settings,       badge: null },
+            { name: "Bitácora",          href: "/bitacora",  icon: ClipboardList,  badge: null },
           ],
         },
       ]

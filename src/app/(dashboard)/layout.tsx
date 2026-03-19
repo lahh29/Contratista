@@ -39,6 +39,7 @@ export default function DashboardLayout({
       '/scanner':          'Escáner de Acceso',
       '/reports':          'Reportes',
       '/settings':         'Configuración',
+      '/bitacora':         'Bitácora',
     }
     document.title = PAGE_TITLES[pathname]
       ? `${PAGE_TITLES[pathname]} — ViñoPlastic`

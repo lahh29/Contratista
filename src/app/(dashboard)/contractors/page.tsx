@@ -59,6 +59,8 @@ import { EditCompanySheet } from "@/components/contractors/EditCompanySheet"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
+import { logAudit } from "@/app/actions/audit"
+import { useAppUser } from "@/hooks/use-app-user"
 import type { Company } from "@/types"
 import { Plus } from "lucide-react"
 
@@ -146,6 +148,7 @@ export default function ContractorsPage() {
   const [activeDialog, setActiveDialog] = React.useState<ActiveDialog>(null)
   const db = useFirestore()
   const { toast } = useToast()
+  const { appUser } = useAppUser()
 
   const companiesQuery = React.useMemo(() => {
     if (!db) return null
@@ -185,6 +188,15 @@ export default function ContractorsPage() {
         description: `${selectedCompany.name} ha sido bloqueada y no podrá ingresar.`,
         variant: "destructive",
       })
+      logAudit({
+        action: 'company.blocked',
+        actorUid:  appUser?.uid   ?? '',
+        actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
+        actorRole: appUser?.role  ?? 'admin',
+        targetType: 'company',
+        targetId:   selectedCompany.id,
+        targetName: selectedCompany.name,
+      })
       sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id })
     } catch {
       const permissionError = new FirestorePermissionError({
@@ -206,6 +218,15 @@ export default function ContractorsPage() {
       toast({
         title: "Empresa eliminada",
         description: `${selectedCompany.name} ha sido eliminada del sistema.`,
+      })
+      logAudit({
+        action: 'company.deleted',
+        actorUid:  appUser?.uid   ?? '',
+        actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
+        actorRole: appUser?.role  ?? 'admin',
+        targetType: 'company',
+        targetId:   selectedCompany.id,
+        targetName: selectedCompany.name,
       })
       sendNotification({ type: 'delete_contractor', companyName: selectedCompany.name })
     } catch {
