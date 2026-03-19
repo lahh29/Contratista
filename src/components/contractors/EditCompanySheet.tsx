@@ -29,6 +29,8 @@ import { useToast } from "@/hooks/use-toast"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
+import { logAudit } from "@/app/actions/audit"
+import { useAppUser } from "@/hooks/use-app-user"
 
 /** "DD/MM/AAAA" → "YYYY-MM-DD" para Firestore */
 function toISODate(val: string): string {
@@ -85,6 +87,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: EditCompanySheetProps) {
   const db = useFirestore()
   const { toast } = useToast()
+  const { appUser } = useAppUser()
   const [saving, setSaving] = React.useState(false)
 
   const form = useForm<z.infer<typeof schema>>({
@@ -113,7 +116,7 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
   }, [company, form])
 
   async function onSubmit(values: z.infer<typeof schema>) {
-    if (!db || !company) return
+    if (!db || !company || !appUser) return
     setSaving(true)
 
     const updateData = {
@@ -134,6 +137,17 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
     try {
       await updateDoc(companyRef, updateData)
       toast({ title: "Empresa actualizada", description: `${values.name} fue actualizada correctamente.` })
+
+      // Auditoría de actualización
+      logAudit({
+        action: 'company.unblocked', // Si estaba bloqueada y se edita, se asume intención de actualizar/desbloquear
+        actorUid:  appUser.uid,
+        actorName: appUser.name || appUser.email || "Usuario",
+        actorRole: appUser.role,
+        targetType: 'company',
+        targetId:   company.id,
+        targetName: values.name,
+      })
 
       const oldDate  = company.sua?.validUntil
       const newDate  = values.suaValidUntil ? toISODate(values.suaValidUntil) : ""

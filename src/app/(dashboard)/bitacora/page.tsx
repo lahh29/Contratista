@@ -5,7 +5,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  ShieldAlert,
   ClipboardList,
   RefreshCw,
   LogIn,
@@ -18,6 +17,7 @@ import {
   LayoutGrid,
   Users,
   Clock,
+  ShieldAlert,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,6 +30,7 @@ import { verifyAuditPassword } from "@/app/actions/audit"
 import { format, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import type { AuditEntry } from "@/types"
+import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "vp_audit_unlocked"
 
@@ -56,14 +57,6 @@ const ACTION_CONFIG: Record<string, {
   "user.login":           { label: "Inicio de sesión",        color: "text-slate-600 dark:text-slate-400",     bg: "bg-slate-50 dark:bg-slate-900/20",       Icon: LogIn      },
 }
 
-const TARGET_ICONS: Record<string, React.ElementType> = {
-  visit:      LogIn,
-  company:    Building2,
-  user:       Users,
-  area:       LayoutGrid,
-  supervisor: UserCog,
-}
-
 const FILTER_OPTIONS = [
   { value: "all",        label: "Todos" },
   { value: "visit",      label: "Visitas" },
@@ -72,6 +65,64 @@ const FILTER_OPTIONS = [
   { value: "area",       label: "Áreas" },
   { value: "supervisor", label: "Encargados" },
 ]
+
+// ── Audit Entry Row ───────────────────────────────────────────────────────────
+function AuditRow({ entry, showDateSeparator }: { entry: AuditEntry; showDateSeparator?: boolean }) {
+  const cfg = ACTION_CONFIG[entry.action]
+  const ActionIcon = cfg?.Icon ?? ClipboardList
+  const ts = entry.timestamp as unknown as { toDate?: () => Date }
+  const date = ts?.toDate ? ts.toDate() : null
+
+  // Fix redundancy: if actor and target are same, or it's a login, hide target
+  const showTarget = entry.targetName && 
+                    entry.targetName !== entry.actorName && 
+                    entry.action !== 'user.login'
+
+  return (
+    <div className="flex flex-col w-full">
+      {showDateSeparator && date && (
+        <div className="bg-muted/30 px-4 py-1.5 border-y border-border/40">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            {format(date, "EEEE, d 'de' MMMM", { locale: es })}
+          </p>
+        </div>
+      )}
+      <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/20 transition-colors group">
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-active:scale-95",
+          cfg?.bg ?? "bg-muted"
+        )}>
+          <ActionIcon className={cn("w-4 h-4", cfg?.color ?? "text-muted-foreground")} />
+        </div>
+
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div className="flex items-center justify-between gap-2 overflow-hidden">
+            <p className={cn("text-xs font-bold truncate", cfg?.color ?? "text-foreground")}>
+              {cfg?.label ?? entry.action}
+            </p>
+            {date && (
+              <span className="text-[10px] font-medium text-muted-foreground/60 tabular-nums shrink-0">
+                {format(date, "HH:mm")}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center text-[10px] text-muted-foreground mt-0.5 overflow-hidden">
+            <span className="truncate font-medium text-foreground/70 max-w-[150px] sm:max-w-none">
+              {entry.actorName}
+            </span>
+            {showTarget && (
+              <>
+                <span className="mx-1 shrink-0 opacity-40">→</span>
+                <span className="truncate">{entry.targetName}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ── Password Gate ─────────────────────────────────────────────────────────────
 function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
@@ -98,7 +149,6 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
-        {/* Icon */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
             <Lock className="w-7 h-7 text-primary" />
@@ -106,26 +156,28 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           <div>
             <h1 className="text-xl font-bold">Acceso Restringido</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Ingresa la contraseña para ver los logs de auditoría
+              Ingresa la contraseña para continuar
             </p>
           </div>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative">
             <Input
               type={showPwd ? "text" : "password"}
-              placeholder="Contraseña"
+              placeholder="••••••••"
               value={password}
               onChange={e => { setPassword(e.target.value); setError(false) }}
-              className={`pr-10 h-11 text-center tracking-widest text-lg font-mono ${error ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              className={cn(
+                "pr-10 h-11 text-center tracking-[0.5em] text-lg font-mono rounded-xl",
+                error && "border-red-500 focus-visible:ring-red-500 bg-red-50/50"
+              )}
               autoFocus
             />
             <button
               type="button"
               onClick={() => setShowPwd(v => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
               tabIndex={-1}
             >
               {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -133,59 +185,19 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           </div>
 
           {error && (
-            <p className="text-xs text-red-500 text-center">Contraseña incorrecta</p>
+            <p className="text-xs text-red-500 text-center font-bold">Contraseña incorrecta</p>
           )}
 
-          <Button type="submit" className="w-full h-11" disabled={loading || !password}>
+          <Button type="submit" className="w-full h-11 rounded-xl shadow-md active:scale-[0.98] transition-transform" disabled={loading || !password}>
             {loading ? (
               <RefreshCw className="w-4 h-4 animate-spin mr-2" />
             ) : (
               <Lock className="w-4 h-4 mr-2" />
             )}
-            Ingresar
+            Desbloquear
           </Button>
         </form>
       </div>
-    </div>
-  )
-}
-
-// ── Audit Entry Row ───────────────────────────────────────────────────────────
-function AuditRow({ entry }: { entry: AuditEntry }) {
-  const cfg = ACTION_CONFIG[entry.action]
-  const ActionIcon = cfg?.Icon ?? ClipboardList
-  const ts = entry.timestamp as unknown as { toDate?: () => Date }
-  const date = ts?.toDate ? ts.toDate() : null
-
-  return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
-      {/* Icon */}
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${cfg?.bg ?? "bg-muted"}`}>
-        <ActionIcon className={`w-4 h-4 ${cfg?.color ?? "text-muted-foreground"}`} />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold leading-tight ${cfg?.color ?? "text-foreground"}`}>
-          {cfg?.label ?? entry.action}
-        </p>
-        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-          {entry.targetName ? `${entry.targetName} · ` : ""}
-          {entry.actorName}
-        </p>
-      </div>
-
-      {/* Time */}
-      {date && (
-        <div className="text-right shrink-0">
-          <p className="text-xs font-medium text-foreground/60 leading-tight">
-            {format(date, "dd MMM", { locale: es })}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">
-            {format(date, "HH:mm")}
-          </p>
-        </div>
-      )}
     </div>
   )
 }
@@ -208,64 +220,77 @@ function AuditLog() {
 
   const filtered = React.useMemo(() => {
     if (!entries) return []
-    if (filter === "all") return entries as unknown as AuditEntry[]
-    return (entries as unknown as AuditEntry[]).filter(e => e.targetType === filter)
+    const all = entries as unknown as AuditEntry[]
+    if (filter === "all") return all
+    return all.filter(e => e.targetType === filter)
   }, [entries, filter])
 
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="registro">
-        <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="registro" className="flex items-center gap-1.5">
-            <ClipboardList className="w-3.5 h-3.5" /> Registro
+    <div className="max-w-xl mx-auto space-y-4">
+      <Tabs defaultValue="registro" className="w-full">
+        <TabsList className="w-full grid grid-cols-2 p-1 h-11 bg-muted/40 rounded-xl mb-4">
+          <TabsTrigger value="registro" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <ClipboardList className="w-4 h-4 mr-2" /> 
+            <span className="font-semibold text-xs uppercase tracking-wide">Registro</span>
           </TabsTrigger>
-          <TabsTrigger value="accesos" className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" /> Últimos Accesos
+          <TabsTrigger value="accesos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Clock className="w-4 h-4 mr-2" /> 
+            <span className="font-semibold text-xs uppercase tracking-wide">Accesos</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="registro" className="mt-4 space-y-3">
-          {/* Filtro */}
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="w-full h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FILTER_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <TabsContent value="registro" className="mt-0 space-y-4 outline-none">
+          <div className="flex items-center gap-2 px-1">
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="flex-1 h-10 rounded-xl bg-background shadow-sm border-border/40 text-xs">
+                <SelectValue placeholder="Todos los eventos" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {FILTER_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="h-10 px-3 flex items-center bg-muted/30 rounded-xl border border-border/40 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+               {filtered.length} TOTAL
+            </div>
+          </div>
 
-          {/* List */}
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-muted-foreground">
-              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-              <span className="text-sm">Cargando…</span>
+            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
+              <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
+              <span className="text-[11px] font-bold uppercase tracking-widest">Cargando...</span>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-2 text-muted-foreground">
-              <ClipboardList className="w-7 h-7 opacity-25" />
-              <p className="text-sm">Sin registros todavía</p>
-              <p className="text-[11px] opacity-50">Las acciones del sistema aparecerán aquí</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center opacity-60">
+              <ClipboardList className="w-12 h-12 text-muted-foreground/30" />
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase">Sin registros</p>
+                <p className="text-[10px] text-muted-foreground">No hay eventos para este filtro</p>
+              </div>
             </div>
           ) : (
-            <>
-              <p className="text-[11px] text-muted-foreground px-0.5">
-                {filtered.length} {filtered.length === 1 ? 'registro' : 'registros'}
-              </p>
-              <div className="rounded-xl border bg-card divide-y divide-border/60">
-                {filtered.map(entry => (
-                  <AuditRow key={entry.id} entry={entry} />
-                ))}
-              </div>
-            </>
+            <div className="rounded-2xl border bg-card overflow-hidden shadow-sm divide-y divide-border/30">
+              {filtered.map((entry, idx) => {
+                const currentDate = (entry.timestamp as any)?.toDate?.()?.toDateString()
+                const prevDate = idx > 0 ? (filtered[idx - 1].timestamp as any)?.toDate?.()?.toDateString() : null
+                const isNewDay = currentDate !== prevDate
+
+                return (
+                  <AuditRow 
+                    key={entry.id} 
+                    entry={entry} 
+                    showDateSeparator={isNewDay}
+                  />
+                )
+              })}
+            </div>
           )}
         </TabsContent>
 
-        <TabsContent value="accesos" className="mt-4">
+        <TabsContent value="accesos" className="mt-0 outline-none">
           <LastAccess />
         </TabsContent>
       </Tabs>
@@ -275,17 +300,9 @@ function AuditLog() {
 
 // ── Last Access ───────────────────────────────────────────────────────────────
 const ROLE_META: Record<string, { label: string; avatar: string; chip: string }> = {
-  admin:      { label: "Admin",      avatar: "bg-blue-100 text-blue-700",    chip: "bg-blue-50 text-blue-700 border-blue-200"    },
-  guard:      { label: "Guardia",    avatar: "bg-orange-100 text-orange-700", chip: "bg-orange-50 text-orange-700 border-orange-200" },
-  contractor: { label: "Contratista",avatar: "bg-teal-100 text-teal-700",    chip: "bg-teal-50 text-teal-700 border-teal-200"    },
-}
-
-type AccessUser = {
-  uid: string
-  name?: string
-  email?: string
-  role?: string
-  lastLoginAt?: { toDate: () => Date }
+  admin:      { label: "Admin",      avatar: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400",    chip: "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900"    },
+  guard:      { label: "Guardia",    avatar: "bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400", chip: "bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900" },
+  contractor: { label: "Contratista",avatar: "bg-teal-100 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400",    chip: "bg-teal-50 text-teal-700 border-teal-100 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-900"    },
 }
 
 function AccessRow({ u }: { u: AccessUser }) {
@@ -294,33 +311,36 @@ function AccessRow({ u }: { u: AccessUser }) {
   const label = u.name ?? u.email ?? u.uid.slice(0, 8)
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
-      {/* Avatar */}
-      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold ${meta.avatar}`}>
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
+      <div className={cn(
+        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-black shadow-inner",
+        meta.avatar
+      )}>
         {label[0].toUpperCase()}
       </div>
 
-      {/* Name + role */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate leading-tight">{label}</p>
-        <span className={`inline-block mt-0.5 text-[10px] font-medium px-1.5 py-px rounded-full border ${meta.chip}`}>
+        <p className="text-[13px] font-bold truncate leading-none">{label}</p>
+        <span className={cn(
+          "inline-flex items-center mt-1.5 text-[9px] font-black px-2 py-0.5 rounded-full border tracking-tighter uppercase",
+          meta.chip
+        )}>
           {meta.label}
         </span>
       </div>
 
-      {/* Time */}
       <div className="text-right shrink-0">
         {date ? (
-          <>
-            <p className="text-xs font-medium text-foreground/70 leading-tight">
+          <div className="flex flex-col items-end">
+            <p className="text-[11px] font-black text-foreground/90 leading-none">
               {formatDistanceToNow(date, { addSuffix: true, locale: es })}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {format(date, "dd/MM/yy · HH:mm")}
+            <p className="text-[9px] text-muted-foreground mt-1 tabular-nums">
+              {format(date, "d MMM, HH:mm", { locale: es })}
             </p>
-          </>
+          </div>
         ) : (
-          <span className="text-[11px] text-muted-foreground/50 italic">Sin acceso</span>
+          <span className="text-[10px] font-bold text-muted-foreground/30 italic uppercase">Sin acceso</span>
         )}
       </div>
     </div>
@@ -350,46 +370,45 @@ function LastAccess() {
   const withoutAccess = users.filter(u => !u.lastLoginAt)
 
   if (loading) return (
-    <div className="flex items-center justify-center py-16 text-muted-foreground">
-      <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-      <span className="text-sm">Cargando…</span>
-    </div>
-  )
-
-  if (users.length === 0) return (
-    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-      <Clock className="w-8 h-8 opacity-30" />
-      <p className="text-sm">Sin registros todavía</p>
+    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
+      <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
+      <span className="text-[11px] font-bold uppercase tracking-widest">Cargando...</span>
     </div>
   )
 
   return (
-    <div className="space-y-3">
-      {/* Usuarios con acceso */}
+    <div className="space-y-6 pb-8">
       {withAccess.length > 0 && (
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 pt-3 pb-1">
-            Accedieron recientemente
+        <div className="space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+            Actividad Reciente
           </p>
-          <div className="divide-y divide-border/60">
+          <div className="rounded-2xl border bg-card overflow-hidden shadow-sm divide-y divide-border/30">
             {withAccess.map(u => <AccessRow key={u.uid} u={u} />)}
           </div>
         </div>
       )}
 
-      {/* Usuarios sin acceso */}
       {withoutAccess.length > 0 && (
-        <div className="rounded-xl border bg-card overflow-hidden opacity-70">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 pt-3 pb-1">
-            Sin acceso registrado
+        <div className="space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">
+            Sin Actividad
           </p>
-          <div className="divide-y divide-border/60">
+          <div className="rounded-2xl border bg-card overflow-hidden shadow-sm divide-y divide-border/30 opacity-50 grayscale-[0.5]">
             {withoutAccess.map(u => <AccessRow key={u.uid} u={u} />)}
           </div>
         </div>
       )}
     </div>
   )
+}
+
+type AccessUser = {
+  uid: string
+  name?: string
+  email?: string
+  role?: string
+  lastLoginAt?: { toDate: () => Date }
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────

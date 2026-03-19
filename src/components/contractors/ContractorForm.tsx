@@ -29,6 +29,8 @@ import { useRouter } from "next/navigation"
 import { errorEmitter } from "@/firebase/error-emitter"
 import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
+import { logAudit } from "@/app/actions/audit"
+import { useAppUser } from "@/hooks/use-app-user"
 
 /** "DD/MM/AAAA" → "YYYY-MM-DD" para Firestore */
 function toISODate(val: string): string {
@@ -83,9 +85,10 @@ export function ContractorForm() {
   const [analysisResult, setAnalysisResult] = React.useState<any>(null)
   const [submitting, setSubmitting] = React.useState(false)
 
-  const { toast }  = useToast()
-  const db         = useFirestore()
-  const router     = useRouter()
+  const { toast }    = useToast()
+  const db           = useFirestore()
+  const router       = useRouter()
+  const { appUser }  = useAppUser()
 
   const areasQuery       = React.useMemo(() => db ? query(collection(db, "areas"),       limit(100)) : null, [db])
   const supervisorsQuery = React.useMemo(() => db ? query(collection(db, "supervisors"), limit(100)) : null, [db])
@@ -159,7 +162,7 @@ export function ContractorForm() {
 
   // ── Submit ──────────────────────────────────────────────────────────────────
   async function onSubmit(values: FormValues) {
-    if (!db) return
+    if (!db || !appUser) return
     setSubmitting(true)
     const companyData = {
       name:    values.company,
@@ -182,6 +185,22 @@ export function ContractorForm() {
     addDoc(companiesRef, companyData)
       .then(async (docRef) => {
         await updateDoc(docRef, { qrCode: docRef.id })
+        
+        // Registrar Auditoría
+        logAudit({
+          action: "company.created",
+          actorUid: appUser.uid,
+          actorName: appUser.name || appUser.email || "Usuario",
+          actorRole: appUser.role,
+          targetType: "company",
+          targetId: docRef.id,
+          targetName: values.company,
+          details: {
+            contact: values.name,
+            suaExpiration: toISODate(values.suaExpiration)
+          }
+        })
+
         toast({ title: "Registro Exitoso", description: `${values.company} ha sido registrada.` })
         sendNotification({ type: "new_contractor", companyName: values.company })
         router.push("/contractors")
