@@ -39,6 +39,14 @@ function toISODate(val: string): string {
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`
 }
 
+/** Formatea `25102024` → `25/10/2024` */
+function formatDisplayDate(value: string): string {
+  const cleanValue = value.replace(/\D/g, '').slice(0, 8)
+  if (cleanValue.length <= 2) return cleanValue
+  if (cleanValue.length <= 4) return `${cleanValue.slice(0, 2)}/${cleanValue.slice(2)}`
+  return `${cleanValue.slice(0, 2)}/${cleanValue.slice(2, 4)}/${cleanValue.slice(4, 8)}`
+}
+
 const contractorSchema = z.object({
   name:               z.string().min(2, "Mínimo 2 caracteres"),
   company:            z.string().min(2, "Mínimo 2 caracteres"),
@@ -343,6 +351,7 @@ export function ContractorForm() {
               placeholder="DD/MM/AAAA"
               maxLength={10}
               {...field}
+              onChange={(e) => field.onChange(formatDisplayDate(e.target.value))}
             />
           </FormControl>
           <FormMessage />
