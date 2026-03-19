@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
   const activeVisitsQuery = React.useMemo(() => {
     if (!db || !user || authLoading) return null
-    return query(collection(db, "visits"), where("status", "==", "Active"), limit(200))
+    return query(collection(db, "visits"), where("status", "in", ["Activa", "Programada"]), limit(200))
   }, [db, user, authLoading])
 
   const companiesQuery = React.useMemo(() => {
@@ -38,7 +38,9 @@ export default function DashboardPage() {
     return query(collection(db, "companies"), limit(500))
   }, [db, user, authLoading])
 
-  const { data: activeVisits, loading: dataLoading } = useCollection(activeVisitsQuery)
+  const { data: allVisits, loading: dataLoading } = useCollection(activeVisitsQuery)
+  const activeVisits = React.useMemo(() => allVisits?.filter(v => v.status === "Activa") ?? null, [allVisits])
+  const scheduledVisits = React.useMemo(() => allVisits?.filter(v => v.status === "Programada") ?? null, [allVisits])
   const { data: companies } = useCollection(companiesQuery)
 
   const handleFinishVisit = async (visitId: string) => {
@@ -135,6 +137,28 @@ export default function DashboardPage() {
           />
         </CardContent>
       </Card>
+      {(scheduledVisits?.length ?? 0) > 0 && (
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between gap-3 py-3 px-4 md:px-6">
+            <div>
+              <CardTitle className="text-base font-semibold">Visitas Programadas</CardTitle>
+              <CardDescription className="text-xs">Próximas visitas agendadas.</CardDescription>
+            </div>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-2.5 py-0.5 text-xs font-semibold shrink-0">
+              {scheduledVisits!.length} Programada{scheduledVisits!.length !== 1 ? "s" : ""}
+            </Badge>
+          </CardHeader>
+          <CardContent className="p-0">
+            <VisitsTable
+              visits={scheduledVisits}
+              loading={dataLoading || authLoading}
+              onFinishVisit={handleFinishVisit}
+              onEditVisit={setEditingVisit}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <EditVisitSheet
         visit={editingVisit}
         open={!!editingVisit}

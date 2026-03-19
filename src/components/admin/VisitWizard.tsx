@@ -15,12 +15,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Calendar } from '@/components/ui/calendar'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import {
   Building2,
   MapPin,
@@ -53,7 +47,8 @@ import { useAppUser } from '@/hooks/use-app-user'
 const STEPS = [
   { label: 'Empresa', icon: Building2 },
   { label: 'Lugar', icon: MapPin },
-  { label: 'Detalles', icon: FileText },
+  { label: 'Programación', icon: CalendarIcon },
+  { label: 'Actividad', icon: FileText },
 ]
 
 const slideVariants = {
@@ -94,7 +89,69 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
   const [visitDate, setVisitDate] = React.useState<Date | undefined>(
     visit?.scheduledDate ? parseISO(visit.scheduledDate) : new Date()
   )
+  const [dateInput, setDateInput] = React.useState(
+    visit?.scheduledDate
+      ? format(parseISO(visit.scheduledDate), 'dd/MM/yyyy')
+      : format(new Date(), 'dd/MM/yyyy')
+  )
+  const [dateError, setDateError] = React.useState('')
+
+  const handleDateInput = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 8)
+    let formatted = digits
+    if (digits.length > 4) {
+      formatted = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4)
+    } else if (digits.length > 2) {
+      formatted = digits.slice(0, 2) + '/' + digits.slice(2)
+    }
+    setDateInput(formatted)
+
+    if (digits.length === 8) {
+      const day = parseInt(digits.slice(0, 2), 10)
+      const month = parseInt(digits.slice(2, 4), 10) - 1
+      const year = parseInt(digits.slice(4, 8), 10)
+      const parsed = new Date(year, month, day)
+      if (!isNaN(parsed.getTime()) && parsed.getDate() === day && parsed.getMonth() === month) {
+        setVisitDate(parsed)
+        setDateError('')
+      } else {
+        setVisitDate(undefined)
+        setDateError('Fecha inválida')
+      }
+    } else {
+      setVisitDate(undefined)
+      setDateError(digits.length > 0 ? '' : '')
+    }
+  }
   const [visitTime, setVisitTime] = React.useState(visit?.scheduledTime ?? '')
+  const [timeInput, setTimeInput] = React.useState(visit?.scheduledTime ?? '')
+  const [timeError, setTimeError] = React.useState('')
+
+  const handleTimeInput = (raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 4)
+    let formatted = digits
+    if (digits.length > 2) {
+      formatted = digits.slice(0, 2) + ':' + digits.slice(2)
+    }
+    setTimeInput(formatted)
+
+    if (digits.length === 4) {
+      const hours = parseInt(digits.slice(0, 2), 10)
+      const minutes = parseInt(digits.slice(2, 4), 10)
+      if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+        const hh = digits.slice(0, 2).padStart(2, '0')
+        const mm = digits.slice(2, 4).padStart(2, '0')
+        setVisitTime(`${hh}:${mm}`)
+        setTimeError('')
+      } else {
+        setVisitTime('')
+        setTimeError('Hora inválida')
+      }
+    } else {
+      setVisitTime('')
+      setTimeError('')
+    }
+  }
 
   const companiesQuery = React.useMemo(
     () => (db ? query(collection(db, 'companies'), limit(500)) : null),
@@ -146,7 +203,8 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
   const canNext = [
     !!companyId,
     !!areaId && !!supervisorId,
-    !!activity && personnelCount >= 1 && !!visitDate,
+    !!visitDate && !dateError && !timeError && personnelCount >= 1,
+    !!activity,
   ]
 
   const go = (next: number) => {
@@ -383,38 +441,27 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
       </div>
     </div>,
 
-    // Step 2: Detalles
+    // Step 2: Programación
     <div key="s2" className="space-y-4">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <CalendarIcon className="w-3.5 h-3.5" /> Fecha
           </label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={'outline'}
-                className="h-12 w-full justify-start text-left font-normal rounded-xl"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {visitDate ? (
-                  format(visitDate, 'PPP', { locale: es })
-                ) : (
-                  <span>Elige una fecha</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={visitDate}
-                onSelect={setVisitDate}
-                initialFocus
-                locale={es}
-                fromDate={new Date()}
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="relative">
+            <Input
+              value={dateInput}
+              onChange={(e) => handleDateInput(e.target.value)}
+              placeholder="DD/MM/AAAA"
+              className={`h-12 rounded-xl pl-10 font-mono tracking-widest focus-visible:ring-0 focus-visible:ring-offset-0 ${dateError ? 'border-destructive' : ''}`}
+              maxLength={10}
+              inputMode="numeric"
+            />
+            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          </div>
+          {dateError && (
+            <p className="text-xs text-destructive mt-1">{dateError}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -422,12 +469,20 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
             <Clock className="w-3.5 h-3.5" /> Hora{' '}
             <span className="normal-case font-normal">(opcional)</span>
           </label>
-          <Input
-            type="time"
-            value={visitTime}
-            onChange={(e) => setVisitTime(e.target.value)}
-            className="h-12 rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
+          <div className="relative">
+            <Input
+              value={timeInput}
+              onChange={(e) => handleTimeInput(e.target.value)}
+              placeholder="HH:MM"
+              className={`h-12 rounded-xl pl-10 font-mono tracking-widest focus-visible:ring-0 focus-visible:ring-offset-0 ${timeError ? 'border-destructive' : ''}`}
+              maxLength={5}
+              inputMode="numeric"
+            />
+            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          </div>
+          {timeError && (
+            <p className="text-xs text-destructive mt-1">{timeError}</p>
+          )}
         </div>
       </div>
 
@@ -459,7 +514,10 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
           </Button>
         </div>
       </div>
+    </div>,
 
+    // Step 3: Actividad
+    <div key="s3" className="space-y-4">
       <div className="space-y-1.5">
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <Truck className="w-3.5 h-3.5" /> Placa del Vehículo{' '}
@@ -483,7 +541,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
           value={activity}
           onChange={(e) => setActivity(e.target.value)}
           className="rounded-xl resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          rows={3}
+          rows={4}
         />
       </div>
     </div>,
@@ -548,7 +606,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
       </div>
 
       {/* Animated step content */}
-      <div className="overflow-hidden min-h-[380px]">
+      <div className="overflow-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}

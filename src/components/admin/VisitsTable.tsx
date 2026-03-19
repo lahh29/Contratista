@@ -78,10 +78,17 @@ export function VisitsTable({ visits, loading, onFinishVisit, onEditVisit }: Vis
                   </TableCell>
                   <TableCell className="hidden md:table-cell">{visit.areaName}</TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-xs font-semibold uppercase">Activo</span>
-                    </div>
+                    {visit.status === "Programada" ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span className="text-xs font-semibold uppercase text-blue-600">Programada</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-xs font-semibold uppercase">Activo</span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell font-mono text-xs">
                     {visit.entryTime
