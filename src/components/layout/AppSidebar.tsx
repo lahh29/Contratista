@@ -157,7 +157,7 @@ export function AppSidebar() {
     }
   }
 
-  const contractorsLabel = 'Proveedores'
+  const contractorsLabel = role === 'admin' ? 'Empresas' : role === 'logistica' ? 'Clientes' : 'Proveedores'
 
   const navigation = isGuard
     ? [

@@ -535,13 +535,10 @@ function UserManager({ db, companies }: UserManagerProps) {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {u.name ?? u.email ?? u.uid.slice(0, 12) + "…"}
+                      {u.role === "contractor" && u.companyId
+                        ? (companies?.find((c) => c.id === u.companyId)?.name ?? u.name ?? u.email ?? u.uid.slice(0, 12) + "…")
+                        : (u.name ?? u.email ?? u.uid.slice(0, 12) + "…")}
                     </p>
-                    {u.role === "contractor" && u.companyId && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {companies?.find((c) => c.id === u.companyId)?.name ?? "—"}
-                      </p>
-                    )}
                   </div>
 
                   {/* Role badge */}

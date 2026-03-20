@@ -56,9 +56,10 @@ export default function DashboardLayout({
 
   if (!appUser || appUser.role === 'contractor') return null
 
+  const contractorsTitle = appUser?.role === 'admin' ? 'Empresas' : appUser?.role === 'logistica' ? 'Clientes' : 'Proveedores'
   const PAGE_TITLES: Record<string, string> = {
     '/dashboard':        'Inicio',
-    '/contractors':      'Proveedores',
+    '/contractors':      contractorsTitle,
     '/contractors/new':  'Nueva Empresa',
     '/scanner':          'Escáner de Acceso',
     '/reports':          'Reportes',

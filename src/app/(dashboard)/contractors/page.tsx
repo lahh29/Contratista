@@ -300,6 +300,9 @@ export default function ContractorsPage() {
                     <TableRow>
                       <TableHead className="font-semibold py-4">Empresa</TableHead>
                       <TableHead className="font-semibold py-4">Contacto Principal</TableHead>
+                      {appUser?.role === 'admin' && (
+                        <TableHead className="font-semibold py-4">Tipo</TableHead>
+                      )}
                       <TableHead className="font-semibold py-4">Estado SUA</TableHead>
                       <TableHead className="font-semibold py-4">Vencimiento</TableHead>
                       <TableHead className="text-right font-semibold py-4">Acciones</TableHead>
@@ -325,6 +328,17 @@ export default function ContractorsPage() {
                             <span className="text-xs text-muted-foreground">{company.phone}</span>
                           </div>
                         </TableCell>
+                        {appUser?.role === 'admin' && (
+                          <TableCell>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                              company.type === 'cliente'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
+                                : 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400'
+                            }`}>
+                              {company.type === 'cliente' ? 'Cliente' : 'Proveedor'}
+                            </span>
+                          </TableCell>
+                        )}
                         <TableCell>
                           <SuaBadge sua={company.sua} />
                         </TableCell>
