@@ -121,6 +121,12 @@ service cloud.firestore {
       }
     }
 
+    // ── Bajas (Personal de Baja) ────────────────────────────────────────────────
+    match /bajas/{bajaId} {
+      allow read:          if isAdmin() || isSeguridad();
+      allow create, update, delete: if isAdmin();
+    }
+
     // ── Audit Log ───────────────────────────────────────────────────────────────
     match /auditLog/{entryId} {
       // Solo el admin puede leer; escritura solo via Admin SDK (server-side)

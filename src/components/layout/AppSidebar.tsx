@@ -14,6 +14,7 @@ import {
   ClipboardList,
   HardHat,
   Package,
+  UserX,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -176,6 +177,7 @@ export function AppSidebar() {
           items: [
             { name: "Inicio",           href: "/dashboard",   icon: LayoutDashboard, badge: activeCount || null },
             { name: contractorsLabel,   href: "/contractors", icon: Users,            badge: null },
+            ...(role === 'seguridad' ? [{ name: "Personal de Baja", href: "/bajas", icon: UserX, badge: null }] : []),
           ],
         },
         {
@@ -196,11 +198,12 @@ export function AppSidebar() {
         {
           title: "Operaciones",
           items: [
-            { name: "Escáner de QR",  href: "/scanner",    icon: QrCode,        badge: null },
-            { name: "Contratos",      href: "/contratos",  icon: FileText,      badge: null },
-            { name: "Reportes",       href: "/reports",    icon: FileText,      badge: null },
-            { name: "Configuración",  href: "/settings",   icon: Settings,      badge: null },
-            { name: "Logs",           href: "/bitacora",   icon: ClipboardList, badge: null },
+            { name: "Escáner de QR",      href: "/scanner",    icon: QrCode,        badge: null },
+            { name: "Contratos",          href: "/contratos",  icon: FileText,      badge: null },
+            { name: "Reportes",           href: "/reports",    icon: FileText,      badge: null },
+            { name: "Personal de Baja",   href: "/bajas",      icon: UserX,         badge: null },
+            { name: "Configuración",      href: "/settings",   icon: Settings,      badge: null },
+            { name: "Logs",               href: "/bitacora",   icon: ClipboardList, badge: null },
           ],
         },
       ]
