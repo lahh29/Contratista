@@ -41,7 +41,11 @@ export interface Visit {
   personnelCount?: number
   vehiclePlates?: string
   safetyEquipment?: { shoes: boolean; vest: boolean }
-  status: 'Active' | 'Completed'
+  status: 'Activa' | 'Programada' | 'Completed'
+  activity?: string
+  scheduledDate?: Timestamp
+  scheduledTime?: string
+  companyType?: string
   entryTime?: Timestamp
   exitTime?: Timestamp
   createdAt?: Timestamp
@@ -71,6 +75,19 @@ export interface AuditEntry {
   targetName?: string
   details?: Record<string, unknown>
   timestamp: Timestamp
+}
+
+export interface FirmaContrato {
+  id: string
+  canvasData: string        // base64 de la firma dibujada
+  fecha: Timestamp
+}
+
+export interface Contrato {
+  id: string                // == companyId
+  status: 'pendiente' | 'firmado' | 'rechazado'
+  fechaFirma?: Timestamp
+  firmadoPor?: string       // uid del contratista que firmó
 }
 
 export interface AppNotification {

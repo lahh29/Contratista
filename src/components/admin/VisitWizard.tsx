@@ -503,7 +503,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
             variant="outline"
             size="icon"
             className="h-12 w-12 rounded-xl text-lg shrink-0"
-            onClick={() => setPersonnelCount((p) => Math.max(1, p - 1))}
+            onClick={() => setPersonnelCount((p: number) => Math.max(1, p - 1))}
           >
             −
           </Button>
@@ -515,7 +515,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
             variant="outline"
             size="icon"
             className="h-12 w-12 rounded-xl text-lg shrink-0"
-            onClick={() => setPersonnelCount((p) => p + 1)}
+            onClick={() => setPersonnelCount((p: number) => p + 1)}
           >
             +
           </Button>

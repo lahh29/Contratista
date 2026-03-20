@@ -42,7 +42,6 @@ export default function DashboardPage() {
 
   const visitsForRole = React.useMemo(() => {
     if (!allVisits) return null
-    if (appUser?.role === 'seguridad') return allVisits.filter(v => !v.companyType || v.companyType === 'proveedor')
     if (appUser?.role === 'logistica') return allVisits.filter(v => v.companyType === 'cliente')
     return allVisits
   }, [allVisits, appUser?.role])

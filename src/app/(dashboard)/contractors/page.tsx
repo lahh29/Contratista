@@ -160,9 +160,7 @@ export default function ContractorsPage() {
   const filteredCompanies = React.useMemo(() => {
     if (!companies) return []
     let list = companies
-    if (appUser?.role === 'seguridad') {
-      list = list.filter(c => !c.type || c.type === 'proveedor')
-    } else if (appUser?.role === 'logistica') {
+    if (appUser?.role === 'logistica') {
       list = list.filter(c => c.type === 'cliente')
     }
     return list.filter(c =>

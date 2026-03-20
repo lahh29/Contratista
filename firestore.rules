@@ -43,9 +43,8 @@ service cloud.firestore {
     // ── Companies ──────────────────────────────────────────────────────────────
     match /companies/{companyId} {
       // Admin, guardia, seguridad y logística: lectura general
-      // Contratista: solo su propia empresa
-      allow read: if isAdmin() || isGuard() || isSeguridad() || isLogistica() ||
-                    (isContractor() && myCompanyId() == companyId);
+      // Contratista: cualquier empresa (necesario para el auto-link por email en primer login)
+      allow read: if isAdmin() || isGuard() || isSeguridad() || isLogistica() || isContractor();
       // Admin: control total
       // Seguridad: solo proveedores
       // Logística: solo clientes
@@ -100,6 +99,26 @@ service cloud.firestore {
       allow update: if isAuthed()
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
                     && request.resource.data.readBy.hasAll(resource.data.readBy);
+    }
+
+    // ── Contratos ──────────────────────────────────────────────────────────────
+    match /contratos/{companyId} {
+      // Admin: control total
+      // Contratista: solo su propio contrato
+      // Seguridad/Logística: lectura para verificar vigencia
+      allow read: if isAdmin() || isSeguridad() || isLogistica() ||
+                    (isContractor() && myCompanyId() == companyId);
+      allow write: if isAdmin();
+      allow create, update: if isContractor() && myCompanyId() == companyId;
+
+      // Subcollección de firmas
+      match /firmas/{firmaId} {
+        allow read: if isAdmin() ||
+                      (isContractor() && myCompanyId() == companyId);
+        // El contratista puede añadir su firma (no modificar ni eliminar)
+        allow create: if isContractor() && myCompanyId() == companyId;
+        allow update, delete: if isAdmin();
+      }
     }
 
     // ── Audit Log ───────────────────────────────────────────────────────────────

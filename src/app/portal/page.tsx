@@ -10,7 +10,6 @@ import { useNotifications } from "@/hooks/use-notifications"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { EditProfileSheet } from "@/components/portal/EditProfileSheet"
 import { generateVoucherPDF } from "@/lib/generate-voucher"
 import {
   Table,
@@ -20,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import Link from "next/link"
 import {
   ShieldCheck,
   ShieldAlert,
@@ -34,10 +34,10 @@ import {
   Loader2,
   AlertTriangle,
   Clock,
-  Pencil,
   Download,
   MapPin,
   Users,
+  FileText,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
@@ -83,8 +83,8 @@ function SuaStatusCard({ company }: { company: Company }) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/70 flex items-center justify-center shadow-sm shrink-0">
-              <Icon className={`w-8 h-8 ${config.text}`} />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0">
+              <Icon className={`w-10 h-10 ${config.text}`} />
             </div>
             <div>
               <p className={`text-xs font-bold uppercase tracking-widest ${config.muted}`}>Estado SUA</p>
@@ -142,7 +142,6 @@ export default function PortalPage() {
   const { appUser, loading: authLoading } = useAppUser()
   const db           = useFirestore()
   const { permission, supported, requestPermission } = useNotifications()
-  const [editingProfile, setEditingProfile] = useState(false)
 
   // Use companyId (string) as dep — more stable than the appUser object reference
   const companyId = appUser?.companyId
@@ -177,7 +176,7 @@ export default function PortalPage() {
   }, [rawVisits])
 
   const activeVisit = useMemo(
-    () => (visits as Visit[] | null)?.find(v => v.status === 'Active') ?? null,
+    () => (visits as Visit[] | null)?.find(v => v.status === 'Activa') ?? null,
     [visits],
   )
 
@@ -191,14 +190,14 @@ export default function PortalPage() {
 
   if (!appUser?.companyId) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
         <Card className="border-orange-200 bg-orange-50 max-w-md w-full">
           <CardContent className="p-6 flex gap-3 items-start">
             <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-orange-800">Sin empresa asignada</p>
               <p className="text-sm text-orange-700 mt-1">
-                Tu cuenta no tiene una empresa vinculada. Contacta al administrador de ViñoPlastic.
+                Tu cuenta no está vinculada a ninguna empresa. Contacta al administrador de ViñoPlastic.
               </p>
             </div>
           </CardContent>
@@ -229,14 +228,16 @@ export default function PortalPage() {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
 
       {/* Header empresa */}
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl md:text-3xl shrink-0 border border-primary/20">
-          {company.name?.[0]}
-        </div>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight">{company.name}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Panel de cumplimiento contratista</p>
         </div>
+        <Button asChild variant="outline" className="gap-2 shrink-0">
+          <Link href="/portal/contrato">
+            <FileText className="w-4 h-4" />
+            Reglamento
+          </Link>
+        </Button>
       </div>
 
       {/* En Planta — banner en tiempo real */}
@@ -282,19 +283,10 @@ export default function PortalPage() {
 
         {/* Datos de la empresa */}
         <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2 pt-5 px-5 flex-row items-center justify-between space-y-0">
+          <CardHeader className="pb-2 pt-5 px-5">
             <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Información de la empresa
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:bg-muted rounded-full"
-              onClick={() => setEditingProfile(true)}
-              title="Editar perfil"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </Button>
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-0">
             <InfoRow icon={Building2} label="Razón Social"       value={company.name} />
@@ -403,9 +395,12 @@ export default function PortalPage() {
                         <TableCell>
                           <Badge
                             variant={visit.status === 'Completed' ? 'secondary' : 'default'}
-                            className={visit.status === 'Active' ? 'bg-green-100 text-green-700 border-green-200' : ''}
+                            className={
+                              visit.status === 'Activa'     ? 'bg-green-100 text-green-700 border-green-200' :
+                              visit.status === 'Programada' ? 'bg-blue-100 text-blue-700 border-blue-200' : ''
+                            }
                           >
-                            {visit.status === 'Active' ? 'Activa' : 'Completada'}
+                            {visit.status === 'Activa' ? 'Activa' : visit.status === 'Programada' ? 'Programada' : 'Completada'}
                           </Badge>
                         </TableCell>
                         <TableCell className="pr-5 text-right">
@@ -435,12 +430,6 @@ export default function PortalPage() {
         </CardContent>
       </Card>
 
-      {/* Edit profile sheet */}
-      <EditProfileSheet
-        company={company}
-        open={editingProfile}
-        onOpenChange={setEditingProfile}
-      />
     </div>
   )
 }

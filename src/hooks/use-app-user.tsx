@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { doc, onSnapshot, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, limit, getDoc } from 'firebase/firestore'
 import { useFirestore, useUser } from '@/firebase'
 import type { AppUser } from '@/types'
 
@@ -58,10 +58,10 @@ export function useAppUser() {
               const companySnap = await getDocs(q)
               if (!companySnap.empty) {
                 companyId = companySnap.docs[0].id
-                await setDoc(ref, { companyId }, { merge: true })
+                await updateDoc(ref, { companyId })
               }
-            } catch {
-              // non-critical
+            } catch (e) {
+              console.error('[auto-link] failed:', e)
             }
           }
 
@@ -86,8 +86,8 @@ export function useAppUser() {
               )
               const snap = await getDocs(q)
               if (!snap.empty) companyId = snap.docs[0].id
-            } catch {
-              // non-critical
+            } catch (e) {
+              console.error('[auto-link first login] failed:', e)
             }
           }
           const profile = {

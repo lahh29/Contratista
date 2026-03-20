@@ -46,7 +46,7 @@ const NOTIFY_THRESHOLDS = new Set([15, 7, 3, 1, 0])
 // ── Batch helper (Firestore batch max = 500 ops) ──────────────────────────────
 async function commitInBatches(
   db: FirebaseFirestore.Firestore,
-  ops: Array<{ ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> }>
+  ops: Array<{ ref: FirebaseFirestore.DocumentReference; data: Record<string, FirebaseFirestore.FieldValue | string | number | boolean | null> }>
 ): Promise<void> {
   const BATCH_SIZE = 499
   for (let i = 0; i < ops.length; i += BATCH_SIZE) {
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const companiesSnap = await db.collection('companies').get()
 
-  const pending: Array<{ ref: FirebaseFirestore.DocumentReference; data: Record<string, unknown> }> = []
+  const pending: Array<{ ref: FirebaseFirestore.DocumentReference; data: Record<string, FirebaseFirestore.FieldValue | string | number | boolean | null> }> = []
   const results = { processed: 0, statusUpdated: 0, notified: 0, skipped: 0, errors: [] as string[] }
 
   for (const companyDoc of companiesSnap.docs) {
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     try {
       const days      = daysUntilExpiry(validUntil, today)
       const newStatus = days < 0 ? 'Expired' : 'Valid'
-      const update: Record<string, unknown> = {}
+      const update: Record<string, FirebaseFirestore.FieldValue | string | number | boolean | null> = {}
 
       // 1. Auto-update SUA status when it changes
       if (company.sua?.status !== newStatus) {

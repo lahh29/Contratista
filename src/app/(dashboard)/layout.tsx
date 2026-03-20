@@ -64,6 +64,7 @@ export default function DashboardLayout({
     '/reports':          'Reportes',
     '/settings':         'Configuración',
     '/bitacora':         'Logs',
+    '/contratos':        'Contratos',
   }
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
 
@@ -105,7 +106,7 @@ export default function DashboardLayout({
 
           {/* Actions */}
           <div className="flex items-center gap-1 shrink-0">
-            {appUser.role !== 'contractor' && <NotificationBell />}
+            <NotificationBell />
           </div>
         </motion.header>
 

@@ -7,12 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { Loader2, Mail, Lock } from "lucide-react"
+import { Loader2, Mail, Lock, UserPlus } from "lucide-react"
 import { motion } from "framer-motion"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/firebase"
+import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { PWAInstallBanner } from "@/components/PWAInstallBanner"
 import { logAudit } from "@/app/actions/audit"
@@ -214,6 +215,16 @@ export default function LoginPage() {
 
               </form>
             </Form>
+
+            <div className="pt-1">
+              <Link
+                href="/register"
+                className="flex items-center justify-center gap-2 w-full h-10 rounded-2xl text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
+              >
+                <UserPlus className="w-4 h-4" />
+                Registrarse como proveedor
+              </Link>
+            </div>
 
           </div>
         </div>
