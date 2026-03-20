@@ -258,12 +258,24 @@ export function VisitsCalendar({
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    "text-sm font-semibold truncate",
-                    isDone && "line-through opacity-50",
-                  )}>
-                    {visit.companyName}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className={cn(
+                      "text-sm font-semibold truncate",
+                      isDone && "line-through opacity-50",
+                    )}>
+                      {visit.companyName}
+                    </p>
+                    {visit.companyType && (
+                      <span className={cn(
+                        "shrink-0 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border capitalize",
+                        visit.companyType === 'cliente'
+                          ? "bg-gradient-to-r from-blue-500/20 to-blue-500/5 border-blue-300/60 text-blue-700 dark:from-blue-500/30 dark:to-blue-500/5 dark:border-blue-600/40 dark:text-blue-300"
+                          : "bg-gradient-to-r from-orange-500/20 to-orange-500/5 border-orange-300/60 text-orange-700 dark:from-orange-500/30 dark:to-orange-500/5 dark:border-orange-600/40 dark:text-orange-300",
+                      )}>
+                        {visit.companyType}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     {visit.scheduledTime && (
                       <span className="text-xs text-muted-foreground font-mono flex items-center gap-1">
