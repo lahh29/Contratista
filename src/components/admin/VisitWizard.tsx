@@ -28,6 +28,7 @@ import {
   Loader2,
   CheckCircle2,
   Clock,
+  AlertCircle,
 } from 'lucide-react'
 import { useFirestore } from '@/firebase'
 import {
@@ -49,6 +50,16 @@ import { useToast } from '@/hooks/use-toast'
 import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
 import { useAppUser } from '@/hooks/use-app-user'
+
+// Verifica si el SUA está vencido considerando la fecha real (timezone Querétaro)
+function isSuaExpired(company: any): boolean {
+  if (!company) return false
+  if (company.sua?.validUntil) {
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' })
+    return company.sua.validUntil < today
+  }
+  return company.sua?.status !== 'Valid'
+}
 
 const STEPS = [
   { label: 'Empresa', icon: Building2 },
@@ -202,7 +213,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
   const selectedSupervisor =
     supervisors?.find((s) => s.id === supervisorId) ?? null
 
-  // When company changes, pre-fill area & supervisor from company defaults
+  // When company changes, pre-fill area, supervisor and personnel count from company defaults
   const handleCompanyChange = (id: string) => {
     setCompanyId(id)
     if (visit) return // Don't auto-change things when editing
@@ -212,6 +223,9 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
       setAreaId(company.defaultAreaId)
       const area = areas?.find((a: any) => a.id === company.defaultAreaId)
       setSupervisorId(company.defaultSupervisorId || area?.supervisorId || '')
+    }
+    if (company?.personnelCount) {
+      setPersonnelCount(Number(company.personnelCount))
     }
   }
 
@@ -226,9 +240,11 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     }
   }
 
+  const suaExpired = isSuaExpired(selectedCompany)
+
   // Per-step validation
   const canNext = [
-    !!companyId,
+    !!companyId && !suaExpired,
     !!areaId && !!supervisorId,
     !!visitDate && !dateError && !timeError && personnelCount >= 1,
     !!activity,
@@ -374,26 +390,24 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border bg-muted/40 p-4 space-y-2"
+          className={`rounded-xl border p-4 space-y-2 ${suaExpired ? 'bg-destructive/5 border-destructive/30' : 'bg-muted/40'}`}
         >
           <div className="flex items-center justify-between">
             <p className="font-semibold text-sm">{selectedCompany.name}</p>
             <Badge
               className={`text-xs rounded-md ${
-                selectedCompany.sua?.status === 'Valid'
+                !suaExpired
                   ? 'bg-green-100 text-green-700 hover:bg-green-100'
                   : 'bg-red-100 text-red-600 hover:bg-red-100'
               }`}
             >
-              {selectedCompany.sua?.status === 'Valid'
-                ? 'SUA Válido'
-                : 'SUA Vencido'}
+              {!suaExpired ? 'SUA Válido' : 'SUA Vencido'}
             </Badge>
           </div>
           {selectedCompany.sua?.validUntil && (
             <p className="text-xs text-muted-foreground">
               Vigente hasta:{' '}
-              <span className="font-medium">
+              <span className={`font-medium ${suaExpired ? 'text-destructive' : ''}`}>
                 {selectedCompany.sua.validUntil}
               </span>
             </p>
@@ -403,6 +417,14 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
               Contacto:{' '}
               <span className="font-medium">{selectedCompany.contact}</span>
             </p>
+          )}
+          {suaExpired && (
+            <div className="flex items-center gap-2 pt-1 text-destructive">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <p className="text-xs font-medium">
+                No se puede registrar la visita. El SUA de esta empresa está vencido.
+              </p>
+            </div>
           )}
         </motion.div>
       )}

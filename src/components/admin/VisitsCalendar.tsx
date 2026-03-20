@@ -258,9 +258,9 @@ export function VisitsCalendar({
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <p className={cn(
-                      "text-sm font-semibold truncate",
+                      "text-sm font-semibold truncate min-w-0",
                       isDone && "line-through opacity-50",
                     )}>
                       {visit.companyName}
