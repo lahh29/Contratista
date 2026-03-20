@@ -139,10 +139,10 @@ export default function BajasPage() {
       {/* Tabla */}
       <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
 
-        {/* Encabezado */}
+        {/* Encabezado — solo desktop */}
         <div className={cn(
-          "grid gap-4 px-5 py-3 border-b border-border/60 bg-muted/30",
-          isAdmin ? "grid-cols-[6rem_1fr_8rem_2.5rem]" : "grid-cols-[6rem_1fr_8rem]"
+          "hidden md:grid gap-4 px-5 py-3 border-b border-border/60 bg-muted/30",
+          isAdmin ? "grid-cols-[7rem_1fr_9rem_2.5rem]" : "grid-cols-[7rem_1fr_9rem]"
         )}>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">No. Empleado</p>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nombre Completo</p>
@@ -164,31 +164,60 @@ export default function BajasPage() {
         ) : (
           <div className="divide-y divide-border/60">
             {filtered.map(baja => (
-              <div
-                key={baja.id}
-                className={cn(
-                  "grid gap-4 items-center px-5 py-3.5 hover:bg-muted/30 transition-colors",
-                  isAdmin ? "grid-cols-[6rem_1fr_8rem_2.5rem]" : "grid-cols-[6rem_1fr_8rem]"
-                )}
-              >
-                <p className="text-sm font-mono font-semibold text-muted-foreground tabular-nums">
-                  {baja.noEmpleado}
-                </p>
-                <p className="text-sm font-semibold truncate">{baja.nombre}</p>
-                <p className="text-sm text-muted-foreground font-mono tabular-nums">
-                  {baja.fechaBaja}
-                </p>
-                {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                    onClick={() => setToDelete(baja)}
-                    title="Eliminar registro"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
+              <div key={baja.id} className="hover:bg-muted/30 transition-colors">
+
+                {/* Mobile: card layout */}
+                <div className="md:hidden flex items-center justify-between gap-3 px-4 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">{baja.nombre}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-muted-foreground font-mono tabular-nums">
+                        No.&nbsp;{baja.noEmpleado}
+                      </span>
+                      <span className="text-muted-foreground/40 text-xs">·</span>
+                      <span className="text-xs text-muted-foreground font-mono tabular-nums">
+                        {baja.fechaBaja}
+                      </span>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-destructive hover:bg-destructive/10"
+                      onClick={() => setToDelete(baja)}
+                      title="Eliminar registro"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Desktop: table row */}
+                <div className={cn(
+                  "hidden md:grid gap-4 items-center px-5 py-3.5",
+                  isAdmin ? "grid-cols-[7rem_1fr_9rem_2.5rem]" : "grid-cols-[7rem_1fr_9rem]"
+                )}>
+                  <p className="text-sm font-mono font-semibold text-muted-foreground tabular-nums">
+                    {baja.noEmpleado}
+                  </p>
+                  <p className="text-sm font-semibold truncate">{baja.nombre}</p>
+                  <p className="text-sm text-muted-foreground font-mono tabular-nums">
+                    {baja.fechaBaja}
+                  </p>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => setToDelete(baja)}
+                      title="Eliminar registro"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+
               </div>
             ))}
           </div>

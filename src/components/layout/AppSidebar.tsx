@@ -165,8 +165,9 @@ export function AppSidebar() {
         {
           title: "Acceso",
           items: [
-            { name: "Inicio",        href: "/dashboard", icon: LayoutDashboard, badge: null },
-            { name: "Escáner de QR", href: "/scanner",   icon: QrCode,          badge: null },
+            { name: "Inicio",           href: "/dashboard", icon: LayoutDashboard, badge: null },
+            { name: "Escáner de QR",    href: "/scanner",   icon: QrCode,          badge: null },
+            { name: "Personal de Baja", href: "/bajas",     icon: UserX,           badge: null },
           ],
         },
       ]
@@ -177,7 +178,6 @@ export function AppSidebar() {
           items: [
             { name: "Inicio",           href: "/dashboard",   icon: LayoutDashboard, badge: activeCount || null },
             { name: contractorsLabel,   href: "/contractors", icon: Users,            badge: null },
-            ...(role === 'seguridad' ? [{ name: "Personal de Baja", href: "/bajas", icon: UserX, badge: null }] : []),
           ],
         },
         {

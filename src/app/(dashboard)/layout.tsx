@@ -26,7 +26,7 @@ export default function DashboardLayout({
       router.push("/login")
     } else if (appUser.role === 'contractor') {
       router.push("/portal")
-    } else if (appUser.role === 'guard' && pathname !== '/scanner' && pathname !== '/dashboard') {
+    } else if (appUser.role === 'guard' && pathname !== '/scanner' && pathname !== '/dashboard' && pathname !== '/bajas') {
       router.replace("/scanner")
     }
   }, [appUser, loading, router, pathname])
