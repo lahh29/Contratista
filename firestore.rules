@@ -16,6 +16,7 @@ service cloud.firestore {
     function isContractor() { return isAuthed() && myRole() == 'contractor'; }
     function isSeguridad()  { return isAuthed() && myRole() == 'seguridad';  }
     function isLogistica()  { return isAuthed() && myRole() == 'logistica';  }
+    function isRys()        { return isAuthed() && myRole() == 'rys';        }
 
     function myCompanyId() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId;
@@ -123,8 +124,8 @@ service cloud.firestore {
 
     // ── Bajas (Personal de Baja) ────────────────────────────────────────────────
     match /bajas/{bajaId} {
-      allow read:          if isAdmin() || isGuard();
-      allow create, update, delete: if isAdmin();
+      allow read:                    if isAdmin() || isGuard() || isRys();
+      allow create, update, delete:  if isAdmin() || isRys();
     }
 
     // ── Audit Log ───────────────────────────────────────────────────────────────

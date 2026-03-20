@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Users, Loader2, ShieldAlert, User, MoreHorizontal } from "lucide-react"
+import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Users, Loader2, ShieldAlert, User, MoreHorizontal, ShieldCheck, Shield, Briefcase, HardHat, Package, UserPlus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { logAudit } from "@/app/actions/audit"
@@ -485,20 +485,13 @@ function UserManager({ db, companies }: UserManagerProps) {
     }
   }
 
-  const ROLE_LABEL: Record<string, string> = {
-    admin:      "Admin",
-    guard:      "Guardia",
-    contractor: "Contratista",
-    seguridad:  "Seg. e Higiene",
-    logistica:  "Logística",
-  }
-
-  const ROLE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-    admin:      "default",
-    guard:      "outline",
-    contractor: "secondary",
-    seguridad:  "secondary",
-    logistica:  "secondary",
+  const ROLE_CONFIG: Record<string, { label: string; icon: React.ElementType; className: string }> = {
+    admin:      { label: "Admin",          icon: ShieldCheck, className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400"       },
+    guard:      { label: "Guardia",        icon: Shield,      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
+    contractor: { label: "Contratista",    icon: Briefcase,   className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
+    seguridad:  { label: "Seg. e Higiene", icon: HardHat,     className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"   },
+    logistica:  { label: "Logística",      icon: Package,     className: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400"   },
+    rys:        { label: "Reclutamiento",  icon: UserPlus,    className: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"           },
   }
 
   return (
@@ -542,9 +535,16 @@ function UserManager({ db, companies }: UserManagerProps) {
                   </div>
 
                   {/* Role badge */}
-                  <Badge variant={ROLE_VARIANT[u.role] ?? "secondary"} className="text-xs shrink-0">
-                    {ROLE_LABEL[u.role] ?? u.role}
-                  </Badge>
+                  {(() => {
+                    const rc = ROLE_CONFIG[u.role]
+                    const RoleIcon = rc?.icon ?? User
+                    return (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${rc?.className ?? "bg-muted text-muted-foreground"}`}>
+                        <RoleIcon className="w-3 h-3 shrink-0" />
+                        {rc?.label ?? u.role}
+                      </span>
+                    )
+                  })()}
 
                   {/* Edit */}
                   <Button size="icon" variant="ghost"
@@ -579,6 +579,7 @@ function UserManager({ db, companies }: UserManagerProps) {
                   <SelectItem value="seguridad">Seguridad e Higiene</SelectItem>
                   <SelectItem value="logistica">Logística</SelectItem>
                   <SelectItem value="guard">Guardia</SelectItem>
+                  <SelectItem value="rys">Reclutamiento</SelectItem>
                   <SelectItem value="contractor">Contratista</SelectItem>
                 </SelectContent>
               </Select>

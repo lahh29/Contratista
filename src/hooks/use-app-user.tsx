@@ -44,7 +44,8 @@ export function useAppUser() {
             data.role === 'contractor' ? 'contractor' :
             data.role === 'guard'      ? 'guard'      :
             data.role === 'seguridad'  ? 'seguridad'  :
-            data.role === 'logistica'  ? 'logistica'  : 'admin'
+            data.role === 'logistica'  ? 'logistica'  :
+            data.role === 'rys'        ? 'rys'        : 'admin'
           let companyId: string | undefined = data.companyId ?? undefined
 
           // If contractor has no companyId yet, try to auto-link by email

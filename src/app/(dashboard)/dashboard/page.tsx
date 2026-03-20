@@ -1,19 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Plus } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { NewVisitModal } from "@/components/visits/NewVisitModal"
 import { DashboardStats } from "@/components/admin/DashboardStats"
 import { VisitsTable } from "@/components/admin/VisitsTable"
+import { VisitsCalendar } from "@/components/admin/VisitsCalendar"
 import { EditVisitSheet } from "@/components/admin/EditVisitSheet"
 import { useFirestore, useCollection, useUser } from "@/firebase"
 import { collection, query, where, limit, updateDoc, doc, serverTimestamp, getDoc } from "firebase/firestore"
@@ -112,36 +102,15 @@ export default function DashboardPage() {
   if (isRestrictedRole) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between gap-3 py-3 px-4 md:px-6">
-            <div>
-              <CardTitle className="text-base font-semibold">Visitas Programadas</CardTitle>
-              <CardDescription className="text-xs">Próximas visitas agendadas.</CardDescription>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {(scheduledVisits?.length ?? 0) > 0 && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-2.5 py-0.5 text-xs font-semibold">
-                  {scheduledVisits!.length} Programada{scheduledVisits!.length !== 1 ? "s" : ""}
-                </Badge>
-              )}
-              <NewVisitModal trigger={
-                <Button size="sm" className="bg-primary text-white h-8 w-8 p-0 shadow-sm shadow-primary/20">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              } />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <VisitsTable
-              visits={scheduledVisits}
-              loading={dataLoading || authLoading}
-              onFinishVisit={handleFinishVisit}
-              onEditVisit={setEditingVisit}
-              canEdit={false}
-            />
-          </CardContent>
-        </Card>
-
+        <VisitsCalendar
+          db={db}
+          activeVisits={visitsForRole}
+          loading={dataLoading || authLoading}
+          onFinishVisit={handleFinishVisit}
+          onEditVisit={setEditingVisit}
+          canEdit={false}
+          scheduledOnly
+        />
         <EditVisitSheet
           visit={editingVisit}
           open={!!editingVisit}
@@ -160,55 +129,14 @@ export default function DashboardPage() {
         alertsCount={alertsCount}
       />
 
-      <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between gap-3 py-3 px-4 md:px-6">
-          <div>
-            <CardTitle className="text-base font-semibold">Proveedores en planta</CardTitle>
-            <CardDescription className="text-xs">Personal trabajando actualmente.</CardDescription>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {(activeVisits?.length ?? 0) > 0 && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-2.5 py-0.5 text-xs font-semibold">
-                {activeVisits!.length} En Planta
-              </Badge>
-            )}
-            <NewVisitModal trigger={
-              <Button size="sm" className="bg-primary text-white h-8 w-8 p-0 shadow-sm shadow-primary/20">
-                <Plus className="w-4 h-4" />
-              </Button>
-            } />
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <VisitsTable
-            visits={activeVisits}
-            loading={dataLoading || authLoading}
-            onFinishVisit={handleFinishVisit}
-            onEditVisit={setEditingVisit}
-          />
-        </CardContent>
-      </Card>
-      {(scheduledVisits?.length ?? 0) > 0 && (
-        <Card className="border-none shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between gap-3 py-3 px-4 md:px-6">
-            <div>
-              <CardTitle className="text-base font-semibold">Visitas Programadas</CardTitle>
-              <CardDescription className="text-xs">Próximas visitas agendadas.</CardDescription>
-            </div>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-2.5 py-0.5 text-xs font-semibold shrink-0">
-              {scheduledVisits!.length} Programada{scheduledVisits!.length !== 1 ? "s" : ""}
-            </Badge>
-          </CardHeader>
-          <CardContent className="p-0">
-            <VisitsTable
-              visits={scheduledVisits}
-              loading={dataLoading || authLoading}
-              onFinishVisit={handleFinishVisit}
-              onEditVisit={setEditingVisit}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <VisitsCalendar
+        db={db}
+        activeVisits={visitsForRole}
+        loading={dataLoading || authLoading}
+        onFinishVisit={handleFinishVisit}
+        onEditVisit={setEditingVisit}
+        canEdit={appUser?.role !== 'guard'}
+      />
 
       <EditVisitSheet
         visit={editingVisit}

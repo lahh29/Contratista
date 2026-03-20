@@ -33,7 +33,7 @@ export default function BajasPage() {
   const db          = useFirestore()
   const { appUser } = useAppUser()
   const { toast }   = useToast()
-  const isAdmin     = appUser?.role === 'admin'
+  const isAdmin     = appUser?.role === 'admin' || appUser?.role === 'rys'
 
   const [bajas,    setBajas]    = useState<Baja[]>([])
   const [loading,  setLoading]  = useState(true)

@@ -15,6 +15,7 @@ import {
   HardHat,
   Package,
   UserX,
+  UserPlus,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -40,11 +41,12 @@ import type { AppUser } from "@/types"
 
 // ── Role config ───────────────────────────────────────────────
 const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow: string; label: string }> = {
-  admin:      { Icon: ShieldCheck, ring: 'ring-blue-400/60',   glow: 'shadow-blue-500/30',   label: 'Administrador'        },
-  guard:      { Icon: Shield,      ring: 'ring-green-400/60',  glow: 'shadow-green-500/30',  label: 'Guardia de Seguridad' },
-  contractor: { Icon: Briefcase,   ring: 'ring-orange-400/60', glow: 'shadow-orange-500/30', label: 'Contratista'          },
+  admin:      { Icon: ShieldCheck, ring: 'ring-sky-400/60',    glow: 'shadow-sky-500/30',    label: 'Administrador'        },
+  guard:      { Icon: Shield,      ring: 'ring-emerald-400/60',glow: 'shadow-emerald-500/30',label: 'Guardia de Seguridad' },
+  contractor: { Icon: Briefcase,   ring: 'ring-amber-400/60',  glow: 'shadow-amber-500/30',  label: 'Contratista'          },
   seguridad:  { Icon: HardHat,     ring: 'ring-yellow-400/60', glow: 'shadow-yellow-500/30', label: 'Seguridad e Higiene'  },
-  logistica:  { Icon: Package,     ring: 'ring-purple-400/60', glow: 'shadow-purple-500/30', label: 'Logística'            },
+  logistica:  { Icon: Package,     ring: 'ring-violet-400/60', glow: 'shadow-violet-500/30', label: 'Logística'            },
+  rys:        { Icon: UserPlus,    ring: 'ring-rose-400/60',   glow: 'shadow-rose-500/30',   label: 'Reclutamiento'        },
 }
 
 // ── UserCard ──────────────────────────────────────────────────
@@ -130,12 +132,13 @@ export function AppSidebar() {
   const { appUser }    = useAppUser()
   const role           = appUser?.role ?? 'admin'
   const isGuard        = role === 'guard'
+  const isRys          = role === 'rys'
   const isStaffRole    = role === 'seguridad' || role === 'logistica'
 
   const activeVisitsQuery = React.useMemo(() => {
-    if (!db) return null
+    if (!db || isRys || isGuard) return null
     return query(collection(db, 'visits'), where('status', '==', 'Activa'))
-  }, [db])
+  }, [db, isRys, isGuard])
 
   const { data: activeVisits } = useCollection(activeVisitsQuery)
   const activeCount = activeVisits?.length ?? 0
@@ -160,7 +163,16 @@ export function AppSidebar() {
 
   const contractorsLabel = role === 'admin' ? 'Empresas' : role === 'logistica' ? 'Clientes' : 'Proveedores'
 
-  const navigation = isGuard
+  const navigation = isRys
+    ? [
+        {
+          title: "Reclutamiento",
+          items: [
+            { name: "Personal de Baja", href: "/bajas", icon: UserX, badge: null },
+          ],
+        },
+      ]
+    : isGuard
     ? [
         {
           title: "Acceso",
