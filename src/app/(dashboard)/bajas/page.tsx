@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { sendNotification } from "@/app/actions/notify"
 
 interface Baja {
   id:         string
@@ -33,7 +34,8 @@ export default function BajasPage() {
   const db          = useFirestore()
   const { appUser } = useAppUser()
   const { toast }   = useToast()
-  const isAdmin     = appUser?.role === 'admin' || appUser?.role === 'rys'
+  const isAdmin     = appUser?.role === 'admin' || appUser?.role === 'rys'  // puede crear
+  const canDelete   = appUser?.role === 'admin'                              // solo admin elimina
 
   const [bajas,    setBajas]    = useState<Baja[]>([])
   const [loading,  setLoading]  = useState(true)
@@ -77,6 +79,12 @@ export default function BajasPage() {
         createdAt:  serverTimestamp(),
       })
       toast({ title: 'Empleado registrado', description: form.nombre.trim() })
+      sendNotification({
+        type:       'baja_registered',
+        nombre:     form.nombre.trim(),
+        noEmpleado: form.noEmpleado.trim(),
+        fechaBaja:  form.fechaBaja,
+      })
       setOpenAdd(false)
       setForm(EMPTY_FORM)
       await fetchBajas()
@@ -142,12 +150,12 @@ export default function BajasPage() {
         {/* Encabezado — solo desktop */}
         <div className={cn(
           "hidden md:grid gap-4 px-5 py-3 border-b border-border/60 bg-muted/30",
-          isAdmin ? "grid-cols-[7rem_1fr_9rem_2.5rem]" : "grid-cols-[7rem_1fr_9rem]"
+          canDelete ? "grid-cols-[7rem_1fr_9rem_2.5rem]" : "grid-cols-[7rem_1fr_9rem]"
         )}>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">No. Empleado</p>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nombre Completo</p>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fecha de Baja</p>
-          {isAdmin && <span />}
+          {canDelete && <span />}
         </div>
 
         {loading ? (
@@ -180,7 +188,7 @@ export default function BajasPage() {
                       </span>
                     </div>
                   </div>
-                  {isAdmin && (
+                  {canDelete && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -196,7 +204,7 @@ export default function BajasPage() {
                 {/* Desktop: table row */}
                 <div className={cn(
                   "hidden md:grid gap-4 items-center px-5 py-3.5",
-                  isAdmin ? "grid-cols-[7rem_1fr_9rem_2.5rem]" : "grid-cols-[7rem_1fr_9rem]"
+                  canDelete ? "grid-cols-[7rem_1fr_9rem_2.5rem]" : "grid-cols-[7rem_1fr_9rem]"
                 )}>
                   <p className="text-sm font-mono font-semibold text-muted-foreground tabular-nums">
                     {baja.noEmpleado}
@@ -205,7 +213,7 @@ export default function BajasPage() {
                   <p className="text-sm text-muted-foreground font-mono tabular-nums">
                     {baja.fechaBaja}
                   </p>
-                  {isAdmin && (
+                  {canDelete && (
                     <Button
                       variant="ghost"
                       size="icon"

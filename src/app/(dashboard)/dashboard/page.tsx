@@ -111,7 +111,6 @@ export default function DashboardPage() {
           onFinishVisit={handleFinishVisit}
           onEditVisit={setEditingVisit}
           canEdit={false}
-          scheduledOnly
         />
         <EditVisitSheet
           visit={editingVisit}

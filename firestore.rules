@@ -124,8 +124,9 @@ service cloud.firestore {
 
     // ── Bajas (Personal de Baja) ────────────────────────────────────────────────
     match /bajas/{bajaId} {
-      allow read:                    if isAdmin() || isGuard() || isRys();
-      allow create, update, delete:  if isAdmin() || isRys();
+      allow read:           if isAdmin() || isGuard() || isRys();
+      allow create, update: if isAdmin() || isRys();
+      allow delete:         if isAdmin();
     }
 
     // ── Audit Log ───────────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ export type NotifyEvent =
   | { type: 'sua_renewed';        companyName: string }
   | { type: 'prolonged_visit';    companyName: string; areaName: string; hoursOnSite: number }
   | { type: 'restricted_area';    companyName: string; areaName: string }
+  | { type: 'baja_registered';    nombre: string; noEmpleado: string; fechaBaja: string }
 
 /**
  * Audience control:
@@ -23,6 +24,7 @@ export type NotifyEvent =
 export type Audience =
   | 'all'
   | 'admins'
+  | 'admins_guards'
   | { companyId: string }
 
 export function buildNotification(event: NotifyEvent): { title: string; body: string; url: string } {
@@ -91,6 +93,12 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body:  `${event.companyName} ingresó al área restringida: ${event.areaName}.`,
         url:   '/dashboard',
       }
+    case 'baja_registered':
+      return {
+        title: `Personal de Baja: ${event.nombre}`,
+        body:  `No. ${event.noEmpleado} · Fecha de baja: ${event.fechaBaja}`,
+        url:   '/bajas',
+      }
   }
 }
 
@@ -102,6 +110,9 @@ function defaultAudience(event: NotifyEvent): Audience {
   if (event.type === 'blocked_contractor') {
     return { companyId: event.companyId }
   }
+  if (event.type === 'baja_registered') {
+    return 'admins_guards'
+  }
   return 'admins'
 }
 
@@ -111,6 +122,7 @@ function tokenMatchesAudience(
 ): boolean {
   if (audience === 'all') return true
   if (audience === 'admins') return data.role === 'admin'
+  if (audience === 'admins_guards') return data.role === 'admin' || data.role === 'guard'
   // { companyId } → admin OR matching contractor
   return data.role === 'admin' || (data.role === 'contractor' && data.companyId === audience.companyId)
 }

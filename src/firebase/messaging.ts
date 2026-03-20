@@ -25,6 +25,10 @@ export async function getFCMToken(): Promise<string | null> {
     console.warn('[FCM] NEXT_PUBLIC_FIREBASE_VAPID_KEY not set')
     return null
   }
+  // Si el permiso está bloqueado no hay nada que hacer — salir silenciosamente
+  if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+    return null
+  }
   const messaging = getFirebaseMessaging()
   if (!messaging) return null
   try {
