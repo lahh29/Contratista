@@ -30,6 +30,35 @@ interface Baja {
 
 const EMPTY_FORM = { noEmpleado: '', nombre: '', fechaBaja: '' }
 
+const CONNECTORS = new Set(['DE', 'LA', 'LOS', 'LAS', 'DEL', 'LES', 'EL', 'Y'])
+
+function splitName(fullName: string): { apellidos: string; nombres: string } {
+  const words = fullName.trim().split(/\s+/)
+  if (words.length <= 1) return { apellidos: fullName, nombres: '' }
+
+  const groups: string[] = []
+  let i = 0
+  while (i < words.length) {
+    if (CONNECTORS.has(words[i]) && groups.length > 0 && i + 1 < words.length) {
+      groups[groups.length - 1] += ' ' + words[i] + ' ' + words[i + 1]
+      i += 2
+    } else {
+      groups.push(words[i])
+      i++
+    }
+  }
+
+  if (groups.length <= 1) return { apellidos: fullName, nombres: '' }
+
+  const firstIsCompound = groups[0].includes(' ')
+  const splitAt = (firstIsCompound || groups.length === 2) ? 1 : 2
+
+  return {
+    apellidos: groups.slice(0, splitAt).join(' '),
+    nombres:   groups.slice(splitAt).join(' '),
+  }
+}
+
 export default function BajasPage() {
   const db          = useFirestore()
   const { appUser } = useAppUser()
@@ -177,7 +206,10 @@ export default function BajasPage() {
                 {/* Mobile: card layout */}
                 <div className="md:hidden flex items-center justify-between gap-3 px-4 py-3.5">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">{baja.nombre}</p>
+                    {(() => { const { apellidos, nombres } = splitName(baja.nombre); return (<>
+                      <p className="text-sm font-semibold leading-tight">{apellidos}</p>
+                      {nombres && <p className="text-xs text-muted-foreground leading-tight">{nombres}</p>}
+                    </>) })()}
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-muted-foreground font-mono tabular-nums">
                         No.&nbsp;{baja.noEmpleado}
