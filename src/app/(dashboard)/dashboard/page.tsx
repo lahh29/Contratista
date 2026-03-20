@@ -138,6 +138,7 @@ export default function DashboardPage() {
         onFinishVisit={handleFinishVisit}
         onEditVisit={setEditingVisit}
         canEdit={appUser?.role !== 'guard'}
+        companyTypeFilter={appUser?.role === 'logistica' ? 'cliente' : undefined}
       />
 
       <EditVisitSheet

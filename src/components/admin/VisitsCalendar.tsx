@@ -58,14 +58,16 @@ const STATUS_CONFIG: Record<string, { label: string; border: string; bg: string;
 // ──────────────────────────────────────────────────────────────────────────────
 
 interface VisitsCalendarProps {
-  db:            any
-  activeVisits:  any[] | null   // real-time: Activa + Programada
-  loading:       boolean
-  onFinishVisit: (id: string) => void
-  onEditVisit:   (visit: any) => void
-  canEdit?:      boolean
+  db:                any
+  activeVisits:      any[] | null   // real-time: Activa + Programada
+  loading:           boolean
+  onFinishVisit:     (id: string) => void
+  onEditVisit:       (visit: any) => void
+  canEdit?:          boolean
   /** Si true solo muestra Programada (vista guardia) */
-  scheduledOnly?: boolean
+  scheduledOnly?:    boolean
+  /** Filtra por companyType (p.ej. 'cliente' para logística) */
+  companyTypeFilter?: string
 }
 
 export function VisitsCalendar({
@@ -76,6 +78,7 @@ export function VisitsCalendar({
   onEditVisit,
   canEdit = true,
   scheduledOnly = false,
+  companyTypeFilter,
 }: VisitsCalendarProps) {
   const today    = useMemo(() => qroToday(), [])
   const todayStr = toQroDateStr(today)
@@ -125,7 +128,9 @@ export function VisitsCalendar({
   const visitsForDay = useMemo(() => {
     const map = new Map<string, any>()
     // Primero datos puntuales (base)
-    fetchedVisits.forEach(v => map.set(v.id, v))
+    fetchedVisits
+      .filter(v => !companyTypeFilter || v.companyType === companyTypeFilter)
+      .forEach(v => map.set(v.id, v))
     // Luego real-time sobreescribe (más actualizado)
     activeVisits
       ?.filter(v => v.scheduledDate === selectedDateStr || (isToday && !v.scheduledDate))
@@ -143,7 +148,7 @@ export function VisitsCalendar({
       if (oa !== ob) return oa - ob
       return (a.scheduledTime ?? '').localeCompare(b.scheduledTime ?? '')
     })
-  }, [fetchedVisits, activeVisits, selectedDateStr, isToday, scheduledOnly])
+  }, [fetchedVisits, activeVisits, selectedDateStr, isToday, scheduledOnly, companyTypeFilter])
 
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">

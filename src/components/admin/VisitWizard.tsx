@@ -41,10 +41,10 @@ import {
   getDocs,
 } from 'firebase/firestore'
 
-// Caché a nivel módulo: evita re-leer Firestore en cada apertura del wizard
+// Caché a nivel módulo para datos de configuración estáticos (áreas y supervisores)
+// Las empresas NO se cachean porque se agregan con frecuencia
 let _areasCache: any[] | null = null
 let _supervisorsCache: any[] | null = null
-let _companiesCache: any[] | null = null
 import { useToast } from '@/hooks/use-toast'
 import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
@@ -159,7 +159,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     }
   }
 
-  const [allCompanies, setAllCompanies] = React.useState<any[]>(_companiesCache ?? [])
+  const [allCompanies, setAllCompanies] = React.useState<any[]>([])
   const [areas,        setAreas]        = React.useState<any[]>(_areasCache ?? [])
   const [supervisors,  setSupervisors]  = React.useState<any[]>(_supervisorsCache ?? [])
 
@@ -182,14 +182,12 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
         }).catch(() => {})
       )
     }
-    if (!_companiesCache) {
-      fetches.push(
-        getDocs(query(collection(db, 'companies'), limit(500))).then(snap => {
-          _companiesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          setAllCompanies(_companiesCache)
-        }).catch(() => {})
-      )
-    }
+    // Empresas: siempre se leen al abrir el wizard para tener datos frescos
+    fetches.push(
+      getDocs(query(collection(db, 'companies'), limit(500))).then(snap => {
+        setAllCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      }).catch(() => {})
+    )
   }, [db])
 
   const companies = React.useMemo(() => {
