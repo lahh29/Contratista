@@ -300,8 +300,8 @@ export default function ContractorsPage() {
                 {filteredCompanies.map((company) => (
                   <div key={company.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 active:bg-muted/30 transition-colors">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm truncate">{company.name}</span>
+                      <span className="font-semibold text-sm truncate block">{company.name}</span>
+                      <div className="mt-1">
                         <SuaBadge sua={company.sua} />
                       </div>
                     </div>

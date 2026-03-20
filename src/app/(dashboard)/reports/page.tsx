@@ -10,8 +10,6 @@ import {
   FileSpreadsheet,
   Loader2,
   X,
-  Car,
-  Users,
   Building2,
   TrendingUp,
   CalendarRange,
@@ -280,8 +278,23 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
 
-      {/* Export cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+      {/* Export actions — mobile: icon buttons row / desktop: cards */}
+      <div className="flex gap-2 sm:hidden">
+        <Button variant="secondary" className="w-20 h-14 flex-col gap-1 text-xs" onClick={handleExcel} disabled={genXlsx || loading}>
+          {genXlsx ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSpreadsheet className="w-5 h-5 text-green-600" />}
+          Excel
+        </Button>
+        <Button variant="secondary" className="w-20 h-14 flex-col gap-1 text-xs" onClick={handlePDF} disabled={genPdf || loading}>
+          {genPdf ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 text-red-600" />}
+          PDF
+        </Button>
+        <Button variant="secondary" className="w-20 h-14 flex-col gap-1 text-xs" onClick={() => setSummaryOpen(true)} disabled={loading}>
+          <BarChart3 className="w-5 h-5 text-accent" />
+          Resumen
+        </Button>
+      </div>
+
+      <div className="hidden sm:grid grid-cols-3 gap-4 md:gap-6">
         <Card className="border-none shadow-sm hover:ring-2 hover:ring-primary/20 transition-all">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -343,8 +356,8 @@ export default function ReportsPage() {
       {/* Visits table */}
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-4">
-            <div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
               <CardTitle>Historial</CardTitle>
               <CardDescription>
                 {loading ? 'Cargando...' : `${filteredVisits.length} visitas`}
@@ -381,7 +394,7 @@ export default function ReportsPage() {
               <div className="flex flex-col divide-y md:hidden">
                 {filteredVisits.map(visit => (
                   <div key={visit.id} className="px-4 py-3 flex items-center gap-3">
-                    <span className="font-semibold text-sm flex-1 truncate">{visit.companyName || '—'}</span>
+                    <span className="font-semibold text-sm shrink-0">{visit.companyName ? visit.companyName.slice(0, 17) + (visit.companyName.length > 17 ? '…' : '') : '—'}</span>
                     <Badge className={`text-xs rounded-md shrink-0 ${
                       visit.status === 'Active'
                         ? 'bg-green-100 text-green-700 hover:bg-green-100'
