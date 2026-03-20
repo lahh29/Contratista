@@ -16,6 +16,7 @@ export interface Company {
   contact?: string
   phone?: string
   email?: string   // Email del contratista — usado para auto-vincular su cuenta al portal
+  type?: 'proveedor' | 'cliente'
   status?: 'Active' | 'Blocked'
   personnelCount?: number
   vehicle?: string

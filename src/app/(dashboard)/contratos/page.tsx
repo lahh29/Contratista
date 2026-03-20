@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { collection, getDocs, doc, getDoc } from "firebase/firestore"
+import { collection, getDocs } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { CheckCircle2, Clock, Loader2, FileText, Printer, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -19,58 +19,67 @@ interface ContratoRow {
 
 export default function ContratosPage() {
   const db = useFirestore()
-  const [rows, setRows]       = useState<ContratoRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch]   = useState('')
-  const [selected, setSelected] = useState<ContratoRow | null>(null)
+  const [rows, setRows]           = useState<ContratoRow[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [search, setSearch]       = useState('')
+  const [selected, setSelected]   = useState<ContratoRow | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
 
   useEffect(() => {
     if (!db) return
     ;(async () => {
-      // 1. Cargar todas las empresas
-      const companiesSnap = await getDocs(collection(db, 'companies'))
+      // 2 lecturas en batch en lugar de 1 + N lecturas individuales
+      const [companiesSnap, contratosSnap] = await Promise.all([
+        getDocs(collection(db, 'companies')),
+        getDocs(collection(db, 'contratos')),
+      ])
 
-      const results: ContratoRow[] = await Promise.all(
-        companiesSnap.docs.map(async (compDoc) => {
-          const company = compDoc.data()
-          const contratoSnap = await getDoc(doc(db, 'contratos', compDoc.id))
+      const contratosMap = new Map(contratosSnap.docs.map(d => [d.id, d.data()]))
 
-          let status:      'firmado' | 'pendiente' = 'pendiente'
-          let fechaFirma:  Date | null = null
-          let signatureImg: string | null = null
+      const results: ContratoRow[] = companiesSnap.docs.map(compDoc => {
+        const company = compDoc.data()
+        const contrato = contratosMap.get(compDoc.id)
 
-          if (contratoSnap.exists()) {
-            const d = contratoSnap.data()
-            if (d.status === 'firmado') {
-              status = 'firmado'
-              if (d.fechaFirma?.toDate) fechaFirma = d.fechaFirma.toDate()
-              // Cargar imagen de firma
-              const firmasSnap = await getDocs(
-                collection(db, 'contratos', compDoc.id, 'firmas')
-              )
-              if (!firmasSnap.empty) signatureImg = firmasSnap.docs[0].data().canvasData ?? null
-            }
-          }
+        let status:      'firmado' | 'pendiente' = 'pendiente'
+        let fechaFirma:  Date | null = null
 
-          return {
-            companyId:   compDoc.id,
-            companyName: company.name ?? compDoc.id,
-            contact:     company.contact ?? company.email ?? '—',
-            status,
-            fechaFirma,
-            signatureImg,
-          }
-        })
-      )
+        if (contrato?.status === 'firmado') {
+          status = 'firmado'
+          if (contrato.fechaFirma?.toDate) fechaFirma = contrato.fechaFirma.toDate()
+        }
+
+        return {
+          companyId:   compDoc.id,
+          companyName: company.name ?? compDoc.id,
+          contact:     company.contact ?? company.email ?? '—',
+          status,
+          fechaFirma,
+          signatureImg: null,
+        }
+      })
 
       setRows(results.sort((a, b) => {
-        // Firmados primero, luego por nombre
         if (a.status !== b.status) return a.status === 'firmado' ? -1 : 1
         return a.companyName.localeCompare(b.companyName)
       }))
       setLoading(false)
     })()
   }, [db])
+
+  // Carga lazy de firma solo al ver el detalle
+  const handleSelectRow = async (row: ContratoRow) => {
+    if (!db || row.status !== 'firmado') { setSelected(row); return }
+    setLoadingDetail(true)
+    try {
+      const firmasSnap = await getDocs(collection(db, 'contratos', row.companyId, 'firmas'))
+      const signatureImg = firmasSnap.docs[0]?.data().canvasData ?? null
+      setSelected({ ...row, signatureImg })
+    } catch {
+      setSelected(row)
+    } finally {
+      setLoadingDetail(false)
+    }
+  }
 
   const filtered = useMemo(() =>
     rows.filter(r =>
@@ -233,9 +242,10 @@ export default function ContratosPage() {
                     size="icon"
                     className="h-8 w-8 text-primary hover:bg-primary/10"
                     title="Ver contrato"
-                    onClick={() => setSelected(row)}
+                    onClick={() => handleSelectRow(row)}
+                    disabled={loadingDetail}
                   >
-                    <FileText className="w-4 h-4" />
+                    {loadingDetail ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                   </Button>
                 ) : (
                   <span className="w-8" />

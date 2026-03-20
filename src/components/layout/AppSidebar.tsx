@@ -20,7 +20,7 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "firebase/auth"
-import { doc, deleteDoc, collection, query, where } from "firebase/firestore"
+import { doc, deleteDoc, collection, query, where, limit } from "firebase/firestore"
 import { useAuth, useFirestore, useUser } from "@/firebase"
 import { useCollection } from "@/firebase/firestore/use-collection"
 import { getFCMToken } from "@/firebase/messaging"
@@ -137,7 +137,7 @@ export function AppSidebar() {
 
   const activeVisitsQuery = React.useMemo(() => {
     if (!db || isRys || isGuard) return null
-    return query(collection(db, 'visits'), where('status', '==', 'Activa'))
+    return query(collection(db, 'visits'), where('status', '==', 'Activa'), limit(50))
   }, [db, isRys, isGuard])
 
   const { data: activeVisits } = useCollection(activeVisitsQuery)

@@ -15,6 +15,7 @@ import {
   Building2,
   TrendingUp,
   CalendarRange,
+  RefreshCw,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,8 +33,8 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog"
-import { useFirestore, useCollection, useUser } from "@/firebase"
-import { collection, query, orderBy, limit } from "firebase/firestore"
+import { useFirestore, useUser } from "@/firebase"
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
 import { formatDistanceToNow, format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useToast } from "@/hooks/use-toast"
@@ -190,11 +191,23 @@ export default function ReportsPage() {
   const { toast } = useToast()
 
   // fetch
-  const visitsQuery = React.useMemo(() => {
-    if (!db || !user || authLoading) return null
-    return query(collection(db, "visits"), orderBy("entryTime", "desc"), limit(200))
+  const [visits, setVisits] = React.useState<any[] | null>(null)
+  const [loading, setLoading] = React.useState(false)
+
+  const fetchVisits = React.useCallback(async () => {
+    if (!db || !user || authLoading) return
+    setLoading(true)
+    try {
+      const snap = await getDocs(query(collection(db, "visits"), orderBy("entryTime", "desc"), limit(200)))
+      setVisits(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    } catch {
+      setVisits([])
+    } finally {
+      setLoading(false)
+    }
   }, [db, user, authLoading])
-  const { data: visits, loading } = useCollection(visitsQuery)
+
+  React.useEffect(() => { fetchVisits() }, [fetchVisits])
 
   // filter state
   const [filterOpen,    setFilterOpen]    = React.useState(false)
@@ -338,6 +351,9 @@ export default function ReportsPage() {
               </CardDescription>
             </div>
             <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={fetchVisits} disabled={loading} title="Actualizar">
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              </Button>
               <Button variant="outline" size="sm" className="gap-2 relative" onClick={() => setFilterOpen(true)}>
                 <Filter className="w-4 h-4" />
                 {activeFilters > 0 && (

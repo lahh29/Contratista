@@ -13,6 +13,7 @@ import {
   Phone,
   Calendar,
   Trash2,
+  RefreshCw,
 } from "lucide-react"
 import {
   Card,
@@ -49,8 +50,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
-import { useFirestore, useCollection } from "@/firebase"
-import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc } from "firebase/firestore"
+import { useFirestore } from "@/firebase"
+import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc, getDocs } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import { CompanyDetailSheet } from "@/components/contractors/CompanyDetailSheet"
@@ -150,12 +151,23 @@ export default function ContractorsPage() {
   const { toast } = useToast()
   const { appUser } = useAppUser()
 
-  const companiesQuery = React.useMemo(() => {
-    if (!db) return null
-    return query(collection(db, "companies"), orderBy("createdAt", "desc"), limit(500))
+  const [companies, setCompanies] = React.useState<any[] | null>(null)
+  const [loading, setLoading] = React.useState(true)
+
+  const fetchCompanies = React.useCallback(async () => {
+    if (!db) return
+    setLoading(true)
+    try {
+      const snap = await getDocs(query(collection(db, "companies"), orderBy("createdAt", "desc"), limit(500)))
+      setCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    } catch {
+      setCompanies([])
+    } finally {
+      setLoading(false)
+    }
   }, [db])
 
-  const { data: companies, loading } = useCollection(companiesQuery)
+  React.useEffect(() => { fetchCompanies() }, [fetchCompanies])
 
   const filteredCompanies = React.useMemo(() => {
     if (!companies) return []
@@ -202,6 +214,7 @@ export default function ContractorsPage() {
         targetName: selectedCompany.name,
       })
       sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id })
+      fetchCompanies()
     } catch {
       const permissionError = new FirestorePermissionError({
         path: companyRef.path,
@@ -233,6 +246,7 @@ export default function ContractorsPage() {
         targetName: selectedCompany.name,
       })
       sendNotification({ type: 'delete_contractor', companyName: selectedCompany.name })
+      fetchCompanies()
     } catch {
       const permissionError = new FirestorePermissionError({
         path: companyRef.path,
@@ -259,6 +273,9 @@ export default function ContractorsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={fetchCompanies} disabled={loading} title="Actualizar lista">
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
             <Button asChild size="sm" className="bg-primary text-white shrink-0 h-10 w-10 p-0">
               <Link href="/contractors/new">
                 <Plus className="w-4 h-4" />

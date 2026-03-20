@@ -29,7 +29,7 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react'
-import { useFirestore, useCollection } from '@/firebase'
+import { useFirestore } from '@/firebase'
 import {
   collection,
   addDoc,
@@ -38,7 +38,13 @@ import {
   serverTimestamp,
   query,
   limit,
+  getDocs,
 } from 'firebase/firestore'
+
+// Caché a nivel módulo: evita re-leer Firestore en cada apertura del wizard
+let _areasCache: any[] | null = null
+let _supervisorsCache: any[] | null = null
+let _companiesCache: any[] | null = null
 import { useToast } from '@/hooks/use-toast'
 import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
@@ -153,22 +159,38 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     }
   }
 
-  const companiesQuery = React.useMemo(
-    () => (db ? query(collection(db, 'companies'), limit(500)) : null),
-    [db]
-  )
-  const areasQuery = React.useMemo(
-    () => (db ? query(collection(db, 'areas'), limit(100)) : null),
-    [db]
-  )
-  const supervisorsQuery = React.useMemo(
-    () => (db ? query(collection(db, 'supervisors'), limit(100)) : null),
-    [db]
-  )
+  const [allCompanies, setAllCompanies] = React.useState<any[]>(_companiesCache ?? [])
+  const [areas,        setAreas]        = React.useState<any[]>(_areasCache ?? [])
+  const [supervisors,  setSupervisors]  = React.useState<any[]>(_supervisorsCache ?? [])
 
-  const { data: allCompanies } = useCollection(companiesQuery)
-  const { data: areas } = useCollection(areasQuery)
-  const { data: supervisors } = useCollection(supervisorsQuery)
+  React.useEffect(() => {
+    if (!db) return
+    const fetches: Promise<void>[] = []
+    if (!_areasCache) {
+      fetches.push(
+        getDocs(query(collection(db, 'areas'), limit(100))).then(snap => {
+          _areasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          setAreas(_areasCache)
+        }).catch(() => {})
+      )
+    }
+    if (!_supervisorsCache) {
+      fetches.push(
+        getDocs(query(collection(db, 'supervisors'), limit(100))).then(snap => {
+          _supervisorsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          setSupervisors(_supervisorsCache)
+        }).catch(() => {})
+      )
+    }
+    if (!_companiesCache) {
+      fetches.push(
+        getDocs(query(collection(db, 'companies'), limit(500))).then(snap => {
+          _companiesCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          setAllCompanies(_companiesCache)
+        }).catch(() => {})
+      )
+    }
+  }, [db])
 
   const companies = React.useMemo(() => {
     if (!allCompanies) return allCompanies

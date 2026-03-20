@@ -24,7 +24,6 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useFirestore } from "@/firebase"
-import { useCollection } from "@/firebase/firestore/use-collection"
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
 import { verifyAuditPassword } from "@/app/actions/audit"
 import { format, formatDistanceToNow } from "date-fns"
@@ -206,23 +205,28 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
 function AuditLog() {
   const db           = useFirestore()
   const [filter, setFilter] = React.useState("all")
+  const [entries, setEntries] = React.useState<AuditEntry[] | null>(null)
+  const [loading, setLoading] = React.useState(true)
 
-  const auditQuery = React.useMemo(() => {
-    if (!db) return null
-    return query(
-      collection(db, "auditLog"),
-      orderBy("timestamp", "desc"),
-      limit(200)
-    )
+  const fetchEntries = React.useCallback(async () => {
+    if (!db) return
+    setLoading(true)
+    try {
+      const snap = await getDocs(query(collection(db, "auditLog"), orderBy("timestamp", "desc"), limit(200)))
+      setEntries(snap.docs.map(d => ({ id: d.id, ...d.data() })) as unknown as AuditEntry[])
+    } catch {
+      setEntries([])
+    } finally {
+      setLoading(false)
+    }
   }, [db])
 
-  const { data: entries, loading } = useCollection(auditQuery)
+  React.useEffect(() => { fetchEntries() }, [fetchEntries])
 
   const filtered = React.useMemo(() => {
     if (!entries) return []
-    const all = entries as unknown as AuditEntry[]
-    if (filter === "all") return all
-    return all.filter(e => e.targetType === filter)
+    if (filter === "all") return entries
+    return entries.filter(e => e.targetType === filter)
   }, [entries, filter])
 
   return (
@@ -256,6 +260,9 @@ function AuditLog() {
             <div className="h-10 px-3 flex items-center bg-muted/30 rounded-xl border border-border/40 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
                {filtered.length} TOTAL
             </div>
+            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl shrink-0" onClick={fetchEntries} disabled={loading} title="Actualizar">
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
 
           {loading ? (

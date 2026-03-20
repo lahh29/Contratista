@@ -4,7 +4,7 @@ import * as React from "react"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { VisitWizard } from "@/components/admin/VisitWizard"
 import {
-  Dialog, DialogContent, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Drawer, DrawerContent, DrawerTitle, DrawerTrigger,
@@ -35,6 +35,7 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[480px] rounded-2xl border-none shadow-2xl p-6 gap-0">
         <DialogTitle className="text-base font-bold mb-4">Nueva Visita</DialogTitle>
+        <DialogDescription className="sr-only">Registra una nueva visita de proveedor o cliente.</DialogDescription>
         <VisitWizard onClose={handleClose} />
       </DialogContent>
     </Dialog>

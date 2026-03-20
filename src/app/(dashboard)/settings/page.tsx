@@ -637,13 +637,16 @@ export default function SettingsPage() {
   const supervisorsQuery = React.useMemo(
     () => (db ? query(collection(db, "supervisors"), limit(100)) : null), [db]
   )
-  const companiesQuery = React.useMemo(
-    () => (db ? query(collection(db, "companies"),   limit(200)) : null), [db]
-  )
-
   const { data: areas,       loading: areasLoading }       = useCollection(areasQuery)
   const { data: supervisors, loading: supervisorsLoading } = useCollection(supervisorsQuery)
-  const { data: companies }                                 = useCollection(companiesQuery)
+
+  const [companies, setCompanies] = React.useState<DocumentData[] | null>(null)
+  React.useEffect(() => {
+    if (!db) return
+    getDocs(query(collection(db, "companies"), limit(200)))
+      .then(snap => setCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .catch(() => setCompanies([]))
+  }, [db])
 
   const supervisorsCard = (
     <CollectionManager

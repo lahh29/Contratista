@@ -11,7 +11,7 @@ import { UserX, Plus, Trash2, Search, RefreshCw, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog"
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -229,6 +229,7 @@ export default function BajasPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Registrar Personal de Baja</DialogTitle>
+            <DialogDescription>Completa los datos del empleado dado de baja.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
