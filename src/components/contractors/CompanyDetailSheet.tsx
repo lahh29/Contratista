@@ -8,7 +8,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { ShieldCheck, ShieldAlert, Phone, User, Calendar, Hash, Building2 } from "lucide-react"
+import { ShieldCheck, ShieldAlert, Phone, User, Calendar, Hash, Building2, FileText, MapPin, StickyNote } from "lucide-react"
 
 interface CompanyDetailSheetProps {
   company: any
@@ -83,6 +83,8 @@ export function CompanyDetailSheet({ company, open, onOpenChange }: CompanyDetai
           <InfoRow icon={Building2} label="Razón Social" value={company.name} />
           <InfoRow icon={User} label="Contacto Principal" value={company.contact} />
           <InfoRow icon={Phone} label="Teléfono" value={company.phone} />
+          <InfoRow icon={FileText} label="RFC" value={company.rfc} />
+          <InfoRow icon={MapPin} label="Dirección" value={company.address} />
           <InfoRow icon={Hash} label="N° de Póliza / SUA" value={company.sua?.number} />
           <InfoRow icon={Calendar} label="Vencimiento SUA" value={company.sua?.validUntil} />
           <InfoRow
@@ -91,6 +93,17 @@ export function CompanyDetailSheet({ company, open, onOpenChange }: CompanyDetai
             value={company.createdAt?.toDate ? company.createdAt.toDate().toLocaleDateString('es-MX') : undefined}
           />
         </div>
+
+        {/* Notas internas — solo si existen */}
+        {company.notes && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 px-4 py-3 flex gap-3">
+            <StickyNote className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-1">Notas internas</p>
+              <p className="text-sm text-amber-900 dark:text-amber-300 whitespace-pre-wrap leading-relaxed">{company.notes}</p>
+            </div>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )

@@ -4,7 +4,7 @@ import { getAdminApp } from './firebase-admin'
 
 export type NotifyEvent =
   | { type: 'entry';              companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
-  | { type: 'exit';               companyName: string; areaName: string }
+  | { type: 'exit';               companyName: string; areaName: string; personnelCount?: number }
   | { type: 'sua_expiring';       companyName: string; daysLeft: number; companyId?: string }
   | { type: 'new_contractor';     companyName: string }
   | { type: 'delete_contractor';  companyName: string }
@@ -13,7 +13,8 @@ export type NotifyEvent =
   | { type: 'sua_renewed';        companyName: string }
   | { type: 'prolonged_visit';    companyName: string; areaName: string; hoursOnSite: number }
   | { type: 'restricted_area';    companyName: string; areaName: string }
-  | { type: 'baja_registered';    nombre: string; noEmpleado: string; fechaBaja: string }
+  | { type: 'baja_registered';       nombre: string; noEmpleado: string; fechaBaja: string }
+  | { type: 'sua_renewal_request';   companyName: string; companyId: string }
 
 /**
  * Audience control:
@@ -25,6 +26,7 @@ export type Audience =
   | 'all'
   | 'admins'
   | 'admins_guards'
+  | 'admins_seguridad'
   | { companyId: string }
 
 export function buildNotification(event: NotifyEvent): { title: string; body: string; url: string } {
@@ -38,7 +40,7 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
     case 'exit':
       return {
         title: `Salida: ${event.companyName}`,
-        body:  `Ha salido del área: ${event.areaName}`,
+        body:  `${event.personnelCount ? `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} · ` : ''}Área: ${event.areaName}`,
         url:   '/dashboard',
       }
     case 'sua_expiring':
@@ -99,6 +101,12 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body:  `No. ${event.noEmpleado} · Fecha de baja: ${event.fechaBaja}`,
         url:   '/bajas',
       }
+    case 'sua_renewal_request':
+      return {
+        title: `Solicitud de renovación SUA: ${event.companyName}`,
+        body:  `${event.companyName} informa que su SUA ha sido renovado y requiere actualización.`,
+        url:   `/contractors`,
+      }
   }
 }
 
@@ -113,6 +121,12 @@ function defaultAudience(event: NotifyEvent): Audience {
   if (event.type === 'baja_registered') {
     return 'admins_guards'
   }
+  if (event.type === 'exit' || event.type === 'entry') {
+    return 'admins_seguridad'
+  }
+  if (event.type === 'sua_renewal_request') {
+    return 'admins_seguridad'
+  }
   return 'admins'
 }
 
@@ -123,8 +137,10 @@ function tokenMatchesAudience(
   if (audience === 'all') return true
   if (audience === 'admins') return data.role === 'admin'
   if (audience === 'admins_guards') return data.role === 'admin' || data.role === 'guard'
+  if (audience === 'admins_seguridad') return data.role === 'admin' || data.role === 'seguridad'
   // { companyId } → admin OR matching contractor
-  return data.role === 'admin' || (data.role === 'contractor' && data.companyId === audience.companyId)
+  const { companyId } = audience
+  return data.role === 'admin' || (data.role === 'contractor' && data.companyId === companyId)
 }
 
 /**

@@ -42,10 +42,19 @@ import {
   getDocs,
 } from 'firebase/firestore'
 
-// Caché a nivel módulo para datos de configuración estáticos (áreas y supervisores)
-// Las empresas NO se cachean porque se agregan con frecuencia
-let _areasCache: any[] | null = null
-let _supervisorsCache: any[] | null = null
+// Caché a nivel módulo con TTL
+// Áreas y supervisores: 30 min (cambian muy raramente)
+// Empresas: 2 min (pueden agregarse con frecuencia, pero evita lecturas en cada apertura del wizard)
+interface _CacheEntry { data: any[]; ts: number }
+const _TTL_LONG  = 30 * 60_000
+const _TTL_SHORT =  2 * 60_000
+function _fresh(c: _CacheEntry | null, ttl: number): boolean {
+  return c !== null && Date.now() - c.ts < ttl
+}
+
+let _areasCache:       _CacheEntry | null = null
+let _supervisorsCache: _CacheEntry | null = null
+let _companiesCache:   _CacheEntry | null = null
 import { useToast } from '@/hooks/use-toast'
 import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
@@ -170,35 +179,38 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     }
   }
 
-  const [allCompanies, setAllCompanies] = React.useState<any[]>([])
-  const [areas,        setAreas]        = React.useState<any[]>(_areasCache ?? [])
-  const [supervisors,  setSupervisors]  = React.useState<any[]>(_supervisorsCache ?? [])
+  const [allCompanies, setAllCompanies] = React.useState<any[]>(_companiesCache?.data ?? [])
+  const [areas,        setAreas]        = React.useState<any[]>(_areasCache?.data ?? [])
+  const [supervisors,  setSupervisors]  = React.useState<any[]>(_supervisorsCache?.data ?? [])
 
   React.useEffect(() => {
     if (!db) return
     const fetches: Promise<void>[] = []
-    if (!_areasCache) {
+    if (!_fresh(_areasCache, _TTL_LONG)) {
       fetches.push(
         getDocs(query(collection(db, 'areas'), limit(100))).then(snap => {
-          _areasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          setAreas(_areasCache)
+          _areasCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
+          setAreas(_areasCache.data)
         }).catch(() => {})
       )
     }
-    if (!_supervisorsCache) {
+    if (!_fresh(_supervisorsCache, _TTL_LONG)) {
       fetches.push(
         getDocs(query(collection(db, 'supervisors'), limit(100))).then(snap => {
-          _supervisorsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          setSupervisors(_supervisorsCache)
+          _supervisorsCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
+          setSupervisors(_supervisorsCache.data)
         }).catch(() => {})
       )
     }
-    // Empresas: siempre se leen al abrir el wizard para tener datos frescos
-    fetches.push(
-      getDocs(query(collection(db, 'companies'), limit(500))).then(snap => {
-        setAllCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-      }).catch(() => {})
-    )
+    if (!_fresh(_companiesCache, _TTL_SHORT)) {
+      fetches.push(
+        getDocs(query(collection(db, 'companies'), limit(500))).then(snap => {
+          _companiesCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
+          setAllCompanies(_companiesCache.data)
+        }).catch(() => {})
+      )
+    }
+    Promise.all(fetches)
   }, [db])
 
   const companies = React.useMemo(() => {

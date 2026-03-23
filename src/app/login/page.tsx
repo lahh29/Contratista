@@ -6,15 +6,15 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { Loader2, Mail, Lock, UserPlus } from "lucide-react"
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth"
+import { Loader2, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/firebase"
+import { useUser } from "@/firebase/auth/use-user"
 import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
 import { PWAInstallBanner } from "@/components/PWAInstallBanner"
 import { logAudit } from "@/app/actions/audit"
 
@@ -24,10 +24,24 @@ const schema = z.object({
 })
 
 export default function LoginPage() {
-  const [loading, setLoading] = React.useState(false)
-  const auth      = useAuth()
-  const router    = useRouter()
-  const { toast } = useToast()
+  const [loading,      setLoading]      = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [loginError,   setLoginError]   = React.useState<string | null>(null)
+  const [resetMode,    setResetMode]    = React.useState(false)
+  const [resetEmail,   setResetEmail]   = React.useState("")
+  const [resetLoading, setResetLoading] = React.useState(false)
+  const [resetSent,    setResetSent]    = React.useState(false)
+
+  const auth                    = useAuth()
+  const router                  = useRouter()
+  const { user, loading: authLoading } = useUser()
+
+  // Auto-redirect if already authenticated
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/dashboard")
+    }
+  }, [user, authLoading, router])
 
   const form = useForm({
     resolver:      zodResolver(schema),
@@ -37,6 +51,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof schema>) {
     if (!auth) return
     setLoading(true)
+    setLoginError(null)
     try {
       const credential = await signInWithEmailAndPassword(auth, values.email, values.password)
       logAudit({
@@ -51,15 +66,27 @@ export default function LoginPage() {
       document.cookie = "vp_session=1; path=/; SameSite=Strict"
       router.push("/dashboard")
     } catch {
-      toast({
-        variant:     "destructive",
-        title:       "Credenciales incorrectas",
-        description: "Verifica tu correo y contraseña.",
-      })
+      setLoginError("Correo o contraseña incorrectos.")
     } finally {
       setLoading(false)
     }
   }
+
+  async function handlePasswordReset() {
+    if (!auth || !resetEmail) return
+    setResetLoading(true)
+    try {
+      await sendPasswordResetEmail(auth, resetEmail)
+    } catch {
+      // Don't reveal whether the email exists — always show success
+    } finally {
+      setResetSent(true)
+      setResetLoading(false)
+    }
+  }
+
+  // Blank screen while checking auth state to avoid flash
+  if (authLoading || user) return null
 
   return (
     <div
@@ -74,7 +101,6 @@ export default function LoginPage() {
 
       {/* Background orbs — give glass something to blur */}
       <div aria-hidden="true" className="pointer-events-none select-none absolute inset-0 overflow-hidden">
-        {/* Top-right large orb */}
         <div
           className="absolute rounded-full"
           style={{
@@ -86,7 +112,6 @@ export default function LoginPage() {
             filter: "blur(60px)",
           }}
         />
-        {/* Bottom-left orb */}
         <div
           className="absolute rounded-full"
           style={{
@@ -98,7 +123,6 @@ export default function LoginPage() {
             filter: "blur(70px)",
           }}
         />
-        {/* Center accent */}
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
@@ -152,79 +176,176 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Form */}
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3" noValidate>
+            {resetMode ? (
+              /* ── Recuperar contraseña ─────────────────────── */
+              <div className="space-y-4">
+                {resetSent ? (
+                  <div className="flex flex-col items-center gap-3 py-2 text-center">
+                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Correo enviado</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Si el correo está registrado, recibirás las instrucciones para restablecer tu contraseña.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-2xl mt-1"
+                      onClick={() => { setResetMode(false); setResetSent(false); setResetEmail("") }}
+                    >
+                      Volver al inicio de sesión
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <p className="font-bold text-sm">Recuperar contraseña</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ingresa tu correo y te enviaremos el enlace de recuperación.
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                      <Input
+                        type="email"
+                        placeholder="correo@vinoplastic.com"
+                        autoComplete="email"
+                        inputMode="email"
+                        className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                        value={resetEmail}
+                        onChange={e => setResetEmail(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handlePasswordReset()}
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-11 rounded-2xl font-bold text-sm shadow-md shadow-primary/20"
+                      disabled={resetLoading || !resetEmail}
+                      onClick={handlePasswordReset}
+                    >
+                      {resetLoading
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : "Enviar enlace"
+                      }
+                    </Button>
+                    <button
+                      type="button"
+                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setResetMode(false)}
+                    >
+                      ← Volver
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              /* ── Login form ───────────────────────────────── */
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3" noValidate>
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                          <Input
-                            type="email"
-                            placeholder="correo@vinoplastic.com"
-                            autoComplete="email"
-                            inputMode="email"
-                            className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs pl-1" />
-                    </FormItem>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="relative">
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                            <Input
+                              type="email"
+                              placeholder="correo@vinoplastic.com"
+                              autoComplete="email"
+                              inputMode="email"
+                              className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                              {...field}
+                              onChange={e => { field.onChange(e); setLoginError(null) }}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-xs pl-1" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Contraseña"
+                              autoComplete="current-password"
+                              className="h-11 rounded-2xl pl-10 pr-11 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                              {...field}
+                              onChange={e => { field.onChange(e); setLoginError(null) }}
+                            />
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                              onClick={() => setShowPassword(v => !v)}
+                              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-xs pl-1" />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Inline error */}
+                  {loginError && (
+                    <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <p className="text-xs text-red-600">{loginError}</p>
+                    </div>
                   )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                          <Input
-                            type="password"
-                            placeholder="Contraseña"
-                            autoComplete="current-password"
-                            className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-xs pl-1" />
-                    </FormItem>
-                  )}
-                />
+                  <Button
+                    type="submit"
+                    className="w-full h-11 rounded-2xl font-bold text-sm mt-1 shadow-md shadow-primary/20"
+                    disabled={loading}
+                    aria-busy={loading}
+                  >
+                    {loading
+                      ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                      : "Iniciar sesión"
+                    }
+                  </Button>
 
-                <Button
-                  type="submit"
-                  className="w-full h-11 rounded-2xl font-bold text-sm mt-1 shadow-md shadow-primary/20"
-                  disabled={loading}
-                  aria-busy={loading}
+                  <div className="text-center pt-0.5">
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setResetMode(true)}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+
+                </form>
+              </Form>
+            )}
+
+            {!resetMode && (
+              <div className="pt-1">
+                <Link
+                  href="/register"
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-2xl text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
                 >
-                  {loading
-                    ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                    : "Iniciar sesión"
-                  }
-                </Button>
-
-              </form>
-            </Form>
-
-            <div className="pt-1">
-              <Link
-                href="/register"
-                className="flex items-center justify-center gap-2 w-full h-10 rounded-2xl text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
-              >
-                <UserPlus className="w-4 h-4" />
-                Registrarse como proveedor
-              </Link>
-            </div>
+                  <UserPlus className="w-4 h-4" />
+                  Registrarse como proveedor
+                </Link>
+              </div>
+            )}
 
           </div>
         </div>

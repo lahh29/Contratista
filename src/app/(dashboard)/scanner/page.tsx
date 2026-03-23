@@ -285,7 +285,7 @@ export default function ScannerPage() {
         details: { área: activeVisit.areaName ?? '—' },
       })
       setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 5))
-      sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—' })
+      sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—', personnelCount: activeVisit.personnelCount })
       resetScanner()
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar salida' })

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { generateVoucherPDF } from "@/lib/generate-voucher"
+import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import {
   Table,
   TableBody,
@@ -38,10 +39,18 @@ import {
   MapPin,
   Users,
   FileText,
+  QrCode,
+  Ban,
+  CalendarClock,
+  RefreshCw,
+  CheckCheck,
+  FileText as FileTextIcon,
+  MapPin as MapPinIcon,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Company, Visit } from "@/types"
+import { sendNotification } from "@/app/actions/notify"
 
 // ── Sub-components ─────────────────────────────────────────
 
@@ -142,6 +151,14 @@ export default function PortalPage() {
   const { appUser, loading: authLoading } = useAppUser()
   const db           = useFirestore()
   const { permission, supported, requestPermission } = useNotifications()
+  const [qrOpen, setQrOpen] = useState(false)
+  const [renewalSent, setRenewalSent] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const stored = localStorage.getItem(`sua_renewal_${appUser?.companyId}`)
+    if (!stored) return false
+    return Date.now() - Number(stored) < 24 * 60 * 60 * 1000 // 24 h cooldown
+  })
+  const [sendingRenewal, setSendingRenewal] = useState(false)
 
   // Use companyId (string) as dep — more stable than the appUser object reference
   const companyId = appUser?.companyId
@@ -175,10 +192,34 @@ export default function PortalPage() {
       .slice(0, 20) as Visit[]
   }, [rawVisits])
 
+  // Visitas programadas — ordenadas por fecha/hora asc
+  const upcomingVisits = useMemo(() => {
+    if (!rawVisits) return null
+    return [...rawVisits]
+      .filter((v: any) => v.status === 'Programada')
+      .sort((a: any, b: any) => {
+        const ad = (a.scheduledDate ?? '') + (a.scheduledTime ?? '')
+        const bd = (b.scheduledDate ?? '') + (b.scheduledTime ?? '')
+        return ad < bd ? -1 : ad > bd ? 1 : 0
+      }) as Visit[]
+  }, [rawVisits])
+
   const activeVisit = useMemo(
     () => (visits as Visit[] | null)?.find(v => v.status === 'Activa') ?? null,
     [visits],
   )
+
+  async function handleRenewalRequest() {
+    if (!company || renewalSent || sendingRenewal) return
+    setSendingRenewal(true)
+    try {
+      await sendNotification({ type: 'sua_renewal_request', companyName: company.name, companyId: company.id })
+      localStorage.setItem(`sua_renewal_${company.id}`, String(Date.now()))
+      setRenewalSent(true)
+    } finally {
+      setSendingRenewal(false)
+    }
+  }
 
   if (authLoading || companyLoading) {
     return (
@@ -232,13 +273,41 @@ export default function PortalPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight">{company.name}</h1>
         </div>
-        <Button asChild variant="outline" className="gap-2 shrink-0">
-          <Link href="/portal/contrato">
-            <FileText className="w-4 h-4" />
-            Reglamento
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="gap-2 shrink-0"
+            onClick={() => setQrOpen(true)}
+          >
+            <QrCode className="w-4 h-4" />
+            <span className="hidden sm:inline">Mi QR</span>
+          </Button>
+          <Button asChild variant="outline" className="gap-2 shrink-0">
+            <Link href="/portal/contrato">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Reglamento</span>
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Banner: empresa bloqueada */}
+      {company.status === 'Blocked' && (
+        <Card className="border-destructive/40 bg-destructive/5 shadow-none">
+          <CardContent className="p-4 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Ban className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <p className="font-bold text-destructive text-sm">Acceso bloqueado</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Tu empresa ha sido bloqueada temporalmente y no puede registrar nuevas visitas.
+                Contacta al administrador de ViñoPlastic para más información.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* En Planta — banner en tiempo real */}
       {activeVisit && (
@@ -278,6 +347,45 @@ export default function PortalPage() {
       {/* SUA status */}
       <SuaStatusCard company={company} />
 
+      {/* Solicitar renovación SUA */}
+      <Card className="border-none shadow-sm">
+        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${renewalSent ? 'bg-green-100' : 'bg-muted'}`}>
+              {renewalSent
+                ? <CheckCheck className="w-5 h-5 text-green-600" />
+                : <RefreshCw className="w-5 h-5 text-muted-foreground" />
+              }
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold leading-tight">
+                {renewalSent ? 'Solicitud enviada' : 'Notificar renovación de SUA'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {renewalSent
+                  ? 'El administrador ha sido notificado y actualizará tu póliza pronto.'
+                  : 'Si ya renovaste tu póliza SUA, avísanos para que actualicemos el sistema.'}
+              </p>
+            </div>
+          </div>
+          {!renewalSent && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 gap-2 self-end sm:self-auto"
+              onClick={handleRenewalRequest}
+              disabled={sendingRenewal}
+            >
+              {sendingRenewal
+                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                : <RefreshCw className="w-3.5 h-3.5" />
+              }
+              Notificar renovación
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {/* 2 columnas en desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -289,9 +397,11 @@ export default function PortalPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-0">
-            <InfoRow icon={Building2} label="Razón Social"       value={company.name} />
-            <InfoRow icon={User}      label="Contacto Principal" value={company.contact} />
-            <InfoRow icon={Phone}     label="Teléfono"           value={company.phone} />
+            <InfoRow icon={Building2}  label="Razón Social"       value={company.name} />
+            <InfoRow icon={User}       label="Contacto Principal" value={company.contact} />
+            <InfoRow icon={Phone}      label="Teléfono"           value={company.phone} />
+            <InfoRow icon={FileTextIcon} label="RFC"              value={company.rfc} />
+            <InfoRow icon={MapPinIcon} label="Dirección"          value={company.address} />
           </CardContent>
         </Card>
 
@@ -339,6 +449,72 @@ export default function PortalPage() {
           </Card>
         )}
       </div>
+
+      {/* Visitas Programadas */}
+      {upcomingVisits && upcomingVisits.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <CalendarClock className="w-4 h-4 text-blue-500" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Próximas visitas
+            </h2>
+            <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 font-semibold px-2 py-0.5 rounded-full">
+              {upcomingVisits.length}
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {upcomingVisits.map(visit => (
+              <Card key={visit.id} className="border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-none">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      {/* Fecha y hora */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-black text-blue-900 dark:text-blue-100">
+                          {visit.scheduledDate
+                            ? new Date(visit.scheduledDate + 'T12:00:00').toLocaleDateString('es-MX', {
+                                weekday: 'long', day: 'numeric', month: 'long',
+                              })
+                            : '—'}
+                        </p>
+                        {(visit as any).scheduledTime && (
+                          <span className="text-xs font-semibold bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full font-mono">
+                            {(visit as any).scheduledTime}
+                          </span>
+                        )}
+                      </div>
+                      {/* Área y supervisor */}
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                        {visit.areaName && (
+                          <span className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-400">
+                            <MapPin className="w-3 h-3 shrink-0" />
+                            {visit.areaName}
+                          </span>
+                        )}
+                        {visit.personnelCount && (
+                          <span className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-400">
+                            <Users className="w-3 h-3 shrink-0" />
+                            {visit.personnelCount} persona{visit.personnelCount !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                      {/* Actividad */}
+                      {(visit as any).activity && (
+                        <p className="text-xs text-blue-600 dark:text-blue-500 mt-1 line-clamp-1">
+                          {(visit as any).activity}
+                        </p>
+                      )}
+                    </div>
+                    <Badge className="shrink-0 bg-blue-600 text-white border-none text-xs px-2.5 py-1">
+                      Programada
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Historial de visitas */}
       <Card className="border-none shadow-sm overflow-hidden">
@@ -429,6 +605,15 @@ export default function PortalPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* QR Dialog */}
+      {company && (
+        <ContractorQRDialog
+          company={company}
+          open={qrOpen}
+          onOpenChange={setQrOpen}
+        />
+      )}
 
     </div>
   )

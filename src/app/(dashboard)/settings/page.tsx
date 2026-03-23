@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { collection, addDoc, deleteDoc, doc, updateDoc, query, limit, setDoc, getDocs } from "firebase/firestore"
-import { useFirestore, useCollection } from "@/firebase"
+import { useFirestore } from "@/firebase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -40,9 +40,10 @@ interface CollectionManagerProps {
   items: DocumentData[] | null | undefined
   loading: boolean
   placeholder?: string
+  onRefresh?: () => void
 }
 
-function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading, placeholder }: CollectionManagerProps) {
+function CollectionManager({ title, description, icon: Icon, collectionName, db, items, loading, placeholder, onRefresh }: CollectionManagerProps) {
   const [newName,  setNewName]  = React.useState("")
   const [editId,   setEditId]   = React.useState<string | null>(null)
   const [editName, setEditName] = React.useState("")
@@ -62,6 +63,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
       logAudit({ action: `${collectionName.replace(/s$/, '')}.created`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: ref.id, targetName: newName.trim() })
       setNewName("")
       toast({ title: "Agregado correctamente" })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al agregar" })
     }
@@ -74,6 +76,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
       await deleteDoc(doc(db, collectionName, id))
       logAudit({ action: `${collectionName.replace(/s$/, '')}.deleted`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: id, targetName: name })
       toast({ title: "Eliminado correctamente" })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al eliminar" })
     }
@@ -86,6 +89,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
       logAudit({ action: `${collectionName.replace(/s$/, '')}.updated`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: id, targetName: editName.trim() })
       setEditId(null)
       toast({ title: "Actualizado correctamente" })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al actualizar" })
     }
@@ -200,9 +204,10 @@ interface AreaManagerProps {
   areas: DocumentData[] | null | undefined
   supervisors: DocumentData[] | null | undefined
   loading: boolean
+  onRefresh?: () => void
 }
 
-function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
+function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManagerProps) {
   const [newName,          setNewName]          = React.useState("")
   const [newSupervisorId,  setNewSupervisorId]  = React.useState("")
   const [editId,           setEditId]           = React.useState<string | null>(null)
@@ -229,6 +234,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
       setNewName("")
       setNewSupervisorId("")
       toast({ title: "Área agregada" })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al agregar" })
     }
@@ -238,6 +244,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
     if (!db) return
     try {
       await updateDoc(doc(db, "areas", id), { restricted: !current })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al actualizar" })
     }
@@ -250,6 +257,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
       await deleteDoc(doc(db, "areas", id))
       logAudit({ action: 'area.deleted', ...actor(), targetType: 'area', targetId: id, targetName: name })
       toast({ title: "Eliminado correctamente" })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al eliminar" })
     }
@@ -265,6 +273,7 @@ function AreaManager({ db, areas, supervisors, loading }: AreaManagerProps) {
       logAudit({ action: 'area.updated', ...actor(), targetType: 'area', targetId: id, targetName: editName.trim() })
       setEditId(null)
       toast({ title: "Actualizado correctamente" })
+      onRefresh?.()
     } catch {
       toast({ variant: "destructive", title: "Error al actualizar" })
     }
@@ -631,14 +640,31 @@ export default function SettingsPage() {
     )
   }
 
-  const areasQuery = React.useMemo(
-    () => (db ? query(collection(db, "areas"),       limit(100)) : null), [db]
-  )
-  const supervisorsQuery = React.useMemo(
-    () => (db ? query(collection(db, "supervisors"), limit(100)) : null), [db]
-  )
-  const { data: areas,       loading: areasLoading }       = useCollection(areasQuery)
-  const { data: supervisors, loading: supervisorsLoading } = useCollection(supervisorsQuery)
+  const [refreshKey,        setRefreshKey]        = React.useState(0)
+  const [areas,             setAreas]             = React.useState<DocumentData[] | null>(null)
+  const [supervisors,       setSupervisors]        = React.useState<DocumentData[] | null>(null)
+  const [areasLoading,      setAreasLoading]       = React.useState(true)
+  const [supervisorsLoading,setSupervisorsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    if (!db) return
+    setAreasLoading(true)
+    getDocs(query(collection(db, "areas"), limit(100)))
+      .then(snap => setAreas(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .catch(() => setAreas([]))
+      .finally(() => setAreasLoading(false))
+  }, [db, refreshKey])
+
+  React.useEffect(() => {
+    if (!db) return
+    setSupervisorsLoading(true)
+    getDocs(query(collection(db, "supervisors"), limit(100)))
+      .then(snap => setSupervisors(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .catch(() => setSupervisors([]))
+      .finally(() => setSupervisorsLoading(false))
+  }, [db, refreshKey])
+
+  const handleRefresh = React.useCallback(() => setRefreshKey(k => k + 1), [])
 
   const [companies, setCompanies] = React.useState<DocumentData[] | null>(null)
   React.useEffect(() => {
@@ -658,11 +684,12 @@ export default function SettingsPage() {
       db={db}
       items={supervisors}
       loading={supervisorsLoading}
+      onRefresh={handleRefresh}
     />
   )
 
   const areasCard = (
-    <AreaManager db={db} areas={areas} supervisors={supervisors} loading={areasLoading} />
+    <AreaManager db={db} areas={areas} supervisors={supervisors} loading={areasLoading} onRefresh={handleRefresh} />
   )
 
   const usersCard = (

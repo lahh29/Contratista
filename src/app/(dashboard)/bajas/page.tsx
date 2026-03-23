@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import {
   collection, getDocs, doc, setDoc, deleteDoc,
-  query, orderBy, serverTimestamp,
+  query, orderBy, serverTimestamp, where, limit,
 } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useAppUser } from "@/hooks/use-app-user"
@@ -18,7 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { cn, splitName } from "@/lib/utils"
 import { sendNotification } from "@/app/actions/notify"
 
 interface Baja {
@@ -29,35 +29,6 @@ interface Baja {
 }
 
 const EMPTY_FORM = { noEmpleado: '', nombre: '', fechaBaja: '' }
-
-const CONNECTORS = new Set(['DE', 'LA', 'LOS', 'LAS', 'DEL', 'LES', 'EL', 'Y'])
-
-function splitName(fullName: string): { apellidos: string; nombres: string } {
-  const words = fullName.trim().split(/\s+/)
-  if (words.length <= 1) return { apellidos: fullName, nombres: '' }
-
-  const groups: string[] = []
-  let i = 0
-  while (i < words.length) {
-    if (CONNECTORS.has(words[i]) && groups.length > 0 && i + 1 < words.length) {
-      groups[groups.length - 1] += ' ' + words[i] + ' ' + words[i + 1]
-      i += 2
-    } else {
-      groups.push(words[i])
-      i++
-    }
-  }
-
-  if (groups.length <= 1) return { apellidos: fullName, nombres: '' }
-
-  const firstIsCompound = groups[0].includes(' ')
-  const splitAt = (firstIsCompound || groups.length === 2) ? 1 : 2
-
-  return {
-    apellidos: groups.slice(0, splitAt).join(' '),
-    nombres:   groups.slice(splitAt).join(' '),
-  }
-}
 
 export default function BajasPage() {
   const db          = useFirestore()
@@ -99,6 +70,15 @@ export default function BajasPage() {
     if (!db || !form.noEmpleado.trim() || !form.nombre.trim() || !form.fechaBaja) return
     setSaving(true)
     try {
+      // Validar duplicado por noEmpleado
+      const dupSnap = await getDocs(
+        query(collection(db, 'bajas'), where('noEmpleado', '==', form.noEmpleado.trim()), limit(1))
+      )
+      if (!dupSnap.empty) {
+        toast({ title: 'Empleado ya registrado', description: `No. ${form.noEmpleado.trim()} ya existe en el listado.`, variant: 'destructive' })
+        setSaving(false)
+        return
+      }
       const newRef = doc(collection(db, 'bajas'))
       await setDoc(newRef, {
         noEmpleado: form.noEmpleado.trim(),

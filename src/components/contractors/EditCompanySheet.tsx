@@ -4,7 +4,7 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, Users, Truck, Building2, Phone, Mail, ShieldCheck, MapPin } from "lucide-react"
+import { Loader2, Users, Truck, Building2, Phone, Mail, ShieldCheck, MapPin, FileText, StickyNote } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -22,6 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -67,6 +68,9 @@ const schema = z.object({
   contact:       z.string().min(2, "Mínimo 2 caracteres"),
   phone:         z.string().optional(),
   email:         z.string().email("Email inválido").optional().or(z.literal("")),
+  rfc:           z.string().optional(),
+  address:       z.string().optional(),
+  notes:         z.string().optional(),
   suaNumber:     z.string().optional(),
   suaValidUntil: z.string().optional(),
   personnelCount: z.coerce.number().min(1).optional(),
@@ -114,6 +118,9 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       contact: "",
       phone: "",
       email: "",
+      rfc: "",
+      address: "",
+      notes: "",
       suaNumber: "",
       suaValidUntil: "",
       personnelCount: 1,
@@ -131,6 +138,9 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
         contact:       company.contact       || "",
         phone:         company.phone         || "",
         email:         company.email         || "",
+        rfc:           company.rfc           || "",
+        address:       company.address       || "",
+        notes:         company.notes         || "",
         suaNumber:     company.sua?.number   || "",
         suaValidUntil: company.sua?.validUntil ? toDisplayDate(company.sua.validUntil) : "",
         personnelCount: company.personnelCount || 1,
@@ -149,6 +159,9 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       contact: values.contact,
       phone:   values.phone || "",
       email:   values.email ? values.email.toLowerCase().trim() : null,
+      rfc:     values.rfc?.toUpperCase().trim() || "",
+      address: values.address?.trim() || "",
+      notes:   values.notes?.trim() || "",
       sua: {
         ...company.sua,
         number:     values.suaNumber     || company.sua?.number     || "",
@@ -279,6 +292,61 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
                   <p className="text-xs text-muted-foreground">
                     Vincula la cuenta del portal del contratista.
                   </p>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
+            {/* ── Datos Fiscales ── */}
+            <div className="space-y-4">
+              <SectionLabel icon={FileText} label="Datos Fiscales" />
+
+              <FormField control={form.control} name="rfc" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>RFC</FieldLabel>
+                  <FormControl>
+                    <Input
+                      className="h-11 uppercase font-mono tracking-widest"
+                      placeholder="XAXX010101000"
+                      maxLength={13}
+                      {...field}
+                      onChange={e => field.onChange(e.target.value.toUpperCase())}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="address" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>Dirección</FieldLabel>
+                  <FormControl>
+                    <Textarea
+                      className="resize-none min-h-[72px]"
+                      placeholder="Calle, No., Colonia, Ciudad…"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
+            {/* ── Notas Internas ── */}
+            <div className="space-y-4">
+              <SectionLabel icon={StickyNote} label="Notas Internas" />
+
+              <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormItem>
+                  <FieldLabel>Notas</FieldLabel>
+                  <FormControl>
+                    <Textarea
+                      className="resize-none min-h-[80px]"
+                      placeholder="Observaciones, restricciones o información adicional…"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">Solo visible para administradores.</p>
                   <FormMessage />
                 </FormItem>
               )} />

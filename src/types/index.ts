@@ -20,6 +20,9 @@ export interface Company {
   status?: 'Active' | 'Blocked'
   personnelCount?: number
   vehicle?: string
+  rfc?: string
+  address?: string
+  notes?: string   // Notas internas (solo visibles para admin/rys)
   sua?: {
     status?: 'Valid' | 'Expired' | 'Pending'
     validUntil?: string

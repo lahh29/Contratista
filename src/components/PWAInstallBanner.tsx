@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 type Platform = 'ios' | 'android' | 'desktop'
 
 const DISMISSED_KEY = 'pwa-install-dismissed'
+const DISMISSED_TTL = 7 * 24 * 60 * 60_000  // 7 días
 
 function getPlatform(): Platform {
   const ua = navigator.userAgent
@@ -56,9 +57,10 @@ export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
   useEffect(() => {
-    // No mostrar si ya está instalada o fue descartada
+    // No mostrar si ya está instalada o fue descartada recientemente
     if (isStandalone()) return
-    if (sessionStorage.getItem(DISMISSED_KEY)) return
+    const ts = localStorage.getItem(DISMISSED_KEY)
+    if (ts && Date.now() - Number(ts) < DISMISSED_TTL) return
 
     const p = getPlatform()
     setPlatform(p)
@@ -79,7 +81,7 @@ export function PWAInstallBanner() {
   }, [])
 
   const dismiss = () => {
-    sessionStorage.setItem(DISMISSED_KEY, '1')
+    localStorage.setItem(DISMISSED_KEY, String(Date.now()))
     setVisible(false)
   }
 
@@ -104,7 +106,7 @@ export function PWAInstallBanner() {
         animate-in slide-in-from-bottom-4 fade-in duration-500
       "
     >
-      <div className="bg-white border border-border rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
+      <div className="bg-card border rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
 
         {/* Barra superior de color */}
         <div className="h-1 bg-primary w-full" />
