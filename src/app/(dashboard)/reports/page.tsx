@@ -397,8 +397,8 @@ export default function ReportsPage() {
                     <span className="font-semibold text-sm shrink-0">{visit.companyName ? visit.companyName.slice(0, 17) + (visit.companyName.length > 17 ? '…' : '') : '—'}</span>
                     <Badge className={`text-xs rounded-md shrink-0 ${
                       visit.status === 'Active'
-                        ? 'bg-green-100 text-green-700 hover:bg-green-100'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-100'
+                        ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}>
                       {visit.status === 'Active' ? 'Activo' : 'Completado'}
                     </Badge>
@@ -437,7 +437,7 @@ export default function ReportsPage() {
                         <TableCell className="font-mono text-xs">{visit.vehiclePlates || '—'}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Badge variant="outline" className={`rounded-md text-xs px-1.5 ${visit.safetyEquipment?.shoes ? 'border-green-300 text-green-700' : 'border-red-200 text-red-500'}`}>
+                            <Badge variant="outline" className={`rounded-md text-xs px-1.5 ${visit.safetyEquipment?.shoes ? 'border-green-300 dark:border-green-700 text-green-700 dark:text-green-400' : 'border-red-200 dark:border-red-800 text-red-500 dark:text-red-400'}`}>
                               Zapatos
                             </Badge>
                             <Badge variant="outline" className={`rounded-md text-xs px-1.5 ${visit.safetyEquipment?.vest ? 'border-green-300 text-green-700' : 'border-red-200 text-red-500'}`}>
@@ -446,7 +446,7 @@ export default function ReportsPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={`rounded-md ${visit.status === 'Active' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-100'}`}>
+                          <Badge className={`rounded-md ${visit.status === 'Active' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                             {visit.status === 'Active' ? 'Activo' : 'Completado'}
                           </Badge>
                         </TableCell>

@@ -353,7 +353,9 @@ export default function ScannerPage() {
 
         {/* SUA status */}
         <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold ${
-          isExpired ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
+          isExpired
+            ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400'
+            : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
         }`}>
           {isExpired
             ? <XCircle className="w-4 h-4 shrink-0" />
@@ -378,11 +380,11 @@ export default function ScannerPage() {
         {activeVisit ? (
           /* ── Salida ── */
           <div className="space-y-3">
-            <div className="rounded-xl border bg-amber-50 border-amber-200 px-4 py-3 space-y-1">
-              <p className="text-amber-800 font-semibold text-sm flex items-center gap-2">
+            <div className="rounded-xl border bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 px-4 py-3 space-y-1">
+              <p className="text-amber-800 dark:text-amber-300 font-semibold text-sm flex items-center gap-2">
                 <MapPin className="w-4 h-4 shrink-0" /> Visita activa
               </p>
-              <p className="text-sm text-amber-700">
+              <p className="text-sm text-amber-700 dark:text-amber-400">
                 <span className="font-bold">{activeVisit.areaName}</span>
                 {activeVisit.supervisorName && <span className="opacity-70"> · {activeVisit.supervisorName}</span>}
               </p>
@@ -418,9 +420,9 @@ export default function ScannerPage() {
 
             {/* Fecha y Hora */}
             {programadaVisit && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 flex items-center gap-2">
-                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span className="text-xs font-semibold text-blue-700">
+              <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 px-3 py-2.5 flex items-center gap-2">
+                <CalendarIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">
                   Visita programada: {programadaVisit.scheduledDate}
                   {programadaVisit.scheduledTime && ` · ${programadaVisit.scheduledTime}`}
                 </span>
@@ -495,8 +497,8 @@ export default function ScannerPage() {
                   onClick={() => setPlatesVerified(v => !v)}
                   className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                     platesVerified
-                      ? 'border-green-300 bg-green-50 text-green-700'
-                      : 'border-orange-200 bg-orange-50 text-orange-700'
+                      ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400'
+                      : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400'
                   }`}
                 >
                   {platesVerified
@@ -514,19 +516,19 @@ export default function ScannerPage() {
                   onClick={() => setConfirmedPersonnel(p => Math.max(1, p - 1))}>−</Button>
                 <div className={`flex-1 h-11 rounded-xl border flex items-center justify-center gap-2 ${
                   confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
-                    ? 'border-orange-400 bg-orange-50'
-                    : 'border-green-400 bg-green-50'
+                    ? 'border-orange-400 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/30'
+                    : 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30'
                 }`}>
                   <Users className="w-4 h-4 text-muted-foreground" />
                   <span className={`text-xl font-black ${
                     confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
-                      ? 'text-orange-700' : 'text-green-700'
+                      ? 'text-orange-700 dark:text-orange-400' : 'text-green-700 dark:text-green-400'
                   }`}>{confirmedPersonnel}</span>
                   <span className="text-xs text-muted-foreground">personas</span>
                 </div>
               </div>
               {confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1) && (
-                <p className="text-xs text-orange-600 flex items-center gap-1.5 px-1">
+                <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1.5 px-1">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   Difiere del QR ({Number(currentCompany?.personnelCount) || 1} registradas)
                 </p>
@@ -537,14 +539,14 @@ export default function ScannerPage() {
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setSafetyShoes(v => !v)}
                 className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
-                  safetyShoes ? 'border-green-400 bg-green-50 text-green-700' : 'border-border bg-background text-muted-foreground'
+                  safetyShoes ? 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'border-border bg-background text-muted-foreground'
                 }`}>
                 <HardHat className="w-5 h-5" />
                 Zapatos
               </button>
               <button type="button" onClick={() => setSafetyVest(v => !v)}
                 className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
-                  safetyVest ? 'border-green-400 bg-green-50 text-green-700' : 'border-border bg-background text-muted-foreground'
+                  safetyVest ? 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'border-border bg-background text-muted-foreground'
                 }`}>
                 <ShieldCheck className="w-5 h-5" />
                 Chaleco
@@ -626,7 +628,7 @@ export default function ScannerPage() {
 
       <Button
         variant="outline"
-        className="w-full h-12 rounded-xl border-2 text-destructive border-red-100 hover:bg-red-50 gap-2 font-bold"
+        className="w-full h-12 rounded-xl border-2 text-destructive border-red-100 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 gap-2 font-bold"
         onClick={handleRegisterExit}
         disabled={isProcessing}
       >

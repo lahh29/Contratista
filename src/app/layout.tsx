@@ -3,6 +3,7 @@ import './globals.css'
 import { FirebaseClientProvider } from '@/firebase'
 import { Toaster } from '@/components/ui/toaster'
 import { PWASetup } from '@/components/PWASetup'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'Control Contratistas — ViñoPlastic',
@@ -35,7 +36,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -48,11 +49,13 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="192x192" href="/api/pwa-icon?size=192" />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
-          <PWASetup />
-          {children}
-          <Toaster />
-        </FirebaseClientProvider>
+        <ThemeProvider>
+          <FirebaseClientProvider>
+            <PWASetup />
+            {children}
+            <Toaster />
+          </FirebaseClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

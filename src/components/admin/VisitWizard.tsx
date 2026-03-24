@@ -386,8 +386,8 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
                   variant="outline"
                   className={`text-[10px] rounded-md shrink-0 capitalize ${
                     c.type === 'cliente'
-                      ? 'border-blue-300 text-blue-700 bg-blue-50'
-                      : 'border-orange-300 text-orange-700 bg-orange-50'
+                      ? 'border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30'
+                      : 'border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30'
                   }`}
                 >
                   {c.type || 'proveedor'}
@@ -409,8 +409,8 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
             <Badge
               className={`text-xs rounded-md ${
                 !suaExpired
-                  ? 'bg-green-100 text-green-700 hover:bg-green-100'
-                  : 'bg-red-100 text-red-600 hover:bg-red-100'
+                  ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40'
+                  : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40'
               }`}
             >
               {!suaExpired ? 'SUA Válido' : 'SUA Vencido'}

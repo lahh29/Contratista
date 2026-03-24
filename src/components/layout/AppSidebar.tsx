@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sidebar"
 import { AnimatePresence } from "framer-motion"
 import type { AppUser } from "@/types"
+import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 // ── Role config ───────────────────────────────────────────────
 const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow: string; label: string }> = {
@@ -222,15 +223,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-0 shadow-xl">
-      <div data-sidebar="header" className="flex flex-row items-center h-14 px-5 border-b border-white/10 shrink-0">
+      <div data-sidebar="header" className="flex flex-row items-center h-14 px-5 border-b border-white/10 shrink-0 gap-2">
         <motion.span
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-base font-black tracking-widest text-white uppercase"
+          className="text-base font-black tracking-widest text-white uppercase flex-1"
         >
           ViñoPlastic
         </motion.span>
+        <ThemeToggle />
       </div>
 
       <SidebarContent className="px-2">

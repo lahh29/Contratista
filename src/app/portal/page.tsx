@@ -68,9 +68,9 @@ function SuaStatusCard({ company }: { company: Company }) {
   }, [validUntil, company.sua?.status])
 
   const config = {
-    Valid:   { bg: 'bg-green-50',   border: 'border-green-200',  text: 'text-green-800',   muted: 'text-green-600',  label: 'Vigente',   icon: ShieldCheck  },
-    Expired: { bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-800',     muted: 'text-red-600',    label: 'Vencido',   icon: ShieldX      },
-    Pending: { bg: 'bg-orange-50',  border: 'border-orange-200', text: 'text-orange-800',  muted: 'text-orange-600', label: 'Pendiente', icon: ShieldAlert  },
+    Valid:   { bg: 'bg-green-50 dark:bg-green-950/30',   border: 'border-green-200 dark:border-green-800',  text: 'text-green-800 dark:text-green-300',   muted: 'text-green-600 dark:text-green-400',  label: 'Vigente',   icon: ShieldCheck  },
+    Expired: { bg: 'bg-red-50 dark:bg-red-950/30',       border: 'border-red-200 dark:border-red-800',      text: 'text-red-800 dark:text-red-300',       muted: 'text-red-600 dark:text-red-400',      label: 'Vencido',   icon: ShieldX      },
+    Pending: { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800',text: 'text-orange-800 dark:text-orange-300',  muted: 'text-orange-600 dark:text-orange-400',label: 'Pendiente', icon: ShieldAlert  },
   }[status]
 
   const Icon = config.icon
@@ -232,12 +232,12 @@ export default function PortalPage() {
   if (!appUser?.companyId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] px-4">
-        <Card className="border-orange-200 bg-orange-50 max-w-md w-full">
+        <Card className="border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 max-w-md w-full">
           <CardContent className="p-6 flex gap-3 items-start">
-            <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-orange-800">Sin empresa asignada</p>
-              <p className="text-sm text-orange-700 mt-1">
+              <p className="font-semibold text-orange-800 dark:text-orange-300">Sin empresa asignada</p>
+              <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
                 Tu cuenta no está vinculada a ninguna empresa. Contacta al administrador de ViñoPlastic.
               </p>
             </div>
@@ -311,26 +311,26 @@ export default function PortalPage() {
 
       {/* En Planta — banner en tiempo real */}
       {activeVisit && (
-        <Card className="border-green-200 bg-green-50 shadow-none">
+        <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 shadow-none">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
               <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-green-800">Actualmente dentro de planta</p>
+              <p className="text-sm font-bold text-green-800 dark:text-green-300">Actualmente dentro de planta</p>
               <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
                 {activeVisit.areaName && (
-                  <span className="flex items-center gap-1 text-xs text-green-700">
+                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
                     <MapPin className="w-3 h-3" /> {activeVisit.areaName}
                   </span>
                 )}
                 {activeVisit.personnelCount && (
-                  <span className="flex items-center gap-1 text-xs text-green-700">
+                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
                     <Users className="w-3 h-3" /> {activeVisit.personnelCount} personas
                   </span>
                 )}
                 {activeVisit.entryTime && (
-                  <span className="flex items-center gap-1 text-xs text-green-700">
+                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
                     <Clock className="w-3 h-3" />
                     Ingresó {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}
                   </span>
@@ -351,9 +351,9 @@ export default function PortalPage() {
       <Card className="border-none shadow-sm">
         <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${renewalSent ? 'bg-green-100' : 'bg-muted'}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${renewalSent ? 'bg-green-100 dark:bg-green-900/40' : 'bg-muted'}`}>
               {renewalSent
-                ? <CheckCheck className="w-5 h-5 text-green-600" />
+                ? <CheckCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
                 : <RefreshCw className="w-5 h-5 text-muted-foreground" />
               }
             </div>
@@ -423,9 +423,9 @@ export default function PortalPage() {
           <Card className="border-none shadow-sm lg:col-span-2">
             <CardContent className="p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${permission === 'granted' ? 'bg-green-100' : 'bg-muted'}`}>
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${permission === 'granted' ? 'bg-green-100 dark:bg-green-900/40' : 'bg-muted'}`}>
                   {permission === 'granted'
-                    ? <Bell    className="w-5 h-5 text-green-700" />
+                    ? <Bell    className="w-5 h-5 text-green-700 dark:text-green-400" />
                     : <BellOff className="w-5 h-5 text-muted-foreground" />
                   }
                 </div>
@@ -443,7 +443,7 @@ export default function PortalPage() {
               {permission !== 'granted' ? (
                 <Button onClick={requestPermission} className="shrink-0">Activar</Button>
               ) : (
-                <Badge className="shrink-0 bg-green-100 text-green-700 border-green-200 px-3 py-1.5">Activo</Badge>
+                <Badge className="shrink-0 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 px-3 py-1.5">Activo</Badge>
               )}
             </CardContent>
           </Card>

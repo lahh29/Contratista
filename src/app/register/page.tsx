@@ -113,9 +113,8 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="relative min-h-screen min-h-dvh flex items-center justify-center overflow-hidden px-5"
+      className="auth-bg relative min-h-screen min-h-dvh flex items-center justify-center overflow-hidden px-5"
       style={{
-        background: "linear-gradient(135deg, hsl(214,80%,96%) 0%, hsl(220,70%,98%) 40%, hsl(210,90%,94%) 100%)",
         paddingBottom: "env(safe-area-inset-bottom)",
         paddingTop:    "env(safe-area-inset-top)",
       }}
@@ -132,16 +131,7 @@ export default function RegisterPage() {
         transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative z-10 w-full max-w-[380px]"
       >
-        <div
-          className="rounded-3xl overflow-hidden"
-          style={{
-            backdropFilter: "blur(32px) saturate(180%)",
-            WebkitBackdropFilter: "blur(32px) saturate(180%)",
-            background: "rgba(255,255,255,0.62)",
-            border: "1px solid rgba(255,255,255,0.75)",
-            boxShadow: "0 8px 40px rgba(30,80,180,0.10), 0 1.5px 0 rgba(255,255,255,0.9) inset",
-          }}
-        >
+        <div className="glass-card rounded-3xl overflow-hidden">
           <div className="px-8 py-10 space-y-7">
 
             {/* Brand */}
@@ -170,7 +160,7 @@ export default function RegisterPage() {
                         placeholder="correo@empresa.com"
                         autoComplete="email"
                         inputMode="email"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
                         value={email}
                         onChange={e => { setEmail(e.target.value); setEmailError('') }}
                         onKeyDown={e => e.key === 'Enter' && handleEmailNext()}
@@ -208,7 +198,7 @@ export default function RegisterPage() {
                         type="password"
                         placeholder="Contraseña (mín. 6 caracteres)"
                         autoComplete="new-password"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
                         value={password}
                         onChange={e => { setPassword(e.target.value); setPassError('') }}
                         disabled={loading}
@@ -220,7 +210,7 @@ export default function RegisterPage() {
                         type="password"
                         placeholder="Confirmar contraseña"
                         autoComplete="new-password"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
                         value={confirm}
                         onChange={e => { setConfirm(e.target.value); setPassError('') }}
                         onKeyDown={e => e.key === 'Enter' && handleRegister()}

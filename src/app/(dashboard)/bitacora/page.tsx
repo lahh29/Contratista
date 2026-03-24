@@ -14,8 +14,6 @@ import {
   Trash2,
   UserCog,
   Building2,
-  LayoutGrid,
-  Users,
   Clock,
   ShieldAlert,
 } from "lucide-react"
@@ -24,7 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useFirestore } from "@/firebase"
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
+import { collection, query, orderBy, limit, getDocs, where, startAfter, type QueryDocumentSnapshot } from "firebase/firestore"
 import { verifyAuditPassword } from "@/app/actions/audit"
 import { format, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
@@ -32,6 +30,7 @@ import type { AuditEntry } from "@/types"
 import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "vp_audit_unlocked"
+const PAGE_SIZE = 50
 
 // ── Action config ─────────────────────────────────────────────────────────────
 const ACTION_CONFIG: Record<string, {
@@ -203,42 +202,60 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
 
 // ── Audit Log ─────────────────────────────────────────────────────────────────
 function AuditLog() {
-  const db           = useFirestore()
+  const db = useFirestore()
   const [filter, setFilter] = React.useState("all")
-  const [entries, setEntries] = React.useState<AuditEntry[] | null>(null)
+  const [entries, setEntries] = React.useState<AuditEntry[]>([])
+  const [hasMore, setHasMore] = React.useState(false)
   const [loading, setLoading] = React.useState(true)
+  const [loadingMore, setLoadingMore] = React.useState(false)
+  const lastDocRef = React.useRef<QueryDocumentSnapshot | null>(null)
 
-  const fetchEntries = React.useCallback(async () => {
+  const fetchEntries = React.useCallback(async (reset: boolean, activeFilter: string) => {
     if (!db) return
-    setLoading(true)
+    reset ? setLoading(true) : setLoadingMore(true)
     try {
-      const snap = await getDocs(query(collection(db, "auditLog"), orderBy("timestamp", "desc"), limit(200)))
-      setEntries(snap.docs.map(d => ({ id: d.id, ...d.data() })) as unknown as AuditEntry[])
+      const colRef = collection(db, "auditLog")
+      const constraints = [
+        ...(activeFilter !== "all" ? [where("targetType", "==", activeFilter)] : []),
+        orderBy("timestamp", "desc"),
+        ...(!reset && lastDocRef.current ? [startAfter(lastDocRef.current)] : []),
+        limit(PAGE_SIZE + 1),
+      ]
+      const snap = await getDocs(query(colRef, ...constraints))
+      const docs = snap.docs
+      const hasMoreData = docs.length > PAGE_SIZE
+      const page = hasMoreData ? docs.slice(0, PAGE_SIZE) : docs
+      const newEntries = page.map(d => ({ id: d.id, ...d.data() })) as unknown as AuditEntry[]
+      lastDocRef.current = page.at(-1) ?? null
+      setHasMore(hasMoreData)
+      setEntries(prev => reset ? newEntries : [...prev, ...newEntries])
     } catch {
-      setEntries([])
+      if (reset) setEntries([])
     } finally {
-      setLoading(false)
+      reset ? setLoading(false) : setLoadingMore(false)
     }
   }, [db])
 
-  React.useEffect(() => { fetchEntries() }, [fetchEntries])
+  React.useEffect(() => {
+    lastDocRef.current = null
+    fetchEntries(true, filter)
+  }, [filter, fetchEntries])
 
-  const filtered = React.useMemo(() => {
-    if (!entries) return []
-    if (filter === "all") return entries
-    return entries.filter(e => e.targetType === filter)
-  }, [entries, filter])
+  const handleRefresh = () => {
+    lastDocRef.current = null
+    fetchEntries(true, filter)
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
       <Tabs defaultValue="registro" className="w-full">
         <TabsList className="w-full grid grid-cols-2 p-1 h-11 bg-muted/40 rounded-xl mb-4">
           <TabsTrigger value="registro" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <ClipboardList className="w-4 h-4 mr-2" /> 
+            <ClipboardList className="w-4 h-4 mr-2" />
             <span className="font-semibold text-xs uppercase tracking-wide">Registro</span>
           </TabsTrigger>
           <TabsTrigger value="accesos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <Clock className="w-4 h-4 mr-2" /> 
+            <Clock className="w-4 h-4 mr-2" />
             <span className="font-semibold text-xs uppercase tracking-wide">Accesos</span>
           </TabsTrigger>
         </TabsList>
@@ -258,9 +275,9 @@ function AuditLog() {
               </SelectContent>
             </Select>
             <div className="h-10 px-3 flex items-center bg-muted/30 rounded-xl border border-border/40 text-[10px] font-bold text-muted-foreground whitespace-nowrap">
-               {filtered.length} TOTAL
+              {entries.length}{hasMore ? "+" : ""} REG
             </div>
-            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl shrink-0" onClick={fetchEntries} disabled={loading} title="Actualizar">
+            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl shrink-0" onClick={handleRefresh} disabled={loading} title="Actualizar">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
           </div>
@@ -270,7 +287,7 @@ function AuditLog() {
               <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
               <span className="text-[11px] font-bold uppercase tracking-widest">Cargando...</span>
             </div>
-          ) : filtered.length === 0 ? (
+          ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center opacity-60">
               <ClipboardList className="w-12 h-12 text-muted-foreground/30" />
               <div className="space-y-1">
@@ -279,21 +296,36 @@ function AuditLog() {
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border bg-card overflow-hidden shadow-sm divide-y divide-border/30">
-              {filtered.map((entry, idx) => {
-                const currentDate = (entry.timestamp as any)?.toDate?.()?.toDateString()
-                const prevDate = idx > 0 ? (filtered[idx - 1].timestamp as any)?.toDate?.()?.toDateString() : null
-                const isNewDay = currentDate !== prevDate
+            <>
+              <div className="rounded-2xl border bg-card overflow-hidden shadow-sm divide-y divide-border/30">
+                {entries.map((entry, idx) => {
+                  const currentDate = (entry.timestamp as any)?.toDate?.()?.toDateString()
+                  const prevDate = idx > 0 ? (entries[idx - 1].timestamp as any)?.toDate?.()?.toDateString() : null
+                  const isNewDay = currentDate !== prevDate
+                  return (
+                    <AuditRow
+                      key={entry.id}
+                      entry={entry}
+                      showDateSeparator={isNewDay}
+                    />
+                  )
+                })}
+              </div>
 
-                return (
-                  <AuditRow 
-                    key={entry.id} 
-                    entry={entry} 
-                    showDateSeparator={isNewDay}
-                  />
-                )
-              })}
-            </div>
+              {hasMore && (
+                <Button
+                  variant="outline"
+                  className="w-full h-10 rounded-xl text-xs font-bold"
+                  onClick={() => fetchEntries(false, filter)}
+                  disabled={loadingMore}
+                >
+                  {loadingMore
+                    ? <><RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />Cargando...</>
+                    : "Cargar más entradas"
+                  }
+                </Button>
+              )}
+            </>
           )}
         </TabsContent>
 

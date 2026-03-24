@@ -60,12 +60,12 @@ export function CompanyDetailSheet({ company, open, onOpenChange }: CompanyDetai
         </SheetHeader>
 
         {/* SUA Status Banner */}
-        <div className={`rounded-xl p-4 mb-6 flex items-center justify-between ${isValid ? 'bg-green-50' : isExpired ? 'bg-red-50' : 'bg-orange-50'}`}>
+        <div className={`rounded-xl p-4 mb-6 flex items-center justify-between ${isValid ? 'bg-green-50 dark:bg-green-950/30' : isExpired ? 'bg-red-50 dark:bg-red-950/30' : 'bg-orange-50 dark:bg-orange-950/30'}`}>
           <div>
-            <p className={`text-xs font-bold uppercase ${isValid ? 'text-green-700' : isExpired ? 'text-red-700' : 'text-orange-700'}`}>
+            <p className={`text-xs font-bold uppercase ${isValid ? 'text-green-700 dark:text-green-400' : isExpired ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
               Estado SUA
             </p>
-            <p className={`text-lg font-black mt-0.5 ${isValid ? 'text-green-800' : isExpired ? 'text-red-800' : 'text-orange-800'}`}>
+            <p className={`text-lg font-black mt-0.5 ${isValid ? 'text-green-800 dark:text-green-300' : isExpired ? 'text-red-800 dark:text-red-300' : 'text-orange-800 dark:text-orange-300'}`}>
               {isValid ? 'Vigente' : isExpired ? 'Vencido' : 'Pendiente'}
             </p>
           </div>

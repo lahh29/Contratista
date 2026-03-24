@@ -90,9 +90,8 @@ export default function LoginPage() {
 
   return (
     <div
-      className="relative min-h-screen min-h-dvh flex items-center justify-center overflow-hidden px-5"
+      className="auth-bg relative min-h-screen min-h-dvh flex items-center justify-center overflow-hidden px-5"
       style={{
-        background: "linear-gradient(135deg, hsl(214,80%,96%) 0%, hsl(220,70%,98%) 40%, hsl(210,90%,94%) 100%)",
         paddingBottom: "env(safe-area-inset-bottom)",
         paddingTop:    "env(safe-area-inset-top)",
       }}
@@ -143,16 +142,7 @@ export default function LoginPage() {
         className="relative z-10 w-full max-w-[380px]"
       >
         {/* Glass surface */}
-        <div
-          className="rounded-3xl overflow-hidden"
-          style={{
-            backdropFilter:         "blur(32px) saturate(180%)",
-            WebkitBackdropFilter:   "blur(32px) saturate(180%)",
-            background:             "rgba(255, 255, 255, 0.62)",
-            border:                 "1px solid rgba(255, 255, 255, 0.75)",
-            boxShadow:              "0 8px 40px rgba(30, 80, 180, 0.10), 0 1.5px 0 rgba(255,255,255,0.9) inset, 0 -1px 0 rgba(180,200,255,0.15) inset",
-          }}
-        >
+        <div className="glass-card rounded-3xl overflow-hidden">
           <div className="px-8 py-10 space-y-7">
 
             {/* Brand */}
@@ -181,8 +171,8 @@ export default function LoginPage() {
               <div className="space-y-4">
                 {resetSent ? (
                   <div className="flex flex-col items-center gap-3 py-2 text-center">
-                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
                       <p className="font-bold text-sm">Correo enviado</p>
@@ -214,7 +204,7 @@ export default function LoginPage() {
                         placeholder="correo@vinoplastic.com"
                         autoComplete="email"
                         inputMode="email"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
                         value={resetEmail}
                         onChange={e => setResetEmail(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handlePasswordReset()}
@@ -258,7 +248,7 @@ export default function LoginPage() {
                               placeholder="correo@vinoplastic.com"
                               autoComplete="email"
                               inputMode="email"
-                              className="h-11 rounded-2xl pl-10 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                              className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
                               {...field}
                               onChange={e => { field.onChange(e); setLoginError(null) }}
                             />
@@ -281,7 +271,7 @@ export default function LoginPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Contraseña"
                               autoComplete="current-password"
-                              className="h-11 rounded-2xl pl-10 pr-11 bg-white/70 border-white/80 focus-visible:bg-white/90"
+                              className="h-11 rounded-2xl pl-10 pr-11 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
                               {...field}
                               onChange={e => { field.onChange(e); setLoginError(null) }}
                             />
@@ -303,9 +293,9 @@ export default function LoginPage() {
 
                   {/* Inline error */}
                   {loginError && (
-                    <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2">
-                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                      <p className="text-xs text-red-600">{loginError}</p>
+                    <div className="flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-3 py-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
+                      <p className="text-xs text-red-600 dark:text-red-400">{loginError}</p>
                     </div>
                   )}
 

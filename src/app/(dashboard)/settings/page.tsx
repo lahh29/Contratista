@@ -21,6 +21,10 @@ import { Firestore, DocumentData } from "firebase/firestore"
 // "BRAVO GARCIA JESUS FERNANDO" → "Bravo Jesus"
 // "HERNANDEZ GUDIÑO NOEMI"      → "Hernandez Noemi"
 // "JUAN PEREZ"                  → "Juan Perez"   (≤2 words: show as-is title-cased)
+function truncStr(s: string, max = 10): string {
+  return s.length > max ? s.slice(0, max).trimEnd() + '…' : s
+}
+
 function shortName(full: string): string {
   const words = full.trim().split(/\s+/)
   const picked = words.length >= 3 ? [words[0], words[2]] : words
@@ -153,7 +157,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
                         if (e.key === "Escape") setEditId(null)
                       }}
                     />
-                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/40"
                       onClick={() => handleUpdate(item.id)} aria-label="Guardar">
                       <Check className="w-4 h-4" />
                     </Button>
@@ -164,7 +168,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
                   </>
                 ) : (
                   <>
-                    <span className="flex-1 min-w-0 text-sm font-medium truncate">{shortName(item.name)}</span>
+                    <span className="flex-1 min-w-0 text-sm font-medium truncate" title={item.name}>{truncStr(shortName(item.name))}</span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Opciones">
@@ -366,7 +370,7 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
                           {item.restricted ? "Zona restringida (toca para quitar)" : "Marcar como zona restringida"}
                         </button>
                       </div>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/40"
                         onClick={() => handleUpdate(item.id)} aria-label="Guardar">
                         <Check className="w-4 h-4" />
                       </Button>
@@ -379,7 +383,7 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
                     <>
                       <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <p className="text-sm font-medium truncate min-w-0">{item.name}</p>
+                          <p className="text-sm font-medium truncate min-w-0" title={item.name}>{truncStr(item.name)}</p>
                           {item.restricted && (
                             <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-destructive" aria-label="Zona restringida" />
                           )}
@@ -536,11 +540,16 @@ function UserManager({ db, companies }: UserManagerProps) {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {u.role === "contractor" && u.companyId
+                    {(() => {
+                      const raw = u.role === "contractor" && u.companyId
                         ? (companies?.find((c) => c.id === u.companyId)?.name ?? u.name ?? u.email ?? u.uid.slice(0, 12) + "…")
-                        : (u.name ?? u.email ?? u.uid.slice(0, 12) + "…")}
-                    </p>
+                        : (u.name ?? u.email ?? u.uid.slice(0, 12) + "…")
+                      return (
+                        <p className="text-sm font-medium truncate" title={raw}>
+                          {truncStr(raw, 14)}
+                        </p>
+                      )
+                    })()}
                   </div>
 
                   {/* Role badge */}
