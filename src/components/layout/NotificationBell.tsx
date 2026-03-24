@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import {
   Bell, ArrowDownToLine, ArrowUpFromLine, AlertTriangle,
   UserPlus, UserMinus, Users, Info, Check,
+  ShieldAlert, ShieldCheck, CheckCircle2, FileText, Clock,
 } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,8 @@ import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { LucideProps } from 'lucide-react'
+import { useAppUser } from '@/hooks/use-app-user'
+import { useRouter } from 'next/navigation'
 
 type IconComponent = React.ComponentType<LucideProps>
 
@@ -48,6 +51,18 @@ const TYPE_CONFIG: Record<string, {
     text: 'text-amber-600 dark:text-amber-400',
     ring: 'ring-amber-200 dark:ring-amber-800',
   },
+  sua_renewed: {
+    icon: CheckCircle2,
+    bg:   'bg-emerald-100 dark:bg-emerald-950/60',
+    text: 'text-emerald-600 dark:text-emerald-400',
+    ring: 'ring-emerald-200 dark:ring-emerald-800',
+  },
+  sua_renewal_request: {
+    icon: FileText,
+    bg:   'bg-amber-100 dark:bg-amber-950/60',
+    text: 'text-amber-600 dark:text-amber-400',
+    ring: 'ring-amber-200 dark:ring-amber-800',
+  },
   new_contractor: {
     icon: UserPlus,
     bg:   'bg-violet-100 dark:bg-violet-950/60',
@@ -60,11 +75,41 @@ const TYPE_CONFIG: Record<string, {
     text: 'text-red-600 dark:text-red-400',
     ring: 'ring-red-200 dark:ring-red-800',
   },
+  blocked_contractor: {
+    icon: ShieldAlert,
+    bg:   'bg-red-100 dark:bg-red-950/60',
+    text: 'text-red-600 dark:text-red-400',
+    ring: 'ring-red-200 dark:ring-red-800',
+  },
+  unblocked_contractor: {
+    icon: ShieldCheck,
+    bg:   'bg-emerald-100 dark:bg-emerald-950/60',
+    text: 'text-emerald-600 dark:text-emerald-400',
+    ring: 'ring-emerald-200 dark:ring-emerald-800',
+  },
   over_capacity: {
     icon: Users,
     bg:   'bg-orange-100 dark:bg-orange-950/60',
     text: 'text-orange-600 dark:text-orange-400',
     ring: 'ring-orange-200 dark:ring-orange-800',
+  },
+  prolonged_visit: {
+    icon: Clock,
+    bg:   'bg-orange-100 dark:bg-orange-950/60',
+    text: 'text-orange-600 dark:text-orange-400',
+    ring: 'ring-orange-200 dark:ring-orange-800',
+  },
+  restricted_area: {
+    icon: ShieldAlert,
+    bg:   'bg-red-100 dark:bg-red-950/60',
+    text: 'text-red-600 dark:text-red-400',
+    ring: 'ring-red-200 dark:ring-red-800',
+  },
+  baja_registered: {
+    icon: UserMinus,
+    bg:   'bg-red-100 dark:bg-red-950/60',
+    text: 'text-red-600 dark:text-red-400',
+    ring: 'ring-red-200 dark:ring-red-800',
   },
 }
 
@@ -81,17 +126,28 @@ function getConfig(type: string) {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export function NotificationBell() {
-  const [open, setOpen] = useState(false)
-  const db              = useFirestore()
-  const { user }        = useUser()
+  const [open, setOpen]   = useState(false)
+  const db                = useFirestore()
+  const { user }          = useUser()
+  const { appUser }       = useAppUser()
+  const router            = useRouter()
 
   const notificationsQuery = useMemo(() => {
     if (!db) return null
-    return query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(20))
+    return query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50))
   }, [db])
 
   const { data: rawNotifications } = useCollection(notificationsQuery)
-  const notifications = rawNotifications as AppNotification[] | null
+  const allNotifications = rawNotifications as AppNotification[] | null
+
+  // Filtrar por rol del usuario actual
+  const notifications = useMemo(() => {
+    if (!allNotifications || !appUser) return allNotifications
+    if (appUser.role === 'admin') return allNotifications
+    return allNotifications.filter(n =>
+      n.roles ? n.roles.includes(appUser.role) : false,
+    )
+  }, [allNotifications, appUser])
 
   const unreadCount = useMemo(
     () => notifications?.filter(n => !n.readBy?.includes(user?.uid ?? '')).length ?? 0,
@@ -110,6 +166,11 @@ export function NotificationBell() {
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen)
     if (isOpen) markAllRead()
+  }
+
+  const handleNotificationClick = (n: AppNotification) => {
+    setOpen(false)
+    if (n.url) router.push(n.url)
   }
 
   return (
@@ -176,15 +237,16 @@ export function NotificationBell() {
                   const createdAt = n.createdAt?.toDate?.()
 
                   return (
-                    <motion.div
+                    <motion.button
                       key={n.id}
                       initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.03, duration: 0.2 }}
+                      onClick={() => handleNotificationClick(n)}
                       className={cn(
-                        'flex gap-3 p-3.5 rounded-xl transition-colors',
+                        'w-full text-left flex gap-3 p-3.5 rounded-xl transition-colors cursor-pointer',
                         isUnread
-                          ? 'bg-card shadow-sm ring-1 ring-border/60'
+                          ? 'bg-card shadow-sm ring-1 ring-border/60 hover:bg-muted/40'
                           : 'bg-muted/30 hover:bg-muted/60',
                       )}
                     >
@@ -200,7 +262,7 @@ export function NotificationBell() {
                       <div className="flex-1 min-w-0 space-y-0.5">
                         <div className="flex items-start justify-between gap-2">
                           <p className={cn(
-                            'text-sm leading-snug truncate',
+                            'text-sm leading-snug line-clamp-2',
                             isUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80',
                           )}>
                             {n.title}
@@ -218,7 +280,7 @@ export function NotificationBell() {
                           </p>
                         )}
                       </div>
-                    </motion.div>
+                    </motion.button>
                   )
                 })}
               </AnimatePresence>

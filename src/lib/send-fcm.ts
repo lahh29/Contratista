@@ -15,6 +15,7 @@ export type NotifyEvent =
   | { type: 'restricted_area';    companyName: string; areaName: string }
   | { type: 'baja_registered';       nombre: string; noEmpleado: string; fechaBaja: string }
   | { type: 'sua_renewal_request';   companyName: string; companyId: string }
+  | { type: 'unblocked_contractor'; companyName: string }
 
 /**
  * Audience control:
@@ -107,6 +108,12 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body:  `${event.companyName} informa que su SUA ha sido renovado y requiere actualización.`,
         url:   `/contractors`,
       }
+    case 'unblocked_contractor':
+      return {
+        title: `Acceso restaurado: ${event.companyName}`,
+        body:  `La empresa ${event.companyName} fue desbloqueada y puede ingresar nuevamente.`,
+        url:   '/contractors',
+      }
   }
 }
 
@@ -126,6 +133,9 @@ function defaultAudience(event: NotifyEvent): Audience {
   }
   if (event.type === 'sua_renewal_request') {
     return 'admins_seguridad'
+  }
+  if (event.type === 'unblocked_contractor') {
+    return 'admins'
   }
   return 'admins'
 }

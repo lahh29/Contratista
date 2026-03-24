@@ -21,6 +21,29 @@ export async function sendNotification(event: NotifyEvent): Promise<void> {
   }
 }
 
+function getRolesForEvent(event: NotifyEvent): string[] {
+  switch (event.type) {
+    case 'entry':
+    case 'exit':
+    case 'restricted_area':
+      return ['admin', 'seguridad']
+    case 'sua_renewal_request':
+      return ['admin', 'seguridad']
+    case 'baja_registered':
+      return ['admin', 'guard']
+    case 'over_capacity':
+    case 'prolonged_visit':
+    case 'new_contractor':
+    case 'delete_contractor':
+    case 'blocked_contractor':
+    case 'unblocked_contractor':
+    case 'sua_renewed':
+    case 'sua_expiring':
+    default:
+      return ['admin']
+  }
+}
+
 async function persistNotification(event: NotifyEvent): Promise<void> {
   const { title, body, url } = buildNotification(event)
   const db = getFirestore(getAdminApp())
@@ -29,6 +52,7 @@ async function persistNotification(event: NotifyEvent): Promise<void> {
     title,
     body,
     url,
+    roles:     getRolesForEvent(event),
     createdAt: FieldValue.serverTimestamp(),
     readBy:    [],
   })

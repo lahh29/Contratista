@@ -100,6 +100,7 @@ export interface AppNotification {
   title: string
   body: string
   url: string
+  roles?: string[]
   createdAt: Timestamp
   readBy: string[]
 }

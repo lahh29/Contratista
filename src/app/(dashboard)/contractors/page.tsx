@@ -198,6 +198,7 @@ export default function ContractorsPage() {
         "Acceso bloqueado",
         async () => {
           await updateDoc(companyRef, { status: "Active" })
+          sendNotification({ type: 'unblocked_contractor', companyName: selectedCompany.name })
           fetchCompanies()
         },
         `${selectedCompany.name} ha sido bloqueada.`,
