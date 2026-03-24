@@ -527,7 +527,7 @@ function UserManager({ db, companies }: UserManagerProps) {
 
   return (
     <>
-      <Card className="border-none shadow-sm overflow-hidden">
+      <Card className="border-none shadow-sm overflow-hidden w-full">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -535,12 +535,9 @@ function UserManager({ db, companies }: UserManagerProps) {
             </div>
             Usuarios del sistema
           </CardTitle>
-          <CardDescription>
-            Asigna roles y empresa. Los contratistas acceden a su portal; los guardias solo al escáner.
-          </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-3 pb-3 pt-0">
           {loading ? (
             <div className="flex justify-center py-6">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -548,46 +545,45 @@ function UserManager({ db, companies }: UserManagerProps) {
           ) : users.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">Sin usuarios registrados aún.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2 overflow-hidden">
               {users.map((u) => (
-                <div key={u.uid} className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg group">
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    {(() => {
-                      const raw = u.role === "contractor" && u.companyId
-                        ? (companies?.find((c) => c.id === u.companyId)?.name ?? u.name ?? u.email ?? u.uid.slice(0, 12) + "…")
-                        : (u.name ?? u.email ?? u.uid.slice(0, 12) + "…")
-                      return (
-                        <p className="text-sm font-medium truncate" title={raw}>
-                          {truncStr(raw, 14)}
-                        </p>
-                      )
-                    })()}
-                  </div>
-
-                  {/* Role badge */}
+                <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0">
+                  {/* Avatar coloreado por rol — comunica el rol sin badge extra */}
                   {(() => {
                     const rc = ROLE_CONFIG[u.role]
                     const RoleIcon = rc?.icon ?? User
                     return (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0 ${rc?.className ?? "bg-muted text-muted-foreground"}`}>
-                        <RoleIcon className="w-3 h-3 shrink-0" />
-                        {rc?.label ?? u.role}
-                      </span>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${rc?.className ?? "bg-muted text-muted-foreground"}`}>
+                        <RoleIcon className="w-4 h-4" />
+                      </div>
                     )
                   })()}
 
-                  {/* Edit */}
-                  <Button size="icon" variant="ghost"
-                    className="h-8 w-8 shrink-0 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-                    onClick={() => startEdit(u)} aria-label={`Editar ${u.name ?? u.email}`}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
+                  {/* Info — siempre 2 líneas, altura uniforme */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate leading-tight">
+                      {u.name ?? u.email ?? u.uid.slice(0, 12) + "…"}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-tight mt-0.5 truncate">
+                      {u.role === "contractor" && u.companyId
+                        ? (companies?.find((c) => c.id === u.companyId)?.name ?? u.email ?? "")
+                        : (u.email ?? ROLE_CONFIG[u.role]?.label ?? u.role)}
+                    </p>
+                  </div>
+
+                  {/* Acciones — mismo patrón que Áreas */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label="Opciones">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuItem onClick={() => startEdit(u)}>
+                        <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))}
             </div>
@@ -739,7 +735,7 @@ export default function SettingsPage() {
           </TabsList>
           <TabsContent value="users"       className="mt-0">{usersCard}</TabsContent>
           <TabsContent value="areas"       className="mt-0">{areasCard}</TabsContent>
-          <TabsContent value="supervisors" className="mt-0">_MODULE_NOT_FOUND_</TabsContent>
+          <TabsContent value="supervisors" className="mt-0">{supervisorsCard}</TabsContent>
         </Tabs>
       </div>
 

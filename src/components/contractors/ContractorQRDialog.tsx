@@ -53,16 +53,6 @@ const SUA_CONFIG: Record<SuaStatus, {
   },
 }
 
-/** Resuelve una variable CSS del tema y retorna su valor HSL para APIs que no soportan var() */
-function useCssColor(variable: string, fallback: string): string {
-  const [color, setColor] = React.useState(fallback)
-  React.useEffect(() => {
-    const val = getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
-    if (val) setColor(`hsl(${val})`)
-  }, [variable])
-  return color
-}
-
 /** Resuelve una CSS variable y retorna hsl() con comas — formato requerido por la Canvas API */
 function resolveCssColor(variable: string, fallback: string): string {
   if (typeof window === "undefined") return fallback
@@ -83,8 +73,9 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
   const StatusIcon = config.icon
   const initial = (company?.name || "?")[0].toUpperCase()
 
-  const qrFgColor = useCssColor("--foreground", "#0f172a")
-  const qrBgColor = useCssColor("--card", "#ffffff")
+  // QR siempre negro sobre blanco — los lectores ópticos necesitan alto contraste
+  const qrFgColor = "#000000"
+  const qrBgColor = "#ffffff"
 
   const downloadQR = () => {
     const svg = document.getElementById("contractor-qr-svg")
@@ -265,9 +256,9 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
         </div>
 
         {/* Cuerpo: QR + acciones */}
-        <div className="bg-card flex flex-col items-center px-5 pt-5 pb-4 gap-4">
+        <div className="bg-white dark:bg-zinc-900 flex flex-col items-center px-5 pt-5 pb-4 gap-4">
           {/* Código QR */}
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm w-full flex justify-center">
+          <div className="rounded-xl border border-border bg-white p-4 shadow-sm w-full flex justify-center">
             <QRCode
               id="contractor-qr-svg"
               value={qrValue}

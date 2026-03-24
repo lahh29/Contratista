@@ -4,6 +4,7 @@ import { FirebaseClientProvider } from '@/firebase'
 import { Toaster } from '@/components/ui/toaster'
 import { PWASetup } from '@/components/PWASetup'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: 'Control Contratistas — ViñoPlastic',
@@ -52,7 +53,9 @@ export default function RootLayout({
         <ThemeProvider>
           <FirebaseClientProvider>
             <PWASetup />
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
             <Toaster />
           </FirebaseClientProvider>
         </ThemeProvider>
