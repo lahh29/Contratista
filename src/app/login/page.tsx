@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -147,15 +146,6 @@ export default function LoginPage() {
 
             {/* Brand */}
             <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/logo-vino-plastic.png"
-                alt="ViñoPlastic"
-                width={52}
-                height={52}
-                sizes="52px"
-                className="object-contain drop-shadow-sm"
-                priority
-              />
               <div className="text-center">
                 <p className="font-black text-lg tracking-widest uppercase text-foreground leading-none">
                   ViñoPlastic
