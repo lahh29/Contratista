@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { logAudit } from "@/app/actions/audit"
 import { Firestore, DocumentData } from "firebase/firestore"
+import { useConfirm } from "@/hooks/use-confirm"
+import { SkeletonList } from "@/components/ui/skeletons"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 // "BRAVO GARCIA JESUS FERNANDO" → "Bravo Jesus"
@@ -53,6 +55,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   const [editName, setEditName] = React.useState("")
   const { toast } = useToast()
   const { appUser } = useAppUser()
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const actor = () => ({
     actorUid:  appUser?.uid   ?? '',
@@ -75,7 +78,13 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
 
   const handleDelete = async (id: string, name: string) => {
     if (!db) return
-    if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
+    const ok = await confirm({
+      title: `¿Eliminar "${name}"?`,
+      description: "Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      variant: "destructive",
+    })
+    if (!ok) return
     try {
       await deleteDoc(doc(db, collectionName, id))
       logAudit({ action: `${collectionName.replace(/s$/, '')}.deleted`, ...actor(), targetType: collectionName.replace(/s$/, ''), targetId: id, targetName: name })
@@ -100,7 +109,9 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
   }
 
   return (
-    <Card className="border-none shadow-sm overflow-hidden">
+    <>
+      {ConfirmDialog}
+      <Card className="border-none shadow-sm overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -138,9 +149,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
         {/* List */}
         <div className="space-y-2 min-h-[80px]">
           {loading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            </div>
+            <SkeletonList rows={3} />
           ) : items?.length ? (
             items.map((item) => (
               <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0">
@@ -198,6 +207,7 @@ function CollectionManager({ title, description, icon: Icon, collectionName, db,
         </div>
       </CardContent>
     </Card>
+    </>
   )
 }
 
@@ -219,6 +229,7 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
   const [editSupervisorId, setEditSupervisorId] = React.useState("")
   const { toast } = useToast()
   const { appUser } = useAppUser()
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const actor = () => ({
     actorUid:  appUser?.uid   ?? '',
@@ -256,7 +267,13 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
 
   const handleDelete = async (id: string, name: string) => {
     if (!db) return
-    if (!window.confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
+    const ok = await confirm({
+      title: `¿Eliminar "${name}"?`,
+      description: "Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      variant: "destructive",
+    })
+    if (!ok) return
     try {
       await deleteDoc(doc(db, "areas", id))
       logAudit({ action: 'area.deleted', ...actor(), targetType: 'area', targetId: id, targetName: name })
@@ -284,6 +301,7 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
   }
 
   return (
+    <>
     <Card className="border-none shadow-sm overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -331,9 +349,7 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
         {/* List */}
         <div className="space-y-2 min-h-[80px]">
           {loading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            </div>
+            <SkeletonList rows={3} />
           ) : areas?.length ? (
             areas.map((item) => {
               const linked = supervisors?.find((s) => s.id === item.supervisorId)
@@ -427,6 +443,8 @@ function AreaManager({ db, areas, supervisors, loading, onRefresh }: AreaManager
         </div>
       </CardContent>
     </Card>
+    {ConfirmDialog}
+    </>
   )
 }
 
@@ -721,7 +739,7 @@ export default function SettingsPage() {
           </TabsList>
           <TabsContent value="users"       className="mt-0">{usersCard}</TabsContent>
           <TabsContent value="areas"       className="mt-0">{areasCard}</TabsContent>
-          <TabsContent value="supervisors" className="mt-0">{supervisorsCard}</TabsContent>
+          <TabsContent value="supervisors" className="mt-0">_MODULE_NOT_FOUND_</TabsContent>
         </Tabs>
       </div>
 

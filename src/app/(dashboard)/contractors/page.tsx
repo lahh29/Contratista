@@ -7,7 +7,6 @@ import {
   MoreVertical,
   ShieldCheck,
   ShieldAlert,
-  Loader2,
   Building2,
   QrCode,
   Phone,
@@ -64,21 +63,15 @@ import { logAudit } from "@/app/actions/audit"
 import { useAppUser } from "@/hooks/use-app-user"
 import type { Company } from "@/types"
 import { Plus } from "lucide-react"
+import { useDebounce } from "@/hooks/use-debounce"
+import { getSuaStatus } from "@/lib/utils"
+import { SkeletonTable, SkeletonRows } from "@/components/ui/skeletons"
+import { toastWithUndo, toastError } from "@/lib/toast-helpers"
 
 type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
 
-function effectiveSuaStatus(sua?: { status?: string; validUntil?: string }): 'Valid' | 'Expired' | 'Pending' {
-  if (sua?.validUntil) {
-    const today = new Date().toISOString().slice(0, 10)
-    if (sua.validUntil < today) return 'Expired'
-    return 'Valid'
-  }
-  if (sua?.status === 'Valid' || sua?.status === 'Expired') return sua.status
-  return 'Pending'
-}
-
 function SuaBadge({ sua }: { sua?: { status?: string; validUntil?: string } }) {
-  const status = effectiveSuaStatus(sua)
+  const status = getSuaStatus(sua)
   const isValid = status === 'Valid'
   const isExpired = status === 'Expired'
   return (
@@ -145,6 +138,7 @@ function CompanyActions({ onAction }: { onAction: (type: ActiveDialog) => void }
 
 export default function ContractorsPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
+  const debouncedSearch = useDebounce(searchTerm, 250)
   const [selectedCompany, setSelectedCompany] = React.useState<Company | null>(null)
   const [activeDialog, setActiveDialog] = React.useState<ActiveDialog>(null)
   const db = useFirestore()
@@ -175,11 +169,12 @@ export default function ContractorsPage() {
     if (appUser?.role === 'logistica') {
       list = list.filter(c => c.type === 'cliente')
     }
+    const q = debouncedSearch.toLowerCase()
     return list.filter(c =>
-      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.contact?.toLowerCase().includes(searchTerm.toLowerCase())
+      c.name?.toLowerCase().includes(q) ||
+      c.contact?.toLowerCase().includes(q)
     ) as Company[]
-  }, [companies, searchTerm, appUser?.role])
+  }, [companies, debouncedSearch, appUser?.role])
 
   function openAction(company: Company, type: ActiveDialog) {
     setSelectedCompany(company)
@@ -199,11 +194,14 @@ export default function ContractorsPage() {
     const updateData = { status: "Blocked" }
     try {
       await updateDoc(companyRef, updateData)
-      toast({
-        title: "Acceso bloqueado",
-        description: `${selectedCompany.name} ha sido bloqueada y no podrá ingresar.`,
-        variant: "destructive",
-      })
+      toastWithUndo(
+        "Acceso bloqueado",
+        async () => {
+          await updateDoc(companyRef, { status: "Active" })
+          fetchCompanies()
+        },
+        `${selectedCompany.name} ha sido bloqueada.`,
+      )
       logAudit({
         action: 'company.blocked',
         actorUid:  appUser?.uid   ?? '',
@@ -232,10 +230,7 @@ export default function ContractorsPage() {
     const companyRef = doc(db, "companies", selectedCompany.id)
     try {
       await deleteDoc(companyRef)
-      toast({
-        title: "Empresa eliminada",
-        description: `${selectedCompany.name} ha sido eliminada del sistema.`,
-      })
+      toast({ title: "Empresa eliminada", description: `${selectedCompany.name} ha sido eliminada del sistema.` })
       logAudit({
         action: 'company.deleted',
         actorUid:  appUser?.uid   ?? '',
@@ -286,9 +281,10 @@ export default function ContractorsPage() {
 
         <CardContent className="p-0 md:px-6 md:pb-6">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
+            <>
+              <div className="md:hidden"><SkeletonRows rows={6} /></div>
+              <div className="hidden md:block"><SkeletonTable rows={6} cols={4} /></div>
+            </>
           ) : filteredCompanies.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground text-sm px-4">
               No se encontraron empresas registradas.

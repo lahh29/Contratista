@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { ShieldCheck, ShieldAlert, Phone, User, Calendar, Hash, Building2, FileText, MapPin, StickyNote } from "lucide-react"
+import { getSuaStatus, SUA_CONFIG } from "@/lib/utils"
 
 interface CompanyDetailSheetProps {
   company: any
@@ -34,12 +35,10 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 export function CompanyDetailSheet({ company, open, onOpenChange }: CompanyDetailSheetProps) {
   if (!company) return null
 
-  const today = new Date().toISOString().split('T')[0]
-  const effectiveStatus = company.sua?.validUntil
-    ? (company.sua.validUntil < today ? 'Expired' : 'Valid')
-    : (company.sua?.status ?? 'Pending')
-  const isValid   = effectiveStatus === 'Valid'
-  const isExpired = effectiveStatus === 'Expired'
+  const status  = getSuaStatus(company.sua)
+  const suaCfg  = SUA_CONFIG[status]
+  const isValid   = status === 'Valid'
+  const isExpired = status === 'Expired'
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -60,19 +59,12 @@ export function CompanyDetailSheet({ company, open, onOpenChange }: CompanyDetai
         </SheetHeader>
 
         {/* SUA Status Banner */}
-        <div className={`rounded-xl p-4 mb-6 flex items-center justify-between ${isValid ? 'bg-green-50 dark:bg-green-950/30' : isExpired ? 'bg-red-50 dark:bg-red-950/30' : 'bg-orange-50 dark:bg-orange-950/30'}`}>
+        <div className={`rounded-xl p-4 mb-6 flex items-center justify-between ${suaCfg.bg}`}>
           <div>
-            <p className={`text-xs font-bold uppercase ${isValid ? 'text-green-700 dark:text-green-400' : isExpired ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
-              Estado SUA
-            </p>
-            <p className={`text-lg font-black mt-0.5 ${isValid ? 'text-green-800 dark:text-green-300' : isExpired ? 'text-red-800 dark:text-red-300' : 'text-orange-800 dark:text-orange-300'}`}>
-              {isValid ? 'Vigente' : isExpired ? 'Vencido' : 'Pendiente'}
-            </p>
+            <p className={`text-xs font-bold uppercase ${suaCfg.subtext}`}>Estado SUA</p>
+            <p className={`text-lg font-black mt-0.5 ${suaCfg.text}`}>{suaCfg.label}</p>
           </div>
-          <Badge
-            variant={isValid ? 'default' : isExpired ? 'destructive' : 'secondary'}
-            className="rounded-lg px-3 py-1.5 text-sm"
-          >
+          <Badge variant={suaCfg.badgeVariant} className="rounded-lg px-3 py-1.5 text-sm">
             {isValid ? <ShieldCheck className="w-4 h-4 mr-1.5" /> : <ShieldAlert className="w-4 h-4 mr-1.5" />}
             {company.sua?.status || 'N/A'}
           </Badge>
