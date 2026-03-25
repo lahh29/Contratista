@@ -43,6 +43,7 @@ export default function DashboardLayout({
       '/settings':         'Configuración',
       '/bitacora':         'Bitácora',
       '/bajas':            'Personal de Baja',
+      '/fumadores':        'Fumadores',
     }
     document.title = PAGE_TITLES[pathname]
       ? `${PAGE_TITLES[pathname]} — ViñoPlastic`
@@ -70,6 +71,7 @@ export default function DashboardLayout({
     '/bitacora':         'Logs',
     '/contratos':        'Contratos',
     '/bajas':            'Personal de Baja',
+    '/fumadores':        'Fumadores',
   }
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
 

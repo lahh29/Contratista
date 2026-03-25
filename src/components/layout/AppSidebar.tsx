@@ -16,6 +16,7 @@ import {
   Package,
   UserX,
   UserPlus,
+  Cigarette,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -178,9 +179,10 @@ export function AppSidebar() {
         {
           title: "Acceso",
           items: [
-            { name: "Inicio",           href: "/dashboard", icon: LayoutDashboard, badge: null },
-            { name: "Escáner de QR",    href: "/scanner",   icon: QrCode,          badge: null },
-            { name: "Personal de Baja", href: "/bajas",     icon: UserX,           badge: null },
+            { name: "Inicio",           href: "/dashboard",  icon: LayoutDashboard, badge: null },
+            { name: "Escáner de QR",    href: "/scanner",    icon: QrCode,          badge: null },
+            { name: "Personal de Baja", href: "/bajas",      icon: UserX,           badge: null },
+            { name: "Fumadores",        href: "/fumadores",  icon: Cigarette,       badge: null },
           ],
         },
       ]
@@ -196,7 +198,8 @@ export function AppSidebar() {
         {
           title: "Operaciones",
           items: [
-            { name: "Escáner de QR", href: "/scanner", icon: QrCode, badge: null },
+            { name: "Escáner de QR", href: "/scanner",   icon: QrCode,    badge: null },
+            ...(role === 'seguridad' ? [{ name: "Fumadores", href: "/fumadores", icon: Cigarette, badge: null }] : []),
           ],
         },
       ]
@@ -215,6 +218,7 @@ export function AppSidebar() {
             { name: "Contratos",          href: "/contratos",  icon: FileText,      badge: null },
             { name: "Reportes",           href: "/reports",    icon: FileText,      badge: null },
             { name: "Personal de Baja",   href: "/bajas",      icon: UserX,         badge: null },
+            { name: "Fumadores",          href: "/fumadores",  icon: Cigarette,     badge: null },
             { name: "Configuración",      href: "/settings",   icon: Settings,      badge: null },
             { name: "Logs",               href: "/bitacora",   icon: ClipboardList, badge: null },
           ],
