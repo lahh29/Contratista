@@ -58,7 +58,7 @@ interface Employee {
   employeeId: string
   Nombre: string
   ApellidoPaterno: string
-  ApellidoMaterno: string
+  ApellidoMaterno?: string
   Puesto: string
   Departamento: string
   Área: string
@@ -253,7 +253,7 @@ export default function FumadoresPage() {
     try {
       await addDoc(collection(db, "fumadores"), {
         employeeId: employee.employeeId,
-        nombre: `${employee.Nombre} ${employee.ApellidoPaterno} ${employee.ApellidoMaterno}`,
+        nombre: [employee.Nombre, employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' '),
         puesto: employee.Puesto,
         departamento: employee.Departamento,
         area: employee.Área,
@@ -321,7 +321,7 @@ export default function FumadoresPage() {
   }
 
   const fullName = employee
-    ? `${employee.Nombre} ${employee.ApellidoPaterno} ${employee.ApellidoMaterno}`
+    ? [employee.Nombre, employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' ')
     : ""
 
   const outCount = todayRecords.filter((r) => r.status === "out").length
@@ -511,12 +511,22 @@ export default function FumadoresPage() {
                 <TableBody>
                   {todayRecords.map((record) => {
                     const duration = fmtDuration(record.exitTime, record.returnTime)
+                    const nameParts = record.nombre.trim().split(' ');
+                    let displayName = record.nombre;
+                    if (nameParts.length >= 2) {
+                        const firstName = nameParts[0];
+                        const paternalLastName = nameParts.length === 2 ? nameParts[1] : nameParts[nameParts.length - 2];
+                        displayName = `${paternalLastName} ${firstName}`;
+                    }
                     return (
                       <TableRow key={record.id}>
                         <TableCell>
                           <div>
-                            <p className="font-medium text-sm leading-tight">{record.nombre}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{record.puesto}</p>
+                            <p className="font-medium text-sm leading-tight">
+                              <span className="sm:hidden">{displayName}</span>
+                              <span className="hidden sm:inline">{record.nombre}</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">{record.puesto}</p>
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
@@ -566,7 +576,7 @@ export default function FumadoresPage() {
       <CreateEmployeeSheet
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={(emp) => {
+        onCreated={(emp: Employee) => {
           // Agrega al caché de sesión para búsqueda inmediata sin ir a Firebase
           employeeCache.current.set(emp.employeeId, emp)
         }}
