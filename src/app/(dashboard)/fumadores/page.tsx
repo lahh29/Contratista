@@ -13,6 +13,7 @@ import {
   AlertCircle,
   RefreshCw,
   UserPlus,
+  X,
 } from "lucide-react"
 import {
   Card,
@@ -333,23 +334,47 @@ export default function FumadoresPage() {
   return (
     <div className="space-y-6 max-w-4xl">
 
-      {/* ── Search bar + import ── */}
-      <div className="flex items-center gap-3 flex-wrap">
-      <div className="relative max-w-sm w-full sm:w-auto sm:min-w-[260px]">
-        {searching ? (
-          <RefreshCw className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
-        ) : (
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        )}
-        <Input
-          placeholder="Número de empleado…"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          className="pl-9"
-          inputMode="numeric"
-          autoComplete="off"
-        />
-      </div>
+      {/* ── Search bar ── */}
+      <div className="flex items-center justify-between gap-4">
+      <div className="relative max-w-[160px]">
+          {searching ? (
+            <RefreshCw
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin"
+              aria-hidden="true"
+            />
+          ) : (
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+          )}
+
+          <Input
+            placeholder="No. Emp."
+            value={inputValue}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              setInputValue(val);
+            }}
+            className="pl-9 pr-9"
+            inputMode="numeric"
+            autoComplete="off"
+            aria-label="Buscar por número de empleado"
+            role="searchbox"
+            maxLength={10}
+          />
+
+          {inputValue && !searching && (
+            <button
+              onClick={() => setInputValue("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              aria-label="Limpiar búsqueda"
+              type="button"
+            >
+              <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+            </button>
+          )}
+        </div>
 
         {appUser?.role === "admin" && (
           <Button
@@ -359,7 +384,6 @@ export default function FumadoresPage() {
             onClick={() => setCreateOpen(true)}
           >
             <UserPlus className="w-4 h-4" />
-            Nuevo empleado
           </Button>
         )}
       </div>
