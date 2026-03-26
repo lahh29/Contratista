@@ -20,6 +20,8 @@ import { useConfirm } from "@/hooks/use-confirm"
 import { SkeletonList } from "@/components/ui/skeletons"
 import { EmployeeManager } from "@/components/fumadores/EmployeeManager"
 import { MealSchedulesManager } from "@/components/settings/MealSchedulesManager"
+import { CreateUserWizard } from "@/components/settings/CreateUserWizard"
+import { deleteUser } from "@/app/actions/users"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 // "BRAVO GARCIA JESUS FERNANDO" → "Bravo Jesus"
@@ -464,8 +466,10 @@ function UserManager({ db, companies }: UserManagerProps) {
   const [editUser,    setEditUser]    = React.useState<DocumentData | null>(null)
   const [editRole,    setEditRole]    = React.useState("contractor")
   const [editCompany, setEditCompany] = React.useState("")
+  const [wizardOpen,  setWizardOpen]  = React.useState(false)
   const { toast } = useToast()
   const { appUser } = useAppUser()
+  const { confirm: confirmDialog, ConfirmDialog: DeleteConfirmDialog } = useConfirm()
 
   const toastRef = React.useRef(toast)
   React.useEffect(() => { toastRef.current = toast }, [toast])
@@ -518,6 +522,36 @@ function UserManager({ db, companies }: UserManagerProps) {
     }
   }
 
+  const handleDeleteUser = async (u: DocumentData) => {
+    // Mover el foco a body antes de que el Dialog ponga aria-hidden en el resto del DOM.
+    // Sin esto, el trigger del DropdownMenu retiene el foco dentro de un elemento
+    // aria-hidden, lo que bloquea la interacción después de cerrar el diálogo.
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    await new Promise<void>((r) => requestAnimationFrame(() => r()))
+
+    const ok = await confirmDialog({
+      title:        `¿Eliminar a "${u.name ?? u.email}"?`,
+      description:  "Se eliminará su acceso a la plataforma y su registro de usuario. Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      variant:      "destructive",
+    })
+    if (!ok) return
+
+    // Actualización optimista: quita al usuario de la lista inmediatamente.
+    // Esto libera el focus trap de Radix antes de que el server action responda,
+    // evitando que el foco quede atrapado al desmontarse el trigger del dropdown.
+    setUsers((prev) => prev.filter((x) => x.uid !== u.uid))
+
+    const result = await deleteUser(u.uid)
+    if (result.success) {
+      toastRef.current({ title: "Usuario eliminado" })
+    } else {
+      // Revertir si falla
+      setUsers((prev) => [...prev, u])
+      toastRef.current({ variant: "destructive", title: "Error al eliminar", description: result.error })
+    }
+  }
+
   const ROLE_CONFIG: Record<string, { label: string; icon: React.ElementType; className: string }> = {
     admin:      { label: "Admin",          icon: ShieldCheck, className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400"       },
     guard:      { label: "Guardia",        icon: Shield,      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
@@ -529,14 +563,27 @@ function UserManager({ db, companies }: UserManagerProps) {
 
   return (
     <>
+      {DeleteConfirmDialog}
+      <CreateUserWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={loadUsers}
+        companies={companies}
+      />
       <Card className="border-none shadow-sm overflow-hidden w-full">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Users className="w-4 h-4 text-primary" />
-            </div>
-            Usuarios del sistema
-          </CardTitle>
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 text-primary" />
+              </div>
+              Usuarios del sistema
+            </CardTitle>
+            <Button size="sm" className="gap-1.5 h-8 px-3 shrink-0" onClick={() => setWizardOpen(true)}>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Nuevo</span>
+            </Button>
+          </div>
         </CardHeader>
 
         <CardContent className="px-3 pb-3 pt-0">
@@ -580,9 +627,19 @@ function UserManager({ db, companies }: UserManagerProps) {
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem onClick={() => startEdit(u)}>
-                        <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                    <DropdownMenuContent align="end" className="w-36">
+                      <DropdownMenuItem onClick={() => {
+                        ;(document.activeElement as HTMLElement | null)?.blur()
+                        requestAnimationFrame(() => startEdit(u))
+                      }}>
+                        <Pencil className="w-3.5 h-3.5 mr-2" /> Editar rol
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => handleDeleteUser(u)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
