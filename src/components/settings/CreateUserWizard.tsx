@@ -208,6 +208,7 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
       <DialogContent
         className="w-full max-w-md rounded-2xl p-0 gap-0 overflow-hidden"
         onKeyDown={onKeyDown}
+        aria-describedby={undefined}
       >
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-0">

@@ -158,7 +158,7 @@ function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="w-full max-w-sm rounded-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="w-full max-w-sm rounded-2xl p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
         <DialogHeader className="px-5 pt-5 pb-4 border-b border-border/50">
           <DialogTitle className="text-base">
             {isEdit ? `Editar horario` : "Agregar horario"}
