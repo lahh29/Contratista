@@ -6,7 +6,6 @@ import {
   LogOut,
   CornerDownLeft,
   Cigarette,
-  User,
   Building2,
   Briefcase,
   CheckCircle2,
@@ -18,6 +17,7 @@ import {
   ShieldAlert,
   Clock,
   ChevronDown,
+  FileJson,
 } from "lucide-react"
 import {
   Card,
@@ -54,21 +54,11 @@ import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { sendNotification } from "@/app/actions/notify"
 import { CreateEmployeeDialog } from "@/components/fumadores/CreateEmployeeDialog"
+import { JsonImporterSheet } from "@/components/fumadores/JsonImporterSheet"
 import { useDebounce } from "@/hooks/use-debounce"
 import { format, formatDistanceStrict } from "date-fns"
 import { es } from "date-fns/locale"
-import {
-  getMealSchedule,
-  isInMealTime,
-  wasInMealTime,
-  getProductionMealSchedule,
-  isInProductionMealTime,
-  wasInProductionMealTime,
-} from "@/lib/meal-schedules"
-
-function isProductionDept(dept: string): boolean {
-  return dept.toUpperCase().trim().includes("PRODUCC")
-}
+import { getMealWindow, isInMealTime, wasInMealTime, isInShift } from "@/lib/meal-schedules"
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -269,16 +259,14 @@ export default function FumadoresPage() {
 
   // ── Meal time validation ───────────────────────────────────────────────────
   const mealSchedule = employee
-    ? isProductionDept(employee.Departamento)
-      ? getProductionMealSchedule(employee.employeeId, employee.Turno)
-      : getMealSchedule(employee.Departamento, employee.Turno)
+    ? getMealWindow(employee.employeeId, employee.Departamento, employee.Turno)
     : null
   const mealStatus = employee
-    ? isProductionDept(employee.Departamento)
-      ? isInProductionMealTime(employee.employeeId, employee.Turno)
-      : isInMealTime(employee.Departamento, employee.Turno)
+    ? isInMealTime(employee.employeeId, employee.Departamento, employee.Turno)
     : null
   // mealStatus: true = en comida, false = fuera de comida, null = sin horario configurado
+  const shiftStatus = employee ? isInShift(employee.Turno) : null
+  // shiftStatus: true = dentro del turno, false = fuera del turno, null = turno sin ventana definida
 
   // Re-check meal status every 30s so the badge updates in real time
   const [, setMealTick] = React.useState(0)
@@ -315,9 +303,7 @@ export default function FumadoresPage() {
 
     setActionLoading(true)
     try {
-      const currentlyInMeal = isProductionDept(employee.Departamento)
-        ? isInProductionMealTime(employee.employeeId, employee.Turno)
-        : isInMealTime(employee.Departamento, employee.Turno)
+      const currentlyInMeal = isInMealTime(employee.employeeId, employee.Departamento, employee.Turno)
       await addDoc(collection(db, "fumadores"), {
         employeeId: employee.employeeId,
         nombre: [employee.Nombre, employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' '),
@@ -412,6 +398,9 @@ export default function FumadoresPage() {
   // ── Create employee dialog ────────────────────────────────────────────────
   const [createOpen, setCreateOpen] = React.useState(false)
 
+  // ── JSON importer ─────────────────────────────────────────────────────────
+  const [importerOpen, setImporterOpen] = React.useState(false)
+
   // ── Panels (shared between mobile tabs and desktop grid) ─────────────────
 
   const buscadorPanel = (
@@ -423,15 +412,27 @@ export default function FumadoresPage() {
           </div>
           <span className="flex-1">Registrar salida / regreso</span>
           {appUser?.role === "admin" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setCreateOpen(true)}
-              aria-label="Agregar empleado"
-            >
-              <UserPlus className="w-4 h-4" />
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setImporterOpen(true)}
+                aria-label="Importar empleados desde JSON"
+                title="Importar JSON"
+              >
+                <FileJson className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => setCreateOpen(true)}
+                aria-label="Agregar empleado"
+              >
+                <UserPlus className="w-4 h-4" />
+              </Button>
+            </>
           )}
         </CardTitle>
       </CardHeader>
@@ -478,20 +479,15 @@ export default function FumadoresPage() {
         {/* Employee result */}
         {employee && (
           <div className="p-4 bg-muted/40 rounded-xl space-y-3">
-            {/* Avatar + name */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/15 flex items-center justify-center shrink-0">
-                <User className="w-5 h-5 text-primary" />
+            {/* Name */}
+            <div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-semibold text-sm leading-tight">{fullName}</span>
+                <Badge variant="outline" className="text-[11px] font-mono px-1.5 py-0">
+                  #{employee.employeeId}
+                </Badge>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="font-semibold text-sm leading-tight">{fullName}</span>
-                  <Badge variant="outline" className="text-[11px] font-mono px-1.5 py-0">
-                    #{employee.employeeId}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">{employee.Puesto}</p>
-              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{employee.Puesto}</p>
             </div>
 
             {/* Dept + turno */}
@@ -504,6 +500,19 @@ export default function FumadoresPage() {
                 <Briefcase className="w-3.5 h-3.5 shrink-0" />
                 Turno {employee.Turno}
               </span>
+              {/* Badge de turno activo */}
+              {shiftStatus === true && (
+                <Badge className="bg-sky-500/10 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/50 text-[11px] gap-1 font-medium">
+                  <Clock className="w-3 h-3" />
+                  En turno
+                </Badge>
+              )}
+              {shiftStatus === false && (
+                <Badge variant="outline" className="text-[11px] gap-1 text-muted-foreground border-border/60 font-normal">
+                  <Clock className="w-3 h-3" />
+                  Fuera de turno
+                </Badge>
+              )}
             </div>
 
             {/* Meal badge */}
@@ -631,9 +640,7 @@ export default function FumadoresPage() {
 
                 const inMeal = record.inMealTime !== undefined
                   ? record.inMealTime
-                  : isProductionDept(record.departamento ?? "")
-                    ? wasInProductionMealTime(record.employeeId, record.turno ?? "", record.exitTime)
-                    : wasInMealTime(record.departamento ?? "", record.turno ?? "", record.exitTime)
+                  : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime)
 
                 const isExpanded = expandedId === record.id
 
@@ -704,10 +711,7 @@ export default function FumadoresPage() {
                         {inMeal !== null && (
                           <span className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 shrink-0" />
-                            {isProductionDept(record.departamento ?? "")
-                              ? getProductionMealSchedule(record.employeeId, record.turno ?? "")?.label ?? "—"
-                              : getMealSchedule(record.departamento ?? "", record.turno ?? "")?.label ?? "—"
-                            }
+                            {getMealWindow(record.employeeId, record.departamento ?? "", record.turno ?? "")?.label ?? "—"}
                           </span>
                         )}
                       </div>
@@ -738,9 +742,7 @@ export default function FumadoresPage() {
                       const duration = fmtDuration(record.exitTime, record.returnTime)
                       const inMeal = record.inMealTime !== undefined
                         ? record.inMealTime
-                        : isProductionDept(record.departamento ?? "")
-                          ? wasInProductionMealTime(record.employeeId, record.turno ?? "", record.exitTime)
-                          : wasInMealTime(record.departamento ?? "", record.turno ?? "", record.exitTime)
+                        : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime)
                       return (
                         <TableRow key={record.id}>
                           <TableCell>
@@ -852,6 +854,7 @@ export default function FumadoresPage() {
           employeeCache.current.set(emp.employeeId, emp)
         }}
       />
+      <JsonImporterSheet open={importerOpen} onOpenChange={setImporterOpen} />
     </div>
   )
 }
