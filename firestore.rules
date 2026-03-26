@@ -160,6 +160,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── Horarios de comida ────────────────────────────────────────────────────────
+    match /mealSchedules/{docId} {
+      // Guardia y seguridad leen horarios (fumadores page)
+      allow read: if isAdmin() || isGuard() || isSeguridad();
+      // Solo admin configura horarios
+      allow write: if isAdmin();
+    }
+
+    match /employeeGroups/{docId} {
+      allow read: if isAdmin() || isGuard() || isSeguridad();
+      allow write: if isAdmin();
+    }
+
     // ── Config (mantenimiento, ajustes globales) ─────────────────────────────────
     match /config/{docId} {
       // Todos los usuarios autenticados pueden leer (necesario para saber si una página está en mantenimiento)

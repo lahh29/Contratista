@@ -11,6 +11,7 @@ import { useAppUser } from "@/hooks/use-app-user"
 import { NotificationBell } from "@/components/layout/NotificationBell"
 import { motion, AnimatePresence } from "framer-motion"
 import { useMaintenance } from "@/hooks/use-maintenance"
+import { MealConfigProvider } from "@/hooks/use-meal-config"
 
 export default function DashboardLayout({
   children,
@@ -80,7 +81,7 @@ export default function DashboardLayout({
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
 
   return (
-    <>
+    <MealConfigProvider>
     <NotificationBanner />
     <SidebarProvider>
       <AppSidebar />
@@ -181,6 +182,6 @@ export default function DashboardLayout({
         </main>
       </SidebarInset>
     </SidebarProvider>
-    </>
+    </MealConfigProvider>
   )
 }

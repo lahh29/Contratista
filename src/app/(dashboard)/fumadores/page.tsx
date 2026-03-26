@@ -59,6 +59,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { format, formatDistanceStrict } from "date-fns"
 import { es } from "date-fns/locale"
 import { getMealWindow, isInMealTime, wasInMealTime, isInShift } from "@/lib/meal-schedules"
+import { useMealConfig } from "@/hooks/use-meal-config"
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -150,6 +151,7 @@ export default function FumadoresPage() {
   const db = useFirestore()
   const { appUser } = useAppUser()
   const { toast } = useToast()
+  const { config: mealConfig } = useMealConfig()
 
   const today = format(new Date(), "yyyy-MM-dd")
 
@@ -259,10 +261,10 @@ export default function FumadoresPage() {
 
   // ── Meal time validation ───────────────────────────────────────────────────
   const mealSchedule = employee
-    ? getMealWindow(employee.employeeId, employee.Departamento, employee.Turno)
+    ? getMealWindow(employee.employeeId, employee.Departamento, employee.Turno, undefined, mealConfig)
     : null
   const mealStatus = employee
-    ? isInMealTime(employee.employeeId, employee.Departamento, employee.Turno)
+    ? isInMealTime(employee.employeeId, employee.Departamento, employee.Turno, mealConfig)
     : null
   // mealStatus: true = en comida, false = fuera de comida, null = sin horario configurado
   const shiftStatus = employee ? isInShift(employee.Turno) : null
@@ -303,7 +305,7 @@ export default function FumadoresPage() {
 
     setActionLoading(true)
     try {
-      const currentlyInMeal = isInMealTime(employee.employeeId, employee.Departamento, employee.Turno)
+      const currentlyInMeal = isInMealTime(employee.employeeId, employee.Departamento, employee.Turno, mealConfig)
       await addDoc(collection(db, "fumadores"), {
         employeeId: employee.employeeId,
         nombre: [employee.Nombre, employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' '),
@@ -640,7 +642,7 @@ export default function FumadoresPage() {
 
                 const inMeal = record.inMealTime !== undefined
                   ? record.inMealTime
-                  : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime)
+                  : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
 
                 const isExpanded = expandedId === record.id
 
@@ -711,7 +713,7 @@ export default function FumadoresPage() {
                         {inMeal !== null && (
                           <span className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 shrink-0" />
-                            {getMealWindow(record.employeeId, record.departamento ?? "", record.turno ?? "")?.label ?? "—"}
+                            {getMealWindow(record.employeeId, record.departamento ?? "", record.turno ?? "", undefined, mealConfig)?.label ?? "—"}
                           </span>
                         )}
                       </div>
@@ -742,7 +744,7 @@ export default function FumadoresPage() {
                       const duration = fmtDuration(record.exitTime, record.returnTime)
                       const inMeal = record.inMealTime !== undefined
                         ? record.inMealTime
-                        : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime)
+                        : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
                       return (
                         <TableRow key={record.id}>
                           <TableCell>

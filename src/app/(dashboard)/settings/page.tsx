@@ -19,6 +19,7 @@ import { Firestore, DocumentData } from "firebase/firestore"
 import { useConfirm } from "@/hooks/use-confirm"
 import { SkeletonList } from "@/components/ui/skeletons"
 import { EmployeeManager } from "@/components/fumadores/EmployeeManager"
+import { MealSchedulesManager } from "@/components/settings/MealSchedulesManager"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 // "BRAVO GARCIA JESUS FERNANDO" → "Bravo Jesus"
@@ -702,6 +703,10 @@ export default function SettingsPage() {
     <EmployeeManager />
   )
 
+  const mealSchedulesCard = (
+    <MealSchedulesManager />
+  )
+
   const supervisorsCard = (
     <CollectionManager
       title="Encargados de Departamento"
@@ -733,16 +738,18 @@ export default function SettingsPage() {
       {/* ── Mobile: tabs ── */}
       <div className="md:hidden">
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-5">
-            <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
-            <TabsTrigger value="employees" className="text-xs">Empleados</TabsTrigger>
-            <TabsTrigger value="areas" className="text-xs">Áreas</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 mb-5">
+            <TabsTrigger value="users"      className="text-xs">Usuarios</TabsTrigger>
+            <TabsTrigger value="employees"  className="text-xs">Empleados</TabsTrigger>
+            <TabsTrigger value="areas"      className="text-xs">Áreas</TabsTrigger>
             <TabsTrigger value="supervisors" className="text-xs">Encargados</TabsTrigger>
+            <TabsTrigger value="horarios"   className="text-xs">Horarios</TabsTrigger>
           </TabsList>
           <TabsContent value="users"       className="mt-0">{usersCard}</TabsContent>
           <TabsContent value="employees"   className="mt-0">{employeesCard}</TabsContent>
           <TabsContent value="areas"       className="mt-0">{areasCard}</TabsContent>
           <TabsContent value="supervisors" className="mt-0">{supervisorsCard}</TabsContent>
+          <TabsContent value="horarios"    className="mt-0">{mealSchedulesCard}</TabsContent>
         </Tabs>
       </div>
 
@@ -755,6 +762,9 @@ export default function SettingsPage() {
         <div className="grid gap-5 md:gap-6 md:grid-cols-2">
           {areasCard}
           {supervisorsCard}
+        </div>
+        <div>
+          {mealSchedulesCard}
         </div>
       </div>
     </div>
