@@ -217,6 +217,7 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
       <DialogContent
         className="max-w-[95vw] sm:max-w-sm p-0 overflow-hidden rounded-2xl border-none shadow-2xl"
         onCloseAutoFocus={(e) => e.preventDefault()}
+        aria-describedby={undefined}
       >
         <VisuallyHidden>
           <DialogTitle>Código QR de Acceso — {company?.name}</DialogTitle>

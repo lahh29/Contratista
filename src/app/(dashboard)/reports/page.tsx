@@ -776,6 +776,7 @@ export default function ReportsPage() {
           <DialogContent
             className="max-w-lg w-[95vw] max-h-[85vh] overflow-y-auto rounded-2xl"
             onCloseAutoFocus={(e) => e.preventDefault()}
+            aria-describedby={undefined}
           >
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">

@@ -33,7 +33,7 @@ export function NewVisitModal({ trigger }: { trigger: React.ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[480px] rounded-2xl border-none shadow-2xl p-6 gap-0">
+      <DialogContent className="sm:max-w-[480px] rounded-2xl border-none shadow-2xl p-6 gap-0" aria-describedby={undefined}>
         <DialogTitle className="text-base font-bold mb-4">Nueva Visita</DialogTitle>
         <DialogDescription className="sr-only">Registra una nueva visita de proveedor o cliente.</DialogDescription>
         <VisitWizard onClose={handleClose} />

@@ -170,7 +170,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onCreated }: CreateEm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Nuevo empleado</DialogTitle>
           <DialogDescription>

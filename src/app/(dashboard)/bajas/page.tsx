@@ -246,7 +246,7 @@ export default function BajasPage() {
 
       {/* Dialog: agregar */}
       <Dialog open={openAdd} onOpenChange={o => { setOpenAdd(o); if (!o) setForm(EMPTY_FORM) }}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Registrar Personal de Baja</DialogTitle>
             <DialogDescription>Completa los datos del empleado dado de baja.</DialogDescription>
