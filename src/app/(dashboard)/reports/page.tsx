@@ -20,6 +20,7 @@ import {
   Trophy,
   CheckCircle2,
 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -36,9 +37,6 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog"
-import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
-} from "@/components/ui/tabs"
 import { useFirestore, useUser } from "@/firebase"
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { formatDistanceToNow, format } from "date-fns"
@@ -433,21 +431,67 @@ export default function ReportsPage() {
     finally { setGenSmokePdf(false) }
   }
 
+  // Smoking detail modal (mobile)
+  const [smokeDetailOpen, setSmokeDetailOpen] = React.useState(false)
+  const [smokeDetailRecord, setSmokeDetailRecord] = React.useState<any | null>(null)
+
+  const openSmokeDetail = (record: any) => {
+    setSmokeDetailRecord(record)
+    setSmokeDetailOpen(true)
+  }
+
+  const REPORT_TABS = [
+    { value: "accesos", label: "Accesos" },
+    { value: "fumadores", label: "Fumadores" },
+  ] as const
+  type ReportTabValue = typeof REPORT_TABS[number]["value"]
+
+  const [activeReportTab, setActiveReportTab] = React.useState<ReportTabValue>("accesos")
+
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
 
-    <Tabs defaultValue="accesos">
-      <TabsList className="w-full sm:w-auto">
-        <TabsTrigger value="accesos" className="flex-1 sm:flex-none gap-2">
-          <Building2 className="w-4 h-4" /> Accesos
-        </TabsTrigger>
-        <TabsTrigger value="fumadores" className="flex-1 sm:flex-none gap-2">
-          <Cigarette className="w-4 h-4" /> Fumadores
-        </TabsTrigger>
-      </TabsList>
+    {/* Pill tabs bar */}
+    <div className="mb-5 border-b border-border/40">
+      <div className="flex flex-wrap gap-1.5 py-2">
+        {REPORT_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setActiveReportTab(tab.value)}
+            className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
+          >
+            {activeReportTab === tab.value && (
+              <motion.div
+                layoutId="reports-pill"
+                className="absolute inset-0 bg-primary rounded-full"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className={`relative z-10 transition-colors duration-150 flex items-center gap-1.5 ${
+              activeReportTab === tab.value
+                ? "text-primary-foreground"
+                : "text-muted-foreground"
+            }`}>
+              {tab.value === "accesos" ? <Building2 className="w-3.5 h-3.5" /> : <Cigarette className="w-3.5 h-3.5" />}
+              {tab.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={activeReportTab}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+      >
 
       {/* ═══════════════ TAB ACCESOS ═══════════════ */}
-      <TabsContent value="accesos" className="space-y-6 md:space-y-8 mt-6">
+      {activeReportTab === "accesos" && (
+      <div className="space-y-6 md:space-y-8">
 
       {/* Export actions — mobile: icon buttons row / desktop: cards */}
       <div className="flex gap-2 sm:hidden">
@@ -819,9 +863,12 @@ export default function ReportsPage() {
         </Dialog>
       )}
 
-      </TabsContent>
+      </div>
+      )}
+
       {/* ═══════════════ TAB FUMADORES ═══════════════ */}
-      <TabsContent value="fumadores" className="space-y-6 mt-6">
+      {activeReportTab === "fumadores" && (
+      <div className="space-y-6 md:space-y-8">
 
         {/* Stats cards */}
         {smokingStats && (
@@ -887,61 +934,98 @@ export default function ReportsPage() {
                 No hay registros para el período seleccionado.
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead className="font-semibold">Empleado</TableHead>
-                      <TableHead className="font-semibold hidden sm:table-cell">Departamento</TableHead>
-                      <TableHead className="font-semibold hidden md:table-cell">Turno</TableHead>
-                      <TableHead className="font-semibold hidden md:table-cell">Fecha</TableHead>
-                      <TableHead className="font-semibold">Salida</TableHead>
-                      <TableHead className="font-semibold">Regreso</TableHead>
-                      <TableHead className="font-semibold">Duración</TableHead>
-                      <TableHead className="font-semibold">Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSmoking.map(r => {
-                      const mins = calcDurationMins(r.exitTime, r.returnTime)
-                      const isLong = mins !== null && mins >= 15
-                      return (
-                        <TableRow key={r.id}>
-                          <TableCell>
-                            <p className="font-semibold text-sm leading-tight">{r.nombre}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{r.puesto}</p>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{r.departamento}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm hidden md:table-cell">{r.turno}</TableCell>
-                          <TableCell className="text-muted-foreground text-xs font-mono hidden md:table-cell">{r.date}</TableCell>
-                          <TableCell className="font-mono text-sm tabular-nums">
-                            {r.exitTime?.toDate ? format(r.exitTime.toDate(), 'HH:mm') : '—'}
-                          </TableCell>
-                          <TableCell className="font-mono text-sm tabular-nums">
-                            {r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—'}
-                          </TableCell>
-                          <TableCell className={`text-sm font-medium tabular-nums ${isLong ? 'text-destructive' : 'text-muted-foreground'}`}>
+              <>
+                {/* Mobile view — simple list */}
+                <div className="flex flex-col divide-y md:hidden">
+                  {filteredSmoking.map(r => {
+                    const mins = calcDurationMins(r.exitTime, r.returnTime)
+                    const isLong = mins !== null && mins >= 15
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() => openSmokeDetail(r)}
+                        className="px-4 py-4 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm leading-tight">{r.nombre}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{r.puesto}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-sm font-medium tabular-nums ${isLong ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {fmtDurationMins(mins)}
-                          </TableCell>
-                          <TableCell>
-                            {r.status === 'out' ? (
-                              <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                Fuera
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
-                                <CheckCircle2 className="w-3 h-3" />
-                                Regresó
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                          </span>
+                          {r.status === 'out' ? (
+                            <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                              <CheckCircle2 className="w-3 h-3" />
+                            </Badge>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="font-semibold">Empleado</TableHead>
+                        <TableHead className="font-semibold">Departamento</TableHead>
+                        <TableHead className="font-semibold">Turno</TableHead>
+                        <TableHead className="font-semibold">Fecha</TableHead>
+                        <TableHead className="font-semibold">Salida</TableHead>
+                        <TableHead className="font-semibold">Regreso</TableHead>
+                        <TableHead className="font-semibold">Duración</TableHead>
+                        <TableHead className="font-semibold">Estado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSmoking.map(r => {
+                        const mins = calcDurationMins(r.exitTime, r.returnTime)
+                        const isLong = mins !== null && mins >= 15
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell>
+                              <p className="font-semibold text-sm leading-tight">{r.nombre}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{r.puesto}</p>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{r.departamento}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{r.turno}</TableCell>
+                            <TableCell className="text-muted-foreground text-xs font-mono">{r.date}</TableCell>
+                            <TableCell className="font-mono text-sm tabular-nums">
+                              {r.exitTime?.toDate ? format(r.exitTime.toDate(), 'HH:mm') : '—'}
+                            </TableCell>
+                            <TableCell className="font-mono text-sm tabular-nums">
+                              {r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—'}
+                            </TableCell>
+                            <TableCell className={`text-sm font-medium tabular-nums ${isLong ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {fmtDurationMins(mins)}
+                            </TableCell>
+                            <TableCell>
+                              {r.status === 'out' ? (
+                                <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                  Fuera
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Regresó
+                                </Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -1004,8 +1088,103 @@ export default function ReportsPage() {
           </Sheet>
         )}
 
-      </TabsContent>
-    </Tabs>
+        {/* Smoking detail dialog (mobile) */}
+        {smokeDetailRecord && (
+          <Dialog open={smokeDetailOpen} onOpenChange={(o) => { if (!o) setSmokeDetailRecord(null); setSmokeDetailOpen(o) }}>
+            <DialogContent className="w-[95vw] max-w-sm rounded-2xl p-0 gap-0 overflow-hidden" aria-describedby={undefined}>
+              <DialogHeader className="px-5 pt-5 pb-4 border-b border-border/50">
+                <DialogTitle className="text-base">Detalles del registro</DialogTitle>
+              </DialogHeader>
+
+              <div className="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                {/* Empleado */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Empleado</label>
+                  <p className="text-sm font-semibold">{smokeDetailRecord.nombre}</p>
+                </div>
+
+                {/* Puesto */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Puesto</label>
+                  <p className="text-sm text-muted-foreground">{smokeDetailRecord.puesto}</p>
+                </div>
+
+                {/* Departamento */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Departamento</label>
+                  <p className="text-sm text-muted-foreground">{smokeDetailRecord.departamento}</p>
+                </div>
+
+                {/* Turno */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Turno</label>
+                  <p className="text-sm text-muted-foreground">{smokeDetailRecord.turno}</p>
+                </div>
+
+                {/* Fecha */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fecha</label>
+                  <p className="text-sm text-muted-foreground font-mono">{smokeDetailRecord.date}</p>
+                </div>
+
+                {/* Salida */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Salida</label>
+                  <p className="text-sm font-mono">
+                    {smokeDetailRecord.exitTime?.toDate ? format(smokeDetailRecord.exitTime.toDate(), 'HH:mm') : '—'}
+                  </p>
+                </div>
+
+                {/* Regreso */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Regreso</label>
+                  <p className="text-sm font-mono">
+                    {smokeDetailRecord.returnTime?.toDate ? format(smokeDetailRecord.returnTime.toDate(), 'HH:mm') : '—'}
+                  </p>
+                </div>
+
+                {/* Duración */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Duración</label>
+                  <p className="text-sm font-medium">
+                    {fmtDurationMins(calcDurationMins(smokeDetailRecord.exitTime, smokeDetailRecord.returnTime))}
+                  </p>
+                </div>
+
+                {/* Estado */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estado</label>
+                  {smokeDetailRecord.status === 'out' ? (
+                    <Badge className="w-fit bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Fuera
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="w-fit text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Regresó
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-border/50 p-4 flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10 rounded-lg"
+                  onClick={() => setSmokeDetailOpen(false)}
+                >
+                  Cerrar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+      </div>
+      )}
+      </motion.div>
+    </AnimatePresence>
 
     </div>
   )

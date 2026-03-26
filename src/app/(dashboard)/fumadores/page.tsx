@@ -19,6 +19,7 @@ import {
   ChevronDown,
   FileJson,
 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Card,
   CardContent,
@@ -36,7 +37,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFirestore } from "@/firebase"
 import {
   collection,
@@ -817,30 +817,70 @@ export default function FumadoresPage() {
   )
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  const MOBILE_TABS = [
+    { value: "buscar", label: "Buscar" },
+    { value: "registros", label: "Registros" },
+  ] as const
+  type TabValue = typeof MOBILE_TABS[number]["value"]
+
+  const [activeTab, setActiveTab] = React.useState<TabValue>("buscar")
+
+  const tabContent: Record<TabValue, React.ReactNode> = {
+    buscar: buscadorPanel,
+    registros: registrosPanel,
+  }
+
   return (
     <div className="animate-in fade-in duration-500 overflow-x-hidden w-full pb-8 supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]">
 
-      {/* ── Mobile: tabs ── */}
+      {/* ── Mobile: pill tabs ── */}
       <div className="lg:hidden">
-        <Tabs defaultValue="buscar" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-5">
-            <TabsTrigger value="buscar" className="gap-2 text-xs">
-              <Search className="w-3.5 h-3.5" />
-              Buscar
-            </TabsTrigger>
-            <TabsTrigger value="registros" className="gap-2 text-xs">
-              <Cigarette className="w-3.5 h-3.5" />
-              Registros
-              {outCount > 0 && (
-                <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[10px] px-1.5 py-0 font-medium ml-1">
-                  {outCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="buscar" className="mt-0">{buscadorPanel}</TabsContent>
-          <TabsContent value="registros" className="mt-0">{registrosPanel}</TabsContent>
-        </Tabs>
+        {/* Tab bar */}
+        <div className="mb-5 border-b border-border/40">
+          <div className="flex flex-wrap gap-1.5 py-2">
+            {MOBILE_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
+              >
+                {activeTab === tab.value && (
+                  <motion.div
+                    layoutId="fumadores-pill"
+                    className="absolute inset-0 bg-primary rounded-full"
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className={`relative z-10 transition-colors duration-150 flex items-center gap-1.5 ${
+                  activeTab === tab.value
+                    ? "text-primary-foreground"
+                    : "text-muted-foreground"
+                }`}>
+                  {tab.value === "buscar" ? <Search className="w-3.5 h-3.5" /> : <Cigarette className="w-3.5 h-3.5" />}
+                  {tab.label}
+                  {tab.value === "registros" && outCount > 0 && (
+                    <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[10px] px-1 py-0 font-medium ml-0.5">
+                      {outCount}
+                    </Badge>
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab content */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+          >
+            {tabContent[activeTab]}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* ── Desktop: side-by-side grid ── */}

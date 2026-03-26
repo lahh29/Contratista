@@ -78,7 +78,7 @@ export function useConfirm() {
 
   const ConfirmDialog = (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl">
+      <DialogContent className="max-w-sm rounded-2xl" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{options.title}</DialogTitle>
           {options.description && (

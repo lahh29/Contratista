@@ -25,7 +25,6 @@ import { useMaintenance } from "@/hooks/use-maintenance"
 import { useAppUser } from "@/hooks/use-app-user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useFirestore } from "@/firebase"
 import { collection, query, orderBy, limit, getDocs, where, startAfter, type QueryDocumentSnapshot } from "firebase/firestore"
@@ -34,6 +33,7 @@ import { format, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import type { AuditEntry } from "@/types"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 
 const STORAGE_KEY = "vp_audit_unlocked"
 const PAGE_SIZE = 50
@@ -252,25 +252,59 @@ function AuditLog() {
     fetchEntries(true, filter)
   }
 
+  const BITACORA_TABS = [
+    { value: "registro", label: "Registro" },
+    { value: "accesos", label: "Accesos" },
+    { value: "mantenimiento", label: "Páginas" },
+  ] as const
+  type BitacoraTabValue = typeof BITACORA_TABS[number]["value"]
+
+  const [activeBitacoraTab, setActiveBitacoraTab] = React.useState<BitacoraTabValue>("registro")
+
   return (
     <div className="max-w-xl mx-auto space-y-4">
-      <Tabs defaultValue="registro" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 p-1 h-11 bg-muted/40 rounded-xl mb-4">
-          <TabsTrigger value="registro" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <ClipboardList className="w-4 h-4 mr-1.5" />
-            <span className="font-semibold text-xs uppercase tracking-wide">Registro</span>
-          </TabsTrigger>
-          <TabsTrigger value="accesos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <Clock className="w-4 h-4 mr-1.5" />
-            <span className="font-semibold text-xs uppercase tracking-wide">Accesos</span>
-          </TabsTrigger>
-          <TabsTrigger value="mantenimiento" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <Wrench className="w-4 h-4 mr-1.5" />
-            <span className="font-semibold text-xs uppercase tracking-wide">Páginas</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Pill tabs bar */}
+      <div className="mb-4 border-b border-border/40">
+        <div className="flex flex-wrap gap-1.5 py-2">
+          {BITACORA_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveBitacoraTab(tab.value)}
+              className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
+            >
+              {activeBitacoraTab === tab.value && (
+                <motion.div
+                  layoutId="bitacora-pill"
+                  className="absolute inset-0 bg-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className={`relative z-10 transition-colors duration-150 flex items-center gap-1.5 font-semibold uppercase tracking-wide text-xs ${
+                activeBitacoraTab === tab.value
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground"
+              }`}>
+                {tab.value === "registro" && <ClipboardList className="w-4 h-4" />}
+                {tab.value === "accesos" && <Clock className="w-4 h-4" />}
+                {tab.value === "mantenimiento" && <Wrench className="w-4 h-4" />}
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
 
-        <TabsContent value="registro" className="mt-0 space-y-4 outline-none">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeBitacoraTab}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        >
+
+      {activeBitacoraTab === "registro" && (
+        <div className="space-y-4 outline-none">
           <div className="flex items-center gap-2 px-1">
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="flex-1 h-10 rounded-xl bg-background shadow-sm border-border/40 text-xs">
@@ -337,16 +371,22 @@ function AuditLog() {
               )}
             </>
           )}
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="accesos" className="mt-0 outline-none">
+      {activeBitacoraTab === "accesos" && (
+        <div className="mt-0 outline-none">
           <LastAccess />
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="mantenimiento" className="mt-0 outline-none">
+      {activeBitacoraTab === "mantenimiento" && (
+        <div className="mt-0 outline-none">
           <MaintenanceManager />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }
