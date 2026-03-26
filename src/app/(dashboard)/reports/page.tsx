@@ -14,6 +14,11 @@ import {
   TrendingUp,
   CalendarRange,
   RefreshCw,
+  Cigarette,
+  Clock,
+  Users,
+  Trophy,
+  CheckCircle2,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -31,8 +36,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from "@/components/ui/tabs"
 import { useFirestore, useUser } from "@/firebase"
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore"
+import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { formatDistanceToNow, format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useToast } from "@/hooks/use-toast"
@@ -155,6 +163,83 @@ async function generateVisitPDF(visit: any) {
   doc.save(`visita-${visit.id?.slice(0, 8)}.pdf`)
 }
 
+// ── Smoking helpers ───────────────────────────────────────────────────────────
+
+function calcDurationMins(exit: any, ret: any): number | null {
+  const e = exit?.toDate?.() ?? null
+  const r = ret?.toDate?.()  ?? null
+  if (!e || !r) return null
+  return Math.round((r.getTime() - e.getTime()) / 60_000)
+}
+
+function fmtDurationMins(mins: number | null): string {
+  if (mins === null) return '—'
+  if (mins < 60) return `${mins}m`
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`
+}
+
+async function generateSmokingExcel(records: any[]) {
+  const XLSX = await import('xlsx')
+  const rows = records.map(r => {
+    const mins = calcDurationMins(r.exitTime, r.returnTime)
+    return {
+      'Empleado':      r.nombre      || '—',
+      'Puesto':        r.puesto      || '—',
+      'Departamento':  r.departamento || '—',
+      'Turno':         r.turno       || '—',
+      'Fecha':         r.date        || '—',
+      'Salida':        r.exitTime?.toDate  ? format(r.exitTime.toDate(),  'HH:mm') : '—',
+      'Regreso':       r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—',
+      'Duración':      fmtDurationMins(mins),
+      'Estado':        r.status === 'out' ? 'Fuera' : 'Regresó',
+    }
+  })
+  const ws = XLSX.utils.json_to_sheet(rows)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Fumadores')
+  XLSX.writeFile(wb, `fumadores-${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+}
+
+async function generateSmokingPDF(records: any[]) {
+  const { jsPDF } = await import('jspdf')
+  const autoTable = (await import('jspdf-autotable')).default
+  const doc = new jsPDF({ orientation: 'landscape' })
+
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.text('ViñoPlastic — Reporte de Área de Fumadores', 14, 18)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(100)
+  doc.text(`Generado: ${format(new Date(), "dd 'de' MMMM yyyy, HH:mm", { locale: es })}`, 14, 26)
+  doc.text(`Total de registros: ${records.length}`, 14, 32)
+
+  autoTable(doc, {
+    startY: 40,
+    head: [['Empleado', 'Puesto', 'Departamento', 'Turno', 'Fecha', 'Salida', 'Regreso', 'Duración', 'Estado']],
+    body: records.map(r => {
+      const mins = calcDurationMins(r.exitTime, r.returnTime)
+      return [
+        r.nombre       || '—',
+        r.puesto        || '—',
+        r.departamento  || '—',
+        r.turno         || '—',
+        r.date          || '—',
+        r.exitTime?.toDate   ? format(r.exitTime.toDate(),  'HH:mm') : '—',
+        r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—',
+        fmtDurationMins(mins),
+        r.status === 'out' ? 'Fuera' : 'Regresó',
+      ]
+    }),
+    styles:     { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [180, 83, 9], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [255, 251, 235] },
+    margin: { left: 14, right: 14 },
+  })
+
+  doc.save(`fumadores-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+}
+
 // ── Monthly summary helpers ───────────────────────────────────────────────────
 
 function buildMonthlySummary(visits: any[]) {
@@ -275,8 +360,94 @@ export default function ReportsPage() {
     setDateFrom(''); setDateTo(''); setStatusFilter('all'); setCompanyFilter('')
   }
 
+  // ── Fumadores ─────────────────────────────────────────────────────────────
+  const [smokingRecords, setSmokingRecords] = React.useState<any[] | null>(null)
+  const [smokeLoading,   setSmokeLoading]   = React.useState(false)
+  const [smokeDateFrom,  setSmokeDateFrom]  = React.useState(() => format(new Date(), 'yyyy-MM-dd'))
+  const [smokeDateTo,    setSmokeDateTo]    = React.useState(() => format(new Date(), 'yyyy-MM-dd'))
+  const [smokeDeptFilter, setSmokeDeptFilter] = React.useState('')
+  const [smokeFilterOpen, setSmokeFilterOpen] = React.useState(false)
+  const [genSmokeXlsx,   setGenSmokeXlsx]  = React.useState(false)
+  const [genSmokePdf,    setGenSmokePdf]    = React.useState(false)
+
+  const fetchSmoking = React.useCallback(async () => {
+    if (!db || !user || authLoading) return
+    setSmokeLoading(true)
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, 'fumadores'),
+          where('date', '>=', smokeDateFrom),
+          where('date', '<=', smokeDateTo),
+          limit(500)
+        )
+      )
+      setSmokingRecords(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    } catch {
+      setSmokingRecords([])
+    } finally {
+      setSmokeLoading(false)
+    }
+  }, [db, user, authLoading, smokeDateFrom, smokeDateTo])
+
+  React.useEffect(() => { fetchSmoking() }, [fetchSmoking])
+
+  const filteredSmoking = React.useMemo(() => {
+    if (!smokingRecords) return []
+    return smokingRecords
+      .filter(r => !smokeDeptFilter || r.departamento?.toLowerCase().includes(smokeDeptFilter.toLowerCase()))
+      .sort((a, b) => {
+        const da = a.exitTime?.toDate?.()?.getTime() ?? 0
+        const db2 = b.exitTime?.toDate?.()?.getTime() ?? 0
+        return db2 - da
+      })
+  }, [smokingRecords, smokeDeptFilter])
+
+  const smokingStats = React.useMemo(() => {
+    if (!filteredSmoking.length) return null
+    const completed = filteredSmoking.filter(r => r.status === 'returned')
+    const durations = completed.map(r => calcDurationMins(r.exitTime, r.returnTime)).filter((m): m is number => m !== null)
+    const avgMins = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : null
+    const byEmployee: Record<string, { nombre: string; count: number }> = {}
+    filteredSmoking.forEach(r => {
+      if (!byEmployee[r.employeeId]) byEmployee[r.employeeId] = { nombre: r.nombre, count: 0 }
+      byEmployee[r.employeeId].count++
+    })
+    const topEmployee = Object.values(byEmployee).sort((a, b) => b.count - a.count)[0] ?? null
+    return { total: filteredSmoking.length, avgMins, topEmployee, outNow: filteredSmoking.filter(r => r.status === 'out').length }
+  }, [filteredSmoking])
+
+  const handleSmokeExcel = async () => {
+    if (!filteredSmoking.length) return toast({ title: 'Sin datos para exportar' })
+    setGenSmokeXlsx(true)
+    try { await generateSmokingExcel(filteredSmoking); toast({ title: 'Excel descargado' }) }
+    catch { toast({ variant: 'destructive', title: 'Error al generar Excel' }) }
+    finally { setGenSmokeXlsx(false) }
+  }
+
+  const handleSmokePDF = async () => {
+    if (!filteredSmoking.length) return toast({ title: 'Sin datos para exportar' })
+    setGenSmokePdf(true)
+    try { await generateSmokingPDF(filteredSmoking); toast({ title: 'PDF descargado' }) }
+    catch { toast({ variant: 'destructive', title: 'Error al generar PDF' }) }
+    finally { setGenSmokePdf(false) }
+  }
+
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
+
+    <Tabs defaultValue="accesos">
+      <TabsList className="w-full sm:w-auto">
+        <TabsTrigger value="accesos" className="flex-1 sm:flex-none gap-2">
+          <Building2 className="w-4 h-4" /> Accesos
+        </TabsTrigger>
+        <TabsTrigger value="fumadores" className="flex-1 sm:flex-none gap-2">
+          <Cigarette className="w-4 h-4" /> Fumadores
+        </TabsTrigger>
+      </TabsList>
+
+      {/* ═══════════════ TAB ACCESOS ═══════════════ */}
+      <TabsContent value="accesos" className="space-y-6 md:space-y-8 mt-6">
 
       {/* Export actions — mobile: icon buttons row / desktop: cards */}
       <div className="flex gap-2 sm:hidden">
@@ -647,6 +818,195 @@ export default function ReportsPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      </TabsContent>
+      {/* ═══════════════ TAB FUMADORES ═══════════════ */}
+      <TabsContent value="fumadores" className="space-y-6 mt-6">
+
+        {/* Stats cards */}
+        {smokingStats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {[
+              { label: 'Total salidas', value: smokingStats.total, icon: <Cigarette className="w-4 h-4" />, color: 'text-amber-600 dark:text-amber-400' },
+              { label: 'Fuera ahora',   value: smokingStats.outNow, icon: <Users className="w-4 h-4" />, color: 'text-destructive' },
+              { label: 'Duración prom.', value: fmtDurationMins(smokingStats.avgMins), icon: <Clock className="w-4 h-4" />, color: 'text-primary' },
+              { label: 'Más salidas', value: smokingStats.topEmployee ? `${smokingStats.topEmployee.nombre.split(' ')[0]} (${smokingStats.topEmployee.count})` : '—', icon: <Trophy className="w-4 h-4" />, color: 'text-muted-foreground' },
+            ].map(({ label, value, icon, color }) => (
+              <Card key={label} className="border-none shadow-sm">
+                <CardContent className="p-4">
+                  <div className={`flex items-center gap-2 mb-1 ${color}`}>
+                    {icon}
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+                  </div>
+                  <p className={`text-xl font-black truncate ${color}`}>{value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Table card */}
+        <Card className="border-none shadow-sm overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="min-w-0">
+                <CardTitle className="flex items-center gap-2">
+                  <Cigarette className="w-4 h-4 text-muted-foreground" /> Historial de fumadores
+                </CardTitle>
+                <CardDescription>
+                  {smokeLoading ? 'Cargando…' : `${filteredSmoking.length} registros`}
+                </CardDescription>
+              </div>
+              <div className="flex gap-2 shrink-0 flex-wrap">
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={fetchSmoking} disabled={smokeLoading} title="Actualizar">
+                  <RefreshCw className={`w-4 h-4 ${smokeLoading ? 'animate-spin' : ''}`} />
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setSmokeFilterOpen(true)}>
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filtrar</span>
+                </Button>
+                <Button variant="secondary" size="sm" className="gap-2" onClick={handleSmokeExcel} disabled={genSmokeXlsx || smokeLoading}>
+                  {genSmokeXlsx ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 text-green-600" />}
+                  <span className="hidden sm:inline">Excel</span>
+                </Button>
+                <Button variant="secondary" size="sm" className="gap-2" onClick={handleSmokePDF} disabled={genSmokePdf || smokeLoading}>
+                  {genSmokePdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4 text-red-600" />}
+                  <span className="hidden sm:inline">PDF</span>
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            {smokeLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : filteredSmoking.length === 0 ? (
+              <p className="text-center py-12 text-muted-foreground text-sm">
+                No hay registros para el período seleccionado.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-muted/50">
+                    <TableRow>
+                      <TableHead className="font-semibold">Empleado</TableHead>
+                      <TableHead className="font-semibold hidden sm:table-cell">Departamento</TableHead>
+                      <TableHead className="font-semibold hidden md:table-cell">Turno</TableHead>
+                      <TableHead className="font-semibold hidden md:table-cell">Fecha</TableHead>
+                      <TableHead className="font-semibold">Salida</TableHead>
+                      <TableHead className="font-semibold">Regreso</TableHead>
+                      <TableHead className="font-semibold">Duración</TableHead>
+                      <TableHead className="font-semibold">Estado</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSmoking.map(r => {
+                      const mins = calcDurationMins(r.exitTime, r.returnTime)
+                      const isLong = mins !== null && mins >= 15
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell>
+                            <p className="font-semibold text-sm leading-tight">{r.nombre}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{r.puesto}</p>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">{r.departamento}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm hidden md:table-cell">{r.turno}</TableCell>
+                          <TableCell className="text-muted-foreground text-xs font-mono hidden md:table-cell">{r.date}</TableCell>
+                          <TableCell className="font-mono text-sm tabular-nums">
+                            {r.exitTime?.toDate ? format(r.exitTime.toDate(), 'HH:mm') : '—'}
+                          </TableCell>
+                          <TableCell className="font-mono text-sm tabular-nums">
+                            {r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—'}
+                          </TableCell>
+                          <TableCell className={`text-sm font-medium tabular-nums ${isLong ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            {fmtDurationMins(mins)}
+                          </TableCell>
+                          <TableCell>
+                            {r.status === 'out' ? (
+                              <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                Fuera
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Regresó
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Filter Sheet */}
+        {smokeFilterOpen && (
+          <Sheet open onOpenChange={(o) => { if (!o) setSmokeFilterOpen(false) }}>
+            <SheetContent
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              className="w-full sm:max-w-md flex flex-col p-0 overflow-hidden"
+            >
+              <div className="p-6 pb-0">
+                <SheetHeader>
+                  <SheetTitle className="text-xl">Filtrar fumadores</SheetTitle>
+                  <SheetDescription>Ajusta el rango de fechas y departamento.</SheetDescription>
+                </SheetHeader>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="space-y-3">
+                  <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5 tracking-wider">
+                    <CalendarRange className="w-3.5 h-3.5" /> Rango de fechas
+                  </label>
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-muted-foreground ml-1">Desde</p>
+                      <Input type="date" value={smokeDateFrom} onChange={e => setSmokeDateFrom(e.target.value)} className="h-11 rounded-xl" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-muted-foreground ml-1">Hasta</p>
+                      <Input type="date" value={smokeDateTo} onChange={e => setSmokeDateTo(e.target.value)} className="h-11 rounded-xl" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5 tracking-wider">
+                    <Building2 className="w-3.5 h-3.5" /> Departamento
+                  </label>
+                  <Input
+                    placeholder="Buscar por departamento…"
+                    value={smokeDeptFilter}
+                    onChange={e => setSmokeDeptFilter(e.target.value)}
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <SheetFooter className="p-6 border-t bg-muted/10 mt-auto flex-col sm:flex-row gap-3">
+                <Button variant="outline" className="w-full sm:w-auto h-11 rounded-xl"
+                  onClick={() => { setSmokeDeptFilter(''); setSmokeFilterOpen(false) }}>
+                  Limpiar
+                </Button>
+                <Button className="w-full sm:flex-1 h-11 rounded-xl font-bold"
+                  onClick={() => setSmokeFilterOpen(false)}>
+                  Aplicar ({filteredSmoking.length})
+                </Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        )}
+
+      </TabsContent>
+    </Tabs>
+
     </div>
   )
 }

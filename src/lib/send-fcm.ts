@@ -16,6 +16,8 @@ export type NotifyEvent =
   | { type: 'baja_registered';       nombre: string; noEmpleado: string; fechaBaja: string }
   | { type: 'sua_renewal_request';   companyName: string; companyId: string }
   | { type: 'unblocked_contractor'; companyName: string }
+  | { type: 'smoker_exit';   employeeName: string; department: string }
+  | { type: 'smoker_return'; employeeName: string; department: string; duration: string }
 
 /**
  * Audience control:
@@ -114,6 +116,18 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body:  `La empresa ${event.companyName} fue desbloqueada y puede ingresar nuevamente.`,
         url:   '/contractors',
       }
+    case 'smoker_exit':
+      return {
+        title: `Salida a fumar: ${event.employeeName}`,
+        body:  `${event.department} · Salió ahora`,
+        url:   '/fumadores',
+      }
+    case 'smoker_return':
+      return {
+        title: `Regresó de fumar: ${event.employeeName}`,
+        body:  `${event.department} · Tiempo fuera: ${event.duration}`,
+        url:   '/fumadores',
+      }
   }
 }
 
@@ -136,6 +150,9 @@ function defaultAudience(event: NotifyEvent): Audience {
   }
   if (event.type === 'unblocked_contractor') {
     return 'admins'
+  }
+  if (event.type === 'smoker_exit' || event.type === 'smoker_return') {
+    return 'admins_seguridad'
   }
   return 'admins'
 }

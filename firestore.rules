@@ -136,6 +136,30 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Empleados (directorio interno) ──────────────────────────────────────────
+    match /empleados/{employeeId} {
+      // Guardia, seguridad y admin pueden consultar empleados
+      allow read: if isAdmin() || isGuard() || isSeguridad();
+      // Solo admin carga/actualiza el directorio
+      allow write: if isAdmin();
+    }
+
+    // ── Fumadores (registro de salidas a fumar) ───────────────────────────────
+    match /fumadores/{recordId} {
+      // Guardia y seguridad: leer registros del día (necesario para la tabla)
+      // Admin: acceso total para reportes
+      allow read: if isAdmin() || isGuard() || isSeguridad();
+      // Guardia y seguridad: crear nuevos registros de salida/regreso
+      allow create: if isAdmin() || isGuard() || isSeguridad();
+      // Solo puede actualizarse el campo returnTime/status (registrar regreso)
+      // y solo si el registro pertenece al día actual (evitar editar históricos)
+      allow update: if (isAdmin() || isGuard() || isSeguridad())
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['returnTime', 'status']);
+      // Solo admin puede borrar registros
+      allow delete: if isAdmin();
+    }
+
     // ── Config (mantenimiento, ajustes globales) ─────────────────────────────────
     match /config/{docId} {
       // Todos los usuarios autenticados pueden leer (necesario para saber si una página está en mantenimiento)

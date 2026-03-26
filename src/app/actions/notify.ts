@@ -31,6 +31,9 @@ function getRolesForEvent(event: NotifyEvent): string[] {
       return ['admin', 'seguridad']
     case 'baja_registered':
       return ['admin', 'guard']
+    case 'smoker_exit':
+    case 'smoker_return':
+      return ['admin', 'seguridad']
     case 'over_capacity':
     case 'prolonged_visit':
     case 'new_contractor':
