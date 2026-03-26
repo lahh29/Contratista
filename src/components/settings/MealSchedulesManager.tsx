@@ -21,11 +21,9 @@ import {
   deleteDoc,
   doc,
   writeBatch,
-  query,
-  orderBy,
 } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
-import { STATIC_CONFIG, type MealWindow, type EmployeeGroup } from "@/lib/meal-schedules"
+import { STATIC_CONFIG, type EmployeeGroup } from "@/lib/meal-schedules"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -50,6 +48,13 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -99,6 +104,125 @@ function makeLabel(start: string, end: string) {
   return `${start} – ${end}`
 }
 
+// ─── ScheduleDialog ───────────────────────────────────────────────────────────
+
+interface ScheduleDialogProps {
+  open:     boolean
+  initial:  ScheduleDoc | null   // null = modo agregar
+  onClose:  () => void
+  onSaved:  () => void
+}
+
+function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps) {
+  const db = useFirestore()
+  const { toast } = useToast()
+
+  const [dept,    setDept]    = React.useState("")
+  const [turno,   setTurno]   = React.useState("")
+  const [start,   setStart]   = React.useState("")
+  const [end,     setEnd]     = React.useState("")
+  const [saving,  setSaving]  = React.useState(false)
+
+  React.useEffect(() => {
+    if (!open) return
+    setDept(initial?.departamento  ?? "")
+    setTurno(initial?.turno        ?? "")
+    setStart(initial?.start        ?? "")
+    setEnd(initial?.end            ?? "")
+    setSaving(false)
+  }, [open, initial])
+
+  const isEdit  = !!initial
+  const canSave = (isEdit || (dept.trim() && turno)) && start && end
+
+  const handleSave = async () => {
+    if (!db || !canSave) return
+    setSaving(true)
+    const id    = isEdit ? initial!.id : `${dept.trim().toUpperCase()}|${turno.toUpperCase()}`
+    const label = makeLabel(start, end)
+    try {
+      await setDoc(doc(db, "mealSchedules", id), {
+        departamento: isEdit ? initial!.departamento : dept.trim().toUpperCase(),
+        turno:        isEdit ? initial!.turno        : turno.toUpperCase(),
+        start, end, label,
+      }, { merge: isEdit })
+      toast({ title: isEdit ? "Horario actualizado" : "Horario guardado" })
+      onSaved()
+      onClose()
+    } catch {
+      toast({ variant: "destructive", title: "Error al guardar" })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="w-full max-w-sm rounded-2xl p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-4 border-b border-border/50">
+          <DialogTitle className="text-base">
+            {isEdit ? `Editar horario` : "Agregar horario"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="px-5 py-4 space-y-3">
+          {/* Departamento — solo editable al crear */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Departamento</label>
+            {isEdit ? (
+              <div className="flex items-center gap-2 h-9 px-3 rounded-md bg-muted/40 text-sm font-medium">
+                {initial!.departamento}
+                <Badge variant="outline" className="text-[10px] ml-auto">T{initial!.turno}</Badge>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Ej. CALIDAD"
+                  value={dept}
+                  onChange={(e) => setDept(e.target.value.toUpperCase())}
+                  className="h-9 text-sm"
+                  autoCapitalize="characters"
+                  autoFocus
+                />
+                <Select value={turno} onValueChange={setTurno}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Turno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TURNOS.map((t) => (
+                      <SelectItem key={t} value={t}>Turno {t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {/* Horario */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Horario de comida</label>
+            <div className="flex items-center gap-2">
+              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-9 text-sm flex-1" autoFocus={isEdit} />
+              <span className="text-muted-foreground text-sm shrink-0">–</span>
+              <Input type="time" value={end}   onChange={(e) => setEnd(e.target.value)}   className="h-9 text-sm flex-1" />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="px-5 pb-5 flex-row gap-2">
+          <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button className="flex-1 gap-2" onClick={handleSave} disabled={!canSave || saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {isEdit ? "Guardar" : "Agregar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── HorariosTab ──────────────────────────────────────────────────────────────
 
 function HorariosTab() {
@@ -106,19 +230,10 @@ function HorariosTab() {
   const { toast } = useToast()
   const { confirm, ConfirmDialog } = useConfirm()
 
-  const [items,   setItems]   = React.useState<ScheduleDoc[] | null>(null)
-  const [loading, setLoading] = React.useState(true)
-
-  // Form state
-  const [dept,  setDept]  = React.useState("")
-  const [turno, setTurno] = React.useState("")
-  const [start, setStart] = React.useState("")
-  const [end,   setEnd]   = React.useState("")
-
-  // Edit state
-  const [editId,    setEditId]    = React.useState<string | null>(null)
-  const [editStart, setEditStart] = React.useState("")
-  const [editEnd,   setEditEnd]   = React.useState("")
+  const [items,        setItems]        = React.useState<ScheduleDoc[] | null>(null)
+  const [loading,      setLoading]      = React.useState(true)
+  const [dialogOpen,   setDialogOpen]   = React.useState(false)
+  const [dialogTarget, setDialogTarget] = React.useState<ScheduleDoc | null>(null)
 
   const load = React.useCallback(async () => {
     if (!db) return
@@ -138,51 +253,25 @@ function HorariosTab() {
 
   React.useEffect(() => { load() }, [load])
 
-  const handleAdd = async () => {
-    if (!db || !dept.trim() || !turno || !start || !end) return
-    const id    = `${dept.trim().toUpperCase()}|${turno.toUpperCase()}`
-    const label = makeLabel(start, end)
-    try {
-      await setDoc(doc(db, "mealSchedules", id), {
-        departamento: dept.trim().toUpperCase(),
-        turno:        turno.toUpperCase(),
-        start, end, label,
-      })
-      toast({ title: "Horario guardado" })
-      setDept(""); setTurno(""); setStart(""); setEnd("")
-      load()
-    } catch {
-      toast({ variant: "destructive", title: "Error al guardar" })
-    }
+  const openAdd  = () => { setDialogTarget(null); setDialogOpen(true) }
+  const openEdit = (item: ScheduleDoc) => {
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    requestAnimationFrame(() => { setDialogTarget(item); setDialogOpen(true) })
   }
 
-  const handleUpdate = async (id: string) => {
-    if (!db || !editStart || !editEnd) return
-    try {
-      await setDoc(doc(db, "mealSchedules", id), {
-        start: editStart,
-        end:   editEnd,
-        label: makeLabel(editStart, editEnd),
-      }, { merge: true })
-      toast({ title: "Horario actualizado" })
-      setEditId(null)
-      load()
-    } catch {
-      toast({ variant: "destructive", title: "Error al actualizar" })
-    }
-  }
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (item: ScheduleDoc) => {
     if (!db) return
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    await new Promise<void>((r) => requestAnimationFrame(() => r()))
     const ok = await confirm({
-      title:        `¿Eliminar "${id}"?`,
+      title:        `¿Eliminar "${item.id}"?`,
       description:  "Si no hay otro horario para este departamento/turno, se usará el valor predeterminado del sistema.",
       confirmLabel: "Eliminar",
       variant:      "destructive",
     })
     if (!ok) return
     try {
-      await deleteDoc(doc(db, "mealSchedules", id))
+      await deleteDoc(doc(db, "mealSchedules", item.id))
       toast({ title: "Horario eliminado" })
       load()
     } catch {
@@ -190,45 +279,21 @@ function HorariosTab() {
     }
   }
 
-  const canAdd = dept.trim() && turno && start && end
-
   return (
     <>
       {ConfirmDialog}
-      <div className="space-y-4">
-        {/* Add form */}
-        <div className="p-4 bg-muted/30 rounded-xl border border-border/50 space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Agregar horario</p>
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              placeholder="Departamento (ej. CALIDAD)"
-              value={dept}
-              onChange={(e) => setDept(e.target.value.toUpperCase())}
-              className="col-span-2 h-9 text-sm"
-              autoCapitalize="characters"
-            />
-            <Select value={turno} onValueChange={setTurno}>
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Turno" />
-              </SelectTrigger>
-              <SelectContent>
-                {TURNOS.map((t) => (
-                  <SelectItem key={t} value={t}>Turno {t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-1.5">
-              <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-9 text-sm flex-1" />
-              <span className="text-muted-foreground text-xs shrink-0">–</span>
-              <Input type="time" value={end}   onChange={(e) => setEnd(e.target.value)}   className="h-9 text-sm flex-1" />
-            </div>
-          </div>
-          <Button onClick={handleAdd} disabled={!canAdd} size="sm" className="w-full gap-1.5">
-            <Plus className="w-4 h-4" /> Agregar horario
-          </Button>
-        </div>
+      <ScheduleDialog
+        open={dialogOpen}
+        initial={dialogTarget}
+        onClose={() => setDialogOpen(false)}
+        onSaved={load}
+      />
 
-        {/* List */}
+      <div className="space-y-4">
+        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openAdd}>
+          <Plus className="w-4 h-4" /> Agregar horario
+        </Button>
+
         <div className="space-y-2 min-h-[80px]">
           {loading ? (
             <SkeletonList rows={4} />
@@ -240,51 +305,30 @@ function HorariosTab() {
           ) : (
             items?.map((item) => (
               <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg min-w-0">
-                {editId === item.id ? (
-                  <>
-                    <div className="flex-1 flex items-center gap-1.5 min-w-0">
-                      <span className="text-xs font-mono text-muted-foreground shrink-0">{item.id}</span>
-                      <Input type="time" value={editStart} onChange={(e) => setEditStart(e.target.value)} className="h-7 text-xs w-24" />
-                      <span className="text-muted-foreground text-xs">–</span>
-                      <Input type="time" value={editEnd}   onChange={(e) => setEditEnd(e.target.value)}   className="h-7 text-xs w-24" />
-                    </div>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-green-600 dark:text-green-400"
-                      onClick={() => handleUpdate(item.id)}>
-                      <Check className="w-3.5 h-3.5" />
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium truncate">{item.departamento}</span>
+                    <Badge variant="outline" className="text-[10px] shrink-0">T{item.turno}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+                      <MoreHorizontal className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0"
-                      onClick={() => setEditId(null)}>
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium truncate">{item.departamento}</span>
-                        <Badge variant="outline" className="text-[10px] shrink-0">T{item.turno}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem onClick={() => { setEditId(item.id); setEditStart(item.start); setEditEnd(item.end) }}>
-                          <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={() => openEdit(item)}>
+                      <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:text-destructive"
+                      onClick={() => handleDelete(item)}>
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))
           )}
@@ -505,11 +549,16 @@ function GruposTab() {
 
   React.useEffect(() => { load() }, [load])
 
-  const openNew  = () => { setSheetInitial(null);  setSheetOpen(true) }
-  const openEdit = (g: GroupDoc) => { setSheetInitial(g); setSheetOpen(true) }
+  const openNew  = () => { setSheetInitial(null); setSheetOpen(true) }
+  const openEdit = (g: GroupDoc) => {
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    requestAnimationFrame(() => { setSheetInitial(g); setSheetOpen(true) })
+  }
 
   const handleDelete = async (g: GroupDoc) => {
     if (!db) return
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    await new Promise<void>((r) => requestAnimationFrame(() => r()))
     const ok = await confirm({
       title:        `¿Eliminar "${g.label}"?`,
       description:  "Se eliminarán los empleados de este grupo. La acción no se puede deshacer.",
@@ -628,7 +677,7 @@ export function MealSchedulesManager() {
       await deleteBatch.commit()
 
       const addBatch = writeBatch(db)
-      STATIC_CONFIG.groups.forEach((g, i) => {
+      STATIC_CONFIG.groups.forEach((g) => {
         const ref = doc(collection(db, "employeeGroups"))
         addBatch.set(ref, {
           departamento: g.departamento,
