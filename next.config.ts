@@ -40,4 +40,8 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPWA(nextConfig)
+// Aplicar withPWA solo en producción (build).
+// En desarrollo se usa Turbopack, que no soporta plugins de Webpack.
+const isDev = process.env.NODE_ENV === 'development'
+
+export default isDev ? nextConfig : withPWA(nextConfig)

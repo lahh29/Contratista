@@ -11,13 +11,14 @@ import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Users, Loader2, ShieldAlert, User, MoreHorizontal, ShieldCheck, Shield, Briefcase, HardHat, Package, UserPlus } from "lucide-react"
+import { Trash2, Plus, Pencil, Check, X, MapPin, UserCog, Users, Loader2, ShieldAlert, User, MoreHorizontal, ShieldCheck, Shield, Briefcase, HardHat, Package, UserPlus, IdCard } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { logAudit } from "@/app/actions/audit"
 import { Firestore, DocumentData } from "firebase/firestore"
 import { useConfirm } from "@/hooks/use-confirm"
 import { SkeletonList } from "@/components/ui/skeletons"
+import { EmployeeManager } from "@/components/fumadores/EmployeeManager"
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 // "BRAVO GARCIA JESUS FERNANDO" → "Bravo Jesus"
@@ -697,6 +698,10 @@ export default function SettingsPage() {
       .catch(() => setCompanies([]))
   }, [db])
 
+  const employeesCard = (
+    <EmployeeManager />
+  )
+
   const supervisorsCard = (
     <CollectionManager
       title="Encargados de Departamento"
@@ -728,20 +733,25 @@ export default function SettingsPage() {
       {/* ── Mobile: tabs ── */}
       <div className="md:hidden">
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-5">
+          <TabsList className="grid w-full grid-cols-4 mb-5">
             <TabsTrigger value="users" className="text-xs">Usuarios</TabsTrigger>
+            <TabsTrigger value="employees" className="text-xs">Empleados</TabsTrigger>
             <TabsTrigger value="areas" className="text-xs">Áreas</TabsTrigger>
             <TabsTrigger value="supervisors" className="text-xs">Encargados</TabsTrigger>
           </TabsList>
           <TabsContent value="users"       className="mt-0">{usersCard}</TabsContent>
+          <TabsContent value="employees"   className="mt-0">{employeesCard}</TabsContent>
           <TabsContent value="areas"       className="mt-0">{areasCard}</TabsContent>
           <TabsContent value="supervisors" className="mt-0">{supervisorsCard}</TabsContent>
         </Tabs>
       </div>
 
-      {/* ── Desktop: grid (sin cambios) ── */}
+      {/* ── Desktop: grid ── */}
       <div className="hidden md:block space-y-6 md:space-y-8">
-        {usersCard}
+        <div className="grid gap-5 md:gap-6 md:grid-cols-2">
+          {usersCard}
+          {employeesCard}
+        </div>
         <div className="grid gap-5 md:gap-6 md:grid-cols-2">
           {areasCard}
           {supervisorsCard}

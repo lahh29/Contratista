@@ -18,6 +18,7 @@ export type NotifyEvent =
   | { type: 'unblocked_contractor'; companyName: string }
   | { type: 'smoker_exit';   employeeName: string; department: string }
   | { type: 'smoker_return'; employeeName: string; department: string; duration: string }
+  | { type: 'smoker_denied_meal'; employeeName: string; department: string; area: string; mealSchedule: string }
 
 /**
  * Audience control:
@@ -128,6 +129,12 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body:  `${event.department} · Tiempo fuera: ${event.duration}`,
         url:   '/fumadores',
       }
+    case 'smoker_denied_meal':
+      return {
+        title: `⚠ Salida denegada: ${event.employeeName}`,
+        body:  `Intentó salir a fumar fuera de su horario de comida (${event.mealSchedule}). Área: ${event.area}`,
+        url:   '/fumadores',
+      }
   }
 }
 
@@ -151,7 +158,7 @@ function defaultAudience(event: NotifyEvent): Audience {
   if (event.type === 'unblocked_contractor') {
     return 'admins'
   }
-  if (event.type === 'smoker_exit' || event.type === 'smoker_return') {
+  if (event.type === 'smoker_exit' || event.type === 'smoker_return' || event.type === 'smoker_denied_meal') {
     return 'admins_seguridad'
   }
   return 'admins'

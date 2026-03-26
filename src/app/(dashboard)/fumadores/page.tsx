@@ -14,6 +14,9 @@ import {
   RefreshCw,
   UserPlus,
   X,
+  UtensilsCrossed,
+  ShieldAlert,
+  Clock,
 } from "lucide-react"
 import {
   Card,
@@ -48,10 +51,12 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { sendNotification } from "@/app/actions/notify"
-import { CreateEmployeeSheet } from "@/components/fumadores/CreateEmployeeSheet"
+import { CreateEmployeeDialog } from "@/components/fumadores/CreateEmployeeDialog"
 import { useDebounce } from "@/hooks/use-debounce"
 import { format, formatDistanceStrict } from "date-fns"
 import { es } from "date-fns/locale"
+import { getMealSchedule, isInMealTime, wasInMealTime } from "@/lib/meal-schedules"
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -72,11 +77,13 @@ interface SmokingRecord {
   nombre: string
   puesto: string
   departamento: string
+  area?: string
   turno: string
   exitTime: any
   returnTime: any | null
   date: string
   status: "out" | "returned"
+  inMealTime?: boolean
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -247,11 +254,47 @@ export default function FumadoresPage() {
       .finally(() => setSearching(false))
   }, [db, debouncedId])
 
+  // ── Meal time validation ───────────────────────────────────────────────────
+  const mealSchedule = employee ? getMealSchedule(employee.Departamento, employee.Turno) : null
+  const mealStatus = employee ? isInMealTime(employee.Departamento, employee.Turno) : null
+  // mealStatus: true = en comida, false = fuera de comida, null = sin horario configurado
+
+  // Re-check meal status every 30s so the badge updates in real time
+  const [, setMealTick] = React.useState(0)
+  React.useEffect(() => {
+    if (!mealSchedule) return
+    const id = setInterval(() => setMealTick((t) => t + 1), 30_000)
+    return () => clearInterval(id)
+  }, [mealSchedule])
+
+  // Whether exit should be blocked (area has schedule AND currently outside meal time)
+  const exitBlocked = mealStatus === false
+
   // ── Actions ────────────────────────────────────────────────────────────────
   const handleExit = async () => {
     if (!db || !employee || !appUser) return
+
+    // Block exit if outside meal time
+    if (exitBlocked && mealSchedule) {
+      toast({
+        title: "Salida denegada",
+        description: `${employee.Nombre} no puede salir a fumar. Su horario de comida es ${mealSchedule.label}.`,
+        variant: "destructive",
+      })
+      // Notify admin & seguridad
+      sendNotification({
+        type: 'smoker_denied_meal',
+        employeeName: `${employee.Nombre} ${employee.ApellidoPaterno}`,
+        department: employee.Departamento,
+        area: employee.Área,
+        mealSchedule: mealSchedule.label,
+      })
+      return
+    }
+
     setActionLoading(true)
     try {
+      const currentlyInMeal = isInMealTime(employee.Departamento, employee.Turno)
       await addDoc(collection(db, "fumadores"), {
         employeeId: employee.employeeId,
         nombre: [employee.Nombre, employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' '),
@@ -264,6 +307,7 @@ export default function FumadoresPage() {
         date: today,
         status: "out",
         registeredBy: appUser.uid,
+        inMealTime: currentlyInMeal ?? true,
       })
       toast({
         title: "Salida registrada",
@@ -327,7 +371,19 @@ export default function FumadoresPage() {
 
   const outCount = todayRecords.filter((r) => r.status === "out").length
 
-  // ── Create employee sheet ─────────────────────────────────────────────────
+  // ── Paginación local (mostrar de 20 en 20) ────────────────────────────────
+  const PAGE_SIZE = 20
+  const [visibleCount, setVisibleCount] = React.useState(PAGE_SIZE)
+
+  // Resetear paginación al recargar registros
+  React.useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [todayRecords.length])
+
+  const visibleRecords = todayRecords.slice(0, visibleCount)
+  const hasMore = visibleCount < todayRecords.length
+
+  // ── Create employee dialog ────────────────────────────────────────────────
   const [createOpen, setCreateOpen] = React.useState(false)
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -430,8 +486,29 @@ export default function FumadoresPage() {
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* Meal schedule info + Actions */}
               <div className="flex flex-col gap-2 w-full sm:w-auto shrink-0">
+                {/* Meal time badge */}
+                {mealSchedule && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {mealStatus === true ? (
+                      <Badge className="bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] gap-1.5 font-medium">
+                        <UtensilsCrossed className="w-3 h-3" />
+                        En comida
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1.5 font-medium">
+                        <ShieldAlert className="w-3 h-3" />
+                        Fuera de horario
+                      </Badge>
+                    )}
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {mealSchedule.label}
+                    </span>
+                  </div>
+                )}
+
                 {activeRecord ? (
                   <>
                     <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
@@ -451,16 +528,27 @@ export default function FumadoresPage() {
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    onClick={handleExit}
-                    disabled={actionLoading}
-                    size="sm"
-                    variant="outline"
-                    className="gap-2 w-full sm:w-auto"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Registrar salida
-                  </Button>
+                  <>
+                    <Button
+                      onClick={handleExit}
+                      disabled={actionLoading || exitBlocked}
+                      size="sm"
+                      variant={exitBlocked ? "destructive" : "outline"}
+                      className="gap-2 w-full sm:w-auto"
+                    >
+                      {exitBlocked ? (
+                        <ShieldAlert className="w-4 h-4" />
+                      ) : (
+                        <LogOut className="w-4 h-4" />
+                      )}
+                      {exitBlocked ? "Salida denegada" : "Registrar salida"}
+                    </Button>
+                    {exitBlocked && (
+                      <p className="text-[11px] text-destructive/80 leading-tight">
+                        No puede salir fuera de su horario de comida
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -529,11 +617,12 @@ export default function FumadoresPage() {
                     <TableHead>Salida</TableHead>
                     <TableHead>Regreso</TableHead>
                     <TableHead className="hidden md:table-cell">Duración</TableHead>
+                    <TableHead className="hidden sm:table-cell">Comida</TableHead>
                     <TableHead>Estado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {todayRecords.map((record) => {
+                  {visibleRecords.map((record) => {
                     const duration = fmtDuration(record.exitTime, record.returnTime)
                     const nameParts = record.nombre.trim().split(' ');
                     let displayName = record.nombre;
@@ -571,6 +660,36 @@ export default function FumadoresPage() {
                             : <span className="text-muted-foreground">{duration ?? "—"}</span>
                           }
                         </TableCell>
+                        {/* Columna Comida */}
+                        <TableCell className="hidden sm:table-cell">
+                          {(() => {
+                            // Usar el campo guardado si existe, sino calcular del timestamp
+                            const inMeal = record.inMealTime !== undefined
+                              ? record.inMealTime
+                              : wasInMealTime(record.departamento ?? "", record.turno ?? "", record.exitTime)
+
+                            if (inMeal === null) {
+                              return (
+                                <span className="text-[11px] text-muted-foreground/50">—</span>
+                              )
+                            }
+                            return inMeal ? (
+                              <Badge
+                                variant="outline"
+                                className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50"
+                              >
+                                <UtensilsCrossed className="w-3 h-3" />
+                                <span className="hidden lg:inline">En horario</span>
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1 font-medium">
+                                <ShieldAlert className="w-3 h-3" />
+                                <span className="hidden lg:inline">Fuera</span>
+                              </Badge>
+                            )
+                          })()}
+                        </TableCell>
+                        {/* Columna Estado */}
                         <TableCell>
                           {record.status === "out" ? (
                             <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5 font-medium">
@@ -594,10 +713,25 @@ export default function FumadoresPage() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      <CreateEmployeeSheet
+      {/* ── Ver más ── */}
+          {hasMore && (
+            <div className="flex justify-center py-4 border-t border-border/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-muted-foreground hover:text-foreground"
+                onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Ver más ({todayRecords.length - visibleCount} restantes)
+              </Button>
+            </div>
+          )}
+        </CardContent> {/* <-- FALTA ESTA ETIQUETA */}
+      </Card>          {/* <-- Y FALTA ESTA ETIQUETA */}
+
+      <CreateEmployeeDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreated={(emp: Employee) => {
