@@ -136,5 +136,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Config (mantenimiento, ajustes globales) ─────────────────────────────────
+    match /config/{docId} {
+      // Todos los usuarios autenticados pueden leer (necesario para saber si una página está en mantenimiento)
+      allow read: if isAuthed();
+      // Solo el admin puede modificar la configuración
+      allow write: if isAdmin();
+    }
+
   }
 }

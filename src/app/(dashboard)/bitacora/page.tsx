@@ -16,7 +16,13 @@ import {
   Building2,
   Clock,
   ShieldAlert,
+  Wrench,
+  ShieldOff,
 } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { doc, setDoc } from "firebase/firestore"
+import { useMaintenance } from "@/hooks/use-maintenance"
+import { useAppUser } from "@/hooks/use-app-user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -249,14 +255,18 @@ function AuditLog() {
   return (
     <div className="max-w-xl mx-auto space-y-4">
       <Tabs defaultValue="registro" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 p-1 h-11 bg-muted/40 rounded-xl mb-4">
+        <TabsList className="w-full grid grid-cols-3 p-1 h-11 bg-muted/40 rounded-xl mb-4">
           <TabsTrigger value="registro" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <ClipboardList className="w-4 h-4 mr-2" />
+            <ClipboardList className="w-4 h-4 mr-1.5" />
             <span className="font-semibold text-xs uppercase tracking-wide">Registro</span>
           </TabsTrigger>
           <TabsTrigger value="accesos" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <Clock className="w-4 h-4 mr-2" />
+            <Clock className="w-4 h-4 mr-1.5" />
             <span className="font-semibold text-xs uppercase tracking-wide">Accesos</span>
+          </TabsTrigger>
+          <TabsTrigger value="mantenimiento" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Wrench className="w-4 h-4 mr-1.5" />
+            <span className="font-semibold text-xs uppercase tracking-wide">Páginas</span>
           </TabsTrigger>
         </TabsList>
 
@@ -331,6 +341,10 @@ function AuditLog() {
 
         <TabsContent value="accesos" className="mt-0 outline-none">
           <LastAccess />
+        </TabsContent>
+
+        <TabsContent value="mantenimiento" className="mt-0 outline-none">
+          <MaintenanceManager />
         </TabsContent>
       </Tabs>
     </div>
@@ -448,6 +462,108 @@ type AccessUser = {
   email?: string
   role?: string
   lastLoginAt?: { toDate: () => Date }
+}
+
+// ── Maintenance Manager ────────────────────────────────────────────────────────
+const MANAGEABLE_PAGES = [
+  { path: '/dashboard',   label: 'Inicio',             icon: Building2  },
+  { path: '/contractors', label: 'Empresas',            icon: Building2  },
+  { path: '/scanner',     label: 'Escáner de QR',       icon: ShieldAlert},
+  { path: '/reports',     label: 'Reportes',            icon: ClipboardList },
+  { path: '/bajas',       label: 'Personal de Baja',    icon: UserCog    },
+  { path: '/fumadores',   label: 'Fumadores',           icon: ShieldOff  },
+  { path: '/contratos',   label: 'Contratos',           icon: ClipboardList },
+  { path: '/settings',    label: 'Configuración',       icon: Wrench     },
+]
+
+function MaintenanceManager() {
+  const db               = useFirestore()
+  const { appUser }      = useAppUser()
+  const disabledPages    = useMaintenance()
+  const [saving, setSaving] = React.useState<string | null>(null)
+
+  if (appUser?.role !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 text-center opacity-60">
+        <ShieldOff className="w-10 h-10 text-muted-foreground/30" />
+        <p className="text-xs font-bold uppercase">Acceso restringido</p>
+        <p className="text-[10px] text-muted-foreground">Solo administradores pueden gestionar el mantenimiento</p>
+      </div>
+    )
+  }
+
+  const toggle = async (path: string) => {
+    if (!db) return
+    setSaving(path)
+    const next = disabledPages.includes(path)
+      ? disabledPages.filter(p => p !== path)
+      : [...disabledPages, path]
+    await setDoc(doc(db, 'config', 'maintenance'), { pages: next }, { merge: true })
+    setSaving(null)
+  }
+
+  return (
+    <div className="space-y-4 pb-8">
+      <div className="px-1 space-y-1">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+          Control de páginas
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          Al deshabilitar una página, los usuarios verán un aviso de mantenimiento. Los administradores siguen teniendo acceso.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border bg-card overflow-hidden shadow-sm divide-y divide-border/30">
+        {MANAGEABLE_PAGES.map(({ path, label, icon: Icon }) => {
+          const isDisabled = disabledPages.includes(path)
+          const isSaving   = saving === path
+
+          return (
+            <div
+              key={path}
+              className="flex items-center gap-4 px-4 py-3.5 hover:bg-muted/20 transition-colors"
+            >
+              <div className={cn(
+                'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+                isDisabled
+                  ? 'bg-red-50 dark:bg-red-950/30'
+                  : 'bg-emerald-50 dark:bg-emerald-950/30',
+              )}>
+                <Icon className={cn(
+                  'w-4 h-4',
+                  isDisabled
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-emerald-600 dark:text-emerald-400',
+                )} />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold truncate">{label}</p>
+                <p className="text-[10px] text-muted-foreground font-mono">{path}</p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {isDisabled && (
+                  <span className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-wide hidden sm:block">
+                    En mantenimiento
+                  </span>
+                )}
+                <Switch
+                  checked={!isDisabled}
+                  disabled={isSaving}
+                  onCheckedChange={() => toggle(path)}
+                  className={isDisabled
+                    ? 'data-[state=unchecked]:bg-red-200 dark:data-[state=unchecked]:bg-red-900/50'
+                    : ''
+                  }
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────

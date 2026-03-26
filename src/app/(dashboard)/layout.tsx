@@ -5,11 +5,12 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Wrench } from "lucide-react"
 import { NotificationBanner } from "@/components/PWASetup"
 import { useAppUser } from "@/hooks/use-app-user"
 import { NotificationBell } from "@/components/layout/NotificationBell"
 import { motion, AnimatePresence } from "framer-motion"
+import { useMaintenance } from "@/hooks/use-maintenance"
 
 export default function DashboardLayout({
   children,
@@ -17,8 +18,9 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { appUser, loading } = useAppUser()
-  const router   = useRouter()
-  const pathname = usePathname()
+  const router         = useRouter()
+  const pathname       = usePathname()
+  const disabledPages  = useMaintenance()
 
   useEffect(() => {
     if (loading) return
@@ -59,6 +61,8 @@ export default function DashboardLayout({
   }
 
   if (!appUser || appUser.role === 'contractor') return null
+
+  const isPageDisabled = appUser.role !== 'admin' && disabledPages.includes(pathname)
 
   const contractorsTitle = appUser?.role === 'admin' ? 'Empresas' : appUser?.role === 'logistica' ? 'Clientes' : 'Proveedores'
   const PAGE_TITLES: Record<string, string> = {
@@ -118,7 +122,27 @@ export default function DashboardLayout({
         </motion.header>
 
         <main className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
-          {children}
+          {isPageDisabled ? (
+            <div className="min-h-[60vh] flex items-center justify-center px-4">
+              <div className="w-full max-w-sm">
+                <div className="rounded-3xl border border-border/60 bg-card shadow-sm p-8 sm:p-10 flex flex-col items-center gap-6 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/50 flex items-center justify-center">
+                    <Wrench className="w-8 h-8 text-amber-600 dark:text-amber-400 animate-pulse" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-black tracking-tight text-foreground">En mantenimiento</h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Esta sección está temporalmente fuera de servicio.<br />Vuelve en unos momentos.
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    No disponible
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : children}
         </main>
       </SidebarInset>
     </SidebarProvider>
