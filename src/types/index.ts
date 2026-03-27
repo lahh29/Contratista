@@ -47,7 +47,7 @@ export interface Visit {
   safetyEquipment?: { shoes: boolean; vest: boolean }
   status: 'Activa' | 'Programada' | 'Completed'
   activity?: string
-  scheduledDate?: Timestamp
+  scheduledDate?: string    // YYYY-MM-DD — stored as string, not Timestamp
   scheduledTime?: string
   companyType?: string
   entryTime?: Timestamp

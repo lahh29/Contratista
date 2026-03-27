@@ -18,7 +18,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const activeSnap = await db
     .collection('visits')
-    .where('status', '==', 'Active')
+    .where('status', '==', 'Activa')
     .get()
 
   const results = { checked: 0, notified: 0, errors: [] as string[] }

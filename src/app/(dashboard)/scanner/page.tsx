@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   Calendar as CalendarIcon,
   Clock,
+  Search,
+  X,
 } from "lucide-react"
 import { format, isToday } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -40,6 +42,39 @@ import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
 import { useAppUser } from '@/hooks/use-app-user'
 
+// ── LocalStorage helpers ───────────────────────────────────────────────────
+
+const HISTORY_KEY = 'scanner_history_v1'
+const ACTIVITY_KEY = 'scanner_last_activity'
+
+type HistoryEntry = { companyName: string; action: 'entry' | 'exit'; time: Date }
+
+function loadHistory(): HistoryEntry[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    if (!raw) return []
+    const { date, history } = JSON.parse(raw) as {
+      date: string
+      history: Array<Omit<HistoryEntry, 'time'> & { time: string }>
+    }
+    if (date !== format(new Date(), 'yyyy-MM-dd')) return []
+    return history.map(h => ({ ...h, time: new Date(h.time) }))
+  } catch {
+    return []
+  }
+}
+
+function saveHistory(history: HistoryEntry[]) {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(HISTORY_KEY, JSON.stringify({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    history: history.map(h => ({ ...h, time: h.time.toISOString() })),
+  }))
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+
 type ScannerMode = 'SCANNING' | 'VERIFYING' | 'ON_SITE'
 
 export default function ScannerPage() {
@@ -51,7 +86,7 @@ export default function ScannerPage() {
   const [isProcessing, setIsProcessing] = React.useState(false)
   const [currentCompany, setCurrentCompany] = React.useState<import('@/types').Company | null>(null)
   const [activeVisit, setActiveVisit] = React.useState<import('@/types').Visit | null>(null)
-  const [programadaVisit, setProgramadaVisit] = React.useState<any>(null)
+  const [programadaVisit, setProgramadaVisit] = React.useState<import('@/types').Visit | null>(null)
   const [selectedArea, setSelectedArea] = React.useState('')
   const [selectedSupervisor, setSelectedSupervisor] = React.useState('')
   const [vehiclePlates, setVehiclePlates] = React.useState('')
@@ -78,18 +113,23 @@ export default function ScannerPage() {
     }
     setDateInput(formatted)
     if (digits.length === 8) {
-      const day = parseInt(digits.slice(0, 2), 10)
+      const day   = parseInt(digits.slice(0, 2), 10)
       const month = parseInt(digits.slice(2, 4), 10) - 1
-      const year = parseInt(digits.slice(4, 8), 10)
+      const year  = parseInt(digits.slice(4, 8), 10)
       const parsed = new Date(year, month, day)
       if (!isNaN(parsed.getTime()) && parsed.getDate() === day && parsed.getMonth() === month) {
-        setScheduledDate(parsed)
-        setDateError('')
+        const today = new Date(); today.setHours(0, 0, 0, 0)
+        if (parsed < today) {
+          setDateError('La fecha no puede ser en el pasado')
+        } else {
+          setScheduledDate(parsed)
+          setDateError('')
+        }
       } else {
         setDateError('Fecha inválida')
       }
     } else {
-      setDateError(digits.length > 0 ? '' : '')
+      setDateError('')
     }
   }
 
@@ -113,14 +153,48 @@ export default function ScannerPage() {
       setTimeError('')
     }
   }
-  const [scanHistory, setScanHistory] = React.useState<
-    { companyName: string; action: 'entry' | 'exit'; time: Date }[]
-  >([])
+  const [scanHistory, setScanHistory] = React.useState<HistoryEntry[]>(loadHistory)
+  const [allCompanies, setAllCompanies] = React.useState<import('@/types').Company[]>([])
+  const [loadingCompanies, setLoadingCompanies] = React.useState(false)
+  const [showManualSearch, setShowManualSearch] = React.useState(false)
+  const [manualQuery, setManualQuery] = React.useState('')
+  const [exitMotivo, setExitMotivo] = React.useState<string | null>(null)
+  const [lastActivityTime, setLastActivityTime] = React.useState<number | null>(() => {
+    if (typeof window === 'undefined') return null
+    const raw = localStorage.getItem(ACTIVITY_KEY)
+    return raw ? parseInt(raw, 10) : null
+  })
 
   const areasQuery = React.useMemo(() => db ? query(collection(db, 'areas'), limit(100)) : null, [db])
   const supervisorsQuery = React.useMemo(() => db ? query(collection(db, 'supervisors'), limit(100)) : null, [db])
   const { data: areas } = useCollection(areasQuery)
   const { data: supervisors } = useCollection(supervisorsQuery)
+
+  React.useEffect(() => { saveHistory(scanHistory) }, [scanHistory])
+  React.useEffect(() => {
+    if (lastActivityTime !== null) localStorage.setItem(ACTIVITY_KEY, String(lastActivityTime))
+  }, [lastActivityTime])
+
+  const activeVisitsQuery = React.useMemo(() =>
+    db ? query(collection(db, 'visits'), where('status', '==', 'Activa')) : null, [db])
+  const { data: activeVisits } = useCollection(activeVisitsQuery)
+
+  const areaOccupancy = React.useMemo(() => {
+    if (!activeVisits) return {} as Record<string, number>
+    return activeVisits.reduce((acc, v) => {
+      const areaName = (v as any).areaName || 'Sin área'
+      acc[areaName] = (acc[areaName] || 0) + (Number((v as any).personnelCount) || 1)
+      return acc
+    }, {} as Record<string, number>)
+  }, [activeVisits])
+
+  const manualResults = React.useMemo(() => {
+    if (!manualQuery.trim()) return []
+    const q = manualQuery.toLowerCase()
+    return allCompanies.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8)
+  }, [allCompanies, manualQuery])
+
+  const hoursIdle = lastActivityTime !== null ? (Date.now() - lastActivityTime) / 3_600_000 : null
 
   const handleAreaChange = React.useCallback(async (areaId: string) => {
     setSelectedArea(areaId)
@@ -131,6 +205,18 @@ export default function ScannerPage() {
       if (supervisorId) setSelectedSupervisor(supervisorId)
     } catch { /* non-critical */ }
   }, [db])
+
+  const openManualSearch = async () => {
+    setShowManualSearch(true)
+    if (allCompanies.length > 0 || !db) return
+    setLoadingCompanies(true)
+    try {
+      const snap = await getDocs(query(collection(db, 'companies'), limit(200)))
+      setAllCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() } as import('@/types').Company)))
+    } finally {
+      setLoadingCompanies(false)
+    }
+  }
 
   const handleQRDetected = async (qrText: string) => {
     if (!db) return
@@ -146,6 +232,12 @@ export default function ScannerPage() {
       }
 
       const company = { id: companySnap.id, ...companySnap.data() } as import('@/types').Company
+
+      if (company.status === 'Blocked') {
+        toast({ variant: 'destructive', title: 'Acceso bloqueado', description: `${company.name} no tiene autorización para ingresar a planta.` })
+        return
+      }
+
       setCurrentCompany(company)
       setConfirmedPersonnel(Number(company.personnelCount) || 1)
 
@@ -178,7 +270,7 @@ export default function ScannerPage() {
         setProgramadaVisit(null)
       } else if (!programadaSnap.empty) {
         // Hay visita programada — pre-llenar sus datos
-        const pv = { id: programadaSnap.docs[0].id, ...programadaSnap.docs[0].data() } as any
+        const pv = { id: programadaSnap.docs[0].id, ...programadaSnap.docs[0].data() } as import('@/types').Visit
         setProgramadaVisit(pv)
         setActiveVisit(null)
         if (pv.areaId) { setSelectedArea(pv.areaId) }
@@ -249,7 +341,8 @@ export default function ScannerPage() {
         targetName: currentCompany.name,
         details: { área: area?.name ?? '—', personal: confirmedPersonnel, placas: vehiclePlates.trim().toUpperCase() },
       })
-      setScanHistory(h => [{ companyName: currentCompany.name, action: 'entry' as const, time: new Date() }, ...h].slice(0, 5))
+      setScanHistory(h => [{ companyName: currentCompany.name, action: 'entry' as const, time: new Date() }, ...h].slice(0, 20))
+      setLastActivityTime(Date.now())
       setActiveVisit({
         id: visitId, status: isScheduled ? 'Programada' : 'Activa',
         areaName: area?.name, supervisorName: supervisor?.name,
@@ -273,7 +366,11 @@ export default function ScannerPage() {
     if (!db || !activeVisit) return
     setIsProcessing(true)
     try {
-      await updateDoc(doc(db, 'visits', activeVisit.id), { status: 'Completed', exitTime: serverTimestamp() })
+      await updateDoc(doc(db, 'visits', activeVisit.id), {
+        status: 'Completed',
+        exitTime: serverTimestamp(),
+        ...(exitMotivo ? { exitMotivo } : {}),
+      })
       toast({ title: 'Salida registrada', description: `${currentCompany?.name} ha salido.` })
       logAudit({
         action: 'visit.completed',
@@ -282,9 +379,10 @@ export default function ScannerPage() {
         actorRole: appUser?.role ?? 'guard',
         targetType: 'visit', targetId: activeVisit.id,
         targetName: currentCompany?.name ?? '—',
-        details: { área: activeVisit.areaName ?? '—' },
+        details: { área: activeVisit.areaName ?? '—', ...(exitMotivo ? { motivo: exitMotivo } : {}) },
       })
-      setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 5))
+      setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 20))
+      setLastActivityTime(Date.now())
       sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—', personnelCount: activeVisit.personnelCount })
       resetScanner()
     } catch {
@@ -313,13 +411,101 @@ export default function ScannerPage() {
     setTimeInput('')
     setScheduledTime('')
     setTimeError('')
+    setExitMotivo(null)
   }
 
   // ── SCANNING ──────────────────────────────────────────────────
   if (mode === 'SCANNING') {
+    const ocupacionEntries = Object.entries(areaOccupancy)
     return (
       <div className="space-y-4">
+
+        {/* Indicador de turno inactivo */}
+        {hoursIdle !== null && hoursIdle >= 4 && (
+          <div className="max-w-sm mx-auto flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-sm">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>Turno inactivo · {Math.floor(hoursIdle)}h sin registros</span>
+          </div>
+        )}
+
         <QRScanner onQRDetected={handleQRDetected} isProcessing={isProcessing} />
+
+        {/* Entrada manual por nombre */}
+        <div className="max-w-sm mx-auto">
+          {!showManualSearch ? (
+            <button
+              onClick={openManualSearch}
+              className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-dashed text-sm text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+            >
+              <Search className="w-3.5 h-3.5" />
+              Buscar empresa por nombre
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  autoFocus
+                  placeholder="Nombre de la empresa…"
+                  value={manualQuery}
+                  onChange={e => setManualQuery(e.target.value)}
+                  className="pl-9 pr-9 h-10 rounded-xl"
+                />
+                <button
+                  onClick={() => { setShowManualSearch(false); setManualQuery('') }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {loadingCompanies && (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
+              {manualResults.length > 0 && (
+                <div className="rounded-xl border bg-card overflow-hidden divide-y">
+                  {manualResults.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => { setShowManualSearch(false); setManualQuery(''); handleQRDetected(c.id) }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                        {c.name[0]}
+                      </div>
+                      <span className="flex-1 text-sm font-medium truncate">{c.name}</span>
+                      {(c as any).status === 'Blocked' && (
+                        <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded shrink-0">Bloqueada</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!loadingCompanies && manualQuery.trim() && manualResults.length === 0 && (
+                <p className="text-center text-xs text-muted-foreground py-3">Sin resultados para &quot;{manualQuery}&quot;</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Aforo por área en tiempo real */}
+        {ocupacionEntries.length > 0 && (
+          <div className="max-w-sm mx-auto space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Aforo actual</p>
+            <div className="flex flex-wrap gap-2">
+              {ocupacionEntries.map(([area, count]) => (
+                <div key={area} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-card border text-xs font-semibold">
+                  <MapPin className="w-3 h-3 text-muted-foreground" />
+                  <span className="truncate max-w-[120px]">{area}</span>
+                  <span className="text-primary font-black">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Historial reciente */}
         {scanHistory.length > 0 && (
           <div className="max-w-sm mx-auto space-y-2">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Últimos escaneos</p>
@@ -389,6 +575,27 @@ export default function ScannerPage() {
                 {activeVisit.supervisorName && <span className="opacity-70"> · {activeVisit.supervisorName}</span>}
               </p>
             </div>
+            {/* Motivo de salida */}
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-0.5">Motivo de salida</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['Trabajo terminado', 'Regresa mañana', 'Descanso', 'Otro'] as const).map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setExitMotivo(prev => prev === m ? null : m)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left ${
+                      exitMotivo === m
+                        ? 'border-amber-400 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'
+                        : 'border-border bg-background text-muted-foreground hover:border-foreground/30'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <Button
               className="w-full h-12 font-bold rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white"
               onClick={handleRegisterExit}
@@ -623,6 +830,27 @@ export default function ScannerPage() {
               <p className="text-sm font-bold font-mono truncate">{activeVisit?.vehiclePlates || '—'}</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Motivo de salida */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-0.5">Motivo de salida</p>
+        <div className="grid grid-cols-2 gap-2">
+          {(['Trabajo terminado', 'Regresa mañana', 'Descanso', 'Otro'] as const).map(m => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setExitMotivo(prev => prev === m ? null : m)}
+              className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left ${
+                exitMotivo === m
+                  ? 'border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
+                  : 'border-border bg-background text-muted-foreground hover:border-foreground/30'
+              }`}
+            >
+              {m}
+            </button>
+          ))}
         </div>
       </div>
 

@@ -18,7 +18,9 @@ export type NotifyEvent =
   | { type: 'unblocked_contractor'; companyName: string }
   | { type: 'smoker_exit';   employeeName: string; department: string }
   | { type: 'smoker_return'; employeeName: string; department: string; duration: string }
-  | { type: 'smoker_denied_meal'; employeeName: string; department: string; area: string; mealSchedule: string }
+  | { type: 'smoker_denied_meal';          employeeName: string; department: string; area: string; mealSchedule: string }
+  | { type: 'scheduled_visit_reminder';   companyName: string; areaName: string; scheduledTime: string; personnelCount: number; companyId: string }
+  | { type: 'daily_summary';              date: string; entries: number; exits: number; suaAlerts: number; blockedCount: number }
 
 /**
  * Audience control:
@@ -31,7 +33,10 @@ export type Audience =
   | 'admins'
   | 'admins_guards'
   | 'admins_seguridad'
-  | { companyId: string }
+  /** admins + matching contractor only */
+  | { companyId: string; includeStaff?: false }
+  /** admins + guards + seguridad + matching contractor */
+  | { companyId: string; includeStaff: true }
 
 export function buildNotification(event: NotifyEvent): { title: string; body: string; url: string } {
   switch (event.type) {
@@ -135,6 +140,24 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body:  `Intentó salir a fumar fuera de su horario de comida (${event.mealSchedule}). Área: ${event.area}`,
         url:   '/fumadores',
       }
+    case 'scheduled_visit_reminder':
+      return {
+        title: `Visita programada: ${event.companyName}`,
+        body:  `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} en ${event.areaName} a las ${event.scheduledTime}`,
+        url:   '/dashboard',
+      }
+    case 'daily_summary': {
+      const parts: string[] = []
+      if (event.entries    > 0) parts.push(`${event.entries} ingreso${event.entries     !== 1 ? 's' : ''}`)
+      if (event.exits      > 0) parts.push(`${event.exits} salida${event.exits          !== 1 ? 's' : ''}`)
+      if (event.suaAlerts  > 0) parts.push(`${event.suaAlerts} alerta${event.suaAlerts  !== 1 ? 's' : ''} SUA`)
+      if (event.blockedCount > 0) parts.push(`${event.blockedCount} bloqueo${event.blockedCount !== 1 ? 's' : ''}`)
+      return {
+        title: `Resumen del día — ${event.date}`,
+        body:  parts.length > 0 ? parts.join(' · ') : 'Sin actividad registrada hoy.',
+        url:   '/dashboard',
+      }
+    }
   }
 }
 
@@ -161,6 +184,9 @@ function defaultAudience(event: NotifyEvent): Audience {
   if (event.type === 'smoker_exit' || event.type === 'smoker_return' || event.type === 'smoker_denied_meal') {
     return 'admins_seguridad'
   }
+  if (event.type === 'scheduled_visit_reminder') {
+    return { companyId: event.companyId, includeStaff: true }
+  }
   return 'admins'
 }
 
@@ -172,9 +198,14 @@ function tokenMatchesAudience(
   if (audience === 'admins') return data.role === 'admin'
   if (audience === 'admins_guards') return data.role === 'admin' || data.role === 'guard'
   if (audience === 'admins_seguridad') return data.role === 'admin' || data.role === 'seguridad'
-  // { companyId } → admin OR matching contractor
-  const { companyId } = audience
-  return data.role === 'admin' || (data.role === 'contractor' && data.companyId === companyId)
+  // { companyId, includeStaff: true } → admin + guard + seguridad + matching contractor
+  // { companyId }                     → admin + matching contractor
+  const { companyId, includeStaff } = audience
+  const isContractor = data.role === 'contractor' && data.companyId === companyId
+  if (includeStaff) {
+    return data.role === 'admin' || data.role === 'guard' || data.role === 'seguridad' || isContractor
+  }
+  return data.role === 'admin' || isContractor
 }
 
 /**
@@ -253,7 +284,7 @@ export async function sendFCM(
   if (staleRefs.length > 0) {
     const batch = db.batch()
     staleRefs.forEach(ref => batch.delete(ref))
-    await batch.commit().catch(() => {/* non-critical */})
+    await batch.commit().catch(err => console.warn('[sendFCM] Failed to cleanup stale tokens:', err))
   }
 
   return { sent }

@@ -35,6 +35,8 @@ function getRolesForEvent(event: NotifyEvent): string[] {
     case 'smoker_return':
     case 'smoker_denied_meal':
       return ['admin', 'seguridad']
+    case 'scheduled_visit_reminder':
+      return ['admin', 'seguridad', 'guard']
     case 'over_capacity':
     case 'prolonged_visit':
     case 'new_contractor':
@@ -43,6 +45,7 @@ function getRolesForEvent(event: NotifyEvent): string[] {
     case 'unblocked_contractor':
     case 'sua_renewed':
     case 'sua_expiring':
+    case 'daily_summary':
     default:
       return ['admin']
   }

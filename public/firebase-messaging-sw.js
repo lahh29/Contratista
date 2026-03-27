@@ -54,6 +54,16 @@ function getActions(type) {
     case 'delete_contractor':
     case 'blocked_contractor':
       return [{ action: 'view', title: 'Ver contratistas' }]
+    case 'scheduled_visit_reminder':
+      return [
+        { action: 'view',    title: 'Ver dashboard' },
+        { action: 'dismiss', title: 'OK' },
+      ]
+    case 'daily_summary':
+      return [
+        { action: 'view',    title: 'Ver dashboard' },
+        { action: 'dismiss', title: 'Ignorar' },
+      ]
     default:
       return []
   }
