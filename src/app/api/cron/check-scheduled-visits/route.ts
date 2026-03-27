@@ -5,11 +5,6 @@ import { sendFCM } from '@/lib/send-fcm'
 
 const TZ = 'America/Mexico_City'
 
-/** How many minutes before the scheduled time to send the reminder. */
-const LEAD_MINUTES = 30
-
-// ── Timezone helpers ──────────────────────────────────────────────────────────
-
 /** Returns today's date string as YYYY-MM-DD in Mexico City time. */
 function getTodayMX(): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -20,24 +15,9 @@ function getTodayMX(): string {
   }).format(new Date())
 }
 
-/**
- * Returns the current time as minutes elapsed since midnight in Mexico City.
- * e.g. 14:35 → 875
- */
-function getCurrentMinuteMX(): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: TZ,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date())
-
-  const hour   = Number(parts.find(p => p.type === 'hour')?.value   ?? 0)
-  const minute = Number(parts.find(p => p.type === 'minute')?.value ?? 0)
-  return hour * 60 + minute
-}
-
 // ── Route handler ─────────────────────────────────────────────────────────────
+// Runs once per day at 07:00 MX (13:00 UTC). Sends reminders for every
+// visit with status 'Programada' scheduled for today that hasn't been notified yet.
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const authHeader = req.headers.get('authorization')
@@ -45,11 +25,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const db          = getFirestore(getAdminApp())
-  const todayStr    = getTodayMX()
-  const currentMin  = getCurrentMinuteMX()
-  const windowStart = currentMin
-  const windowEnd   = currentMin + LEAD_MINUTES
+  const db       = getFirestore(getAdminApp())
+  const todayStr = getTodayMX()
 
   const snap = await db
     .collection('visits')
@@ -69,31 +46,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       continue
     }
 
-    // Skip visits without a specific time (date-only bookings)
-    const scheduledTime: string | undefined = visit.scheduledTime
-    if (!scheduledTime || !/^\d{2}:\d{2}$/.test(scheduledTime)) {
-      results.skipped++
-      continue
-    }
-
-    const [hh, mm]      = scheduledTime.split(':').map(Number)
-    const visitMinute   = hh * 60 + mm
-    const minutesUntil  = visitMinute - windowStart
-
-    // Only notify if the visit falls within the look-ahead window
-    if (minutesUntil < 0 || minutesUntil > windowEnd - windowStart) {
-      results.skipped++
-      continue
-    }
-
     try {
       await sendFCM({
-        type:          'scheduled_visit_reminder',
-        companyName:   visit.companyName   ?? 'Empresa desconocida',
-        areaName:      visit.areaName      ?? '—',
-        scheduledTime,
+        type:           'scheduled_visit_reminder',
+        companyName:    visit.companyName    ?? 'Empresa desconocida',
+        areaName:       visit.areaName       ?? '—',
+        scheduledTime:  visit.scheduledTime  ?? '',
         personnelCount: visit.personnelCount ?? 1,
-        companyId:     visit.companyId     ?? '',
+        companyId:      visit.companyId      ?? '',
       })
       await visitDoc.ref.update({ reminderNotifiedAt: FieldValue.serverTimestamp() })
       results.notified++
@@ -104,11 +64,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   return NextResponse.json({
-    ok:          true,
-    date:        todayStr,
-    tz:          TZ,
-    windowStart: `${String(Math.floor(windowStart / 60)).padStart(2, '0')}:${String(windowStart % 60).padStart(2, '0')}`,
-    windowEnd:   `${String(Math.floor(windowEnd   / 60)).padStart(2, '0')}:${String(windowEnd   % 60).padStart(2, '0')}`,
+    ok:      true,
+    date:    todayStr,
+    tz:      TZ,
     ...results,
     ...(results.errors.length === 0 && { errors: undefined }),
   })

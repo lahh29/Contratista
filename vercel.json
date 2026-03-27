@@ -13,7 +13,7 @@
     },
     {
       "path": "/api/cron/check-scheduled-visits",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 13 * * *"
     },
     {
       "path": "/api/cron/daily-summary",
