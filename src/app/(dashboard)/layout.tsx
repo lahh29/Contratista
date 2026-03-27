@@ -29,7 +29,7 @@ export default function DashboardLayout({
       router.push("/login")
     } else if (appUser.role === 'contractor') {
       router.push("/portal")
-    } else if (appUser.role === 'guard' && pathname !== '/scanner' && pathname !== '/dashboard' && pathname !== '/bajas') {
+    } else if (appUser.role === 'guard' && pathname !== '/scanner' && pathname !== '/dashboard' && pathname !== '/bajas' && pathname !== '/fumadores') {
       router.replace("/scanner")
     } else if (appUser.role === 'rys' && pathname !== '/bajas') {
       router.replace("/bajas")
