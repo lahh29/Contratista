@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc, collection, query, where, limit, getDocs } from "firebase/firestore"
@@ -119,11 +118,6 @@ export default function RegisterPage() {
         paddingTop:    "env(safe-area-inset-top)",
       }}
     >
-      {/* Background orbs */}
-      <div aria-hidden className="pointer-events-none select-none absolute inset-0 overflow-hidden">
-        <div className="absolute rounded-full" style={{ top:"-12%", right:"-8%", width:"55vmax", height:"55vmax", maxWidth:600, maxHeight:600, background:"radial-gradient(circle, hsl(216,90%,65%) 0%, hsl(216,80%,72%) 40%, transparent 70%)", opacity:0.22, filter:"blur(60px)" }} />
-        <div className="absolute rounded-full" style={{ bottom:"-10%", left:"-8%", width:"45vmax", height:"45vmax", maxWidth:480, maxHeight:480, background:"radial-gradient(circle, hsl(200,85%,60%) 0%, hsl(210,80%,68%) 40%, transparent 70%)", opacity:0.18, filter:"blur(70px)" }} />
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -135,12 +129,9 @@ export default function RegisterPage() {
           <div className="px-8 py-10 space-y-7">
 
             {/* Brand */}
-            <div className="flex flex-col items-center gap-3">
-              <Image src="/logo-vino-plastic.png" alt="ViñoPlastic" width={52} height={52} sizes="52px" className="object-contain drop-shadow-sm" priority />
-              <div className="text-center">
-                <p className="font-black text-lg tracking-widest uppercase text-foreground leading-none">ViñoPlastic</p>
-                <p className="text-muted-foreground text-[11px] font-medium tracking-wider mt-1">Portal Contratista · Registro</p>
-              </div>
+            <div className="text-center">
+              <p className="font-black text-lg tracking-widest uppercase text-foreground leading-none">ViñoPlastic</p>
+              <p className="text-muted-foreground text-[11px] font-medium tracking-wider mt-1">Portal Contratista · Registro</p>
             </div>
 
             <AnimatePresence mode="wait">

@@ -57,24 +57,43 @@ function fmtDateTime(ts: any) {
 // ── export functions (browser-only, dynamic imports) ─────────────────────────
 
 async function generateExcel(visits: any[]) {
-  const XLSX = await import('xlsx')
-  const rows = visits.map(v => ({
-    'Fecha Entrada':        fmtDateTime(v.entryTime),
-    'Empresa':              v.companyName      || '—',
-    'Área':                 v.areaName         || '—',
-    'Supervisor':           v.supervisorName   || '—',
-    'Personal':             v.personnelCount   ?? 1,
-    'Placas':               v.vehiclePlates    || '—',
-    'Placas Verificadas':   v.platesVerified   ? 'Sí' : 'No',
-    'Zapatos Seguridad':    v.safetyEquipment?.shoes ? 'Sí' : 'No',
-    'Chaleco Seguridad':    v.safetyEquipment?.vest  ? 'Sí' : 'No',
-    'Estado':               v.status === 'Active' ? 'Activo' : 'Completado',
-    'Fecha Salida':         fmtDateTime(v.exitTime),
+  const ExcelJS = (await import('exceljs')).default
+  const wb = new ExcelJS.Workbook()
+  const ws = wb.addWorksheet('Visitas')
+  ws.columns = [
+    { header: 'Fecha Entrada',      key: 'fechaEntrada',      width: 20 },
+    { header: 'Empresa',            key: 'empresa',           width: 22 },
+    { header: 'Área',               key: 'area',              width: 18 },
+    { header: 'Supervisor',         key: 'supervisor',        width: 22 },
+    { header: 'Personal',           key: 'personal',          width: 10 },
+    { header: 'Placas',             key: 'placas',            width: 14 },
+    { header: 'Placas Verificadas', key: 'placasVer',         width: 18 },
+    { header: 'Zapatos Seguridad',  key: 'zapatos',           width: 16 },
+    { header: 'Chaleco Seguridad',  key: 'chaleco',           width: 16 },
+    { header: 'Estado',             key: 'estado',            width: 12 },
+    { header: 'Fecha Salida',       key: 'fechaSalida',       width: 20 },
+  ]
+  visits.forEach(v => ws.addRow({
+    fechaEntrada: fmtDateTime(v.entryTime),
+    empresa:      v.companyName      || '—',
+    area:         v.areaName         || '—',
+    supervisor:   v.supervisorName   || '—',
+    personal:     v.personnelCount   ?? 1,
+    placas:       v.vehiclePlates    || '—',
+    placasVer:    v.platesVerified   ? 'Sí' : 'No',
+    zapatos:      v.safetyEquipment?.shoes ? 'Sí' : 'No',
+    chaleco:      v.safetyEquipment?.vest  ? 'Sí' : 'No',
+    estado:       v.status === 'Active' ? 'Activo' : 'Completado',
+    fechaSalida:  fmtDateTime(v.exitTime),
   }))
-  const ws = XLSX.utils.json_to_sheet(rows)
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Visitas')
-  XLSX.writeFile(wb, `reporte-visitas-${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `reporte-visitas-${format(new Date(), 'yyyy-MM-dd')}.xlsx`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 async function generatePDF(visits: any[]) {
@@ -177,25 +196,42 @@ function fmtDurationMins(mins: number | null): string {
 }
 
 async function generateSmokingExcel(records: any[]) {
-  const XLSX = await import('xlsx')
-  const rows = records.map(r => {
+  const ExcelJS = (await import('exceljs')).default
+  const wb = new ExcelJS.Workbook()
+  const ws = wb.addWorksheet('Fumadores')
+  ws.columns = [
+    { header: 'Empleado',     key: 'empleado',     width: 22 },
+    { header: 'Puesto',       key: 'puesto',        width: 18 },
+    { header: 'Departamento', key: 'departamento',  width: 18 },
+    { header: 'Turno',        key: 'turno',         width: 12 },
+    { header: 'Fecha',        key: 'fecha',         width: 14 },
+    { header: 'Salida',       key: 'salida',        width: 10 },
+    { header: 'Regreso',      key: 'regreso',       width: 10 },
+    { header: 'Duración',     key: 'duracion',      width: 10 },
+    { header: 'Estado',       key: 'estado',        width: 10 },
+  ]
+  records.forEach(r => {
     const mins = calcDurationMins(r.exitTime, r.returnTime)
-    return {
-      'Empleado':      r.nombre      || '—',
-      'Puesto':        r.puesto      || '—',
-      'Departamento':  r.departamento || '—',
-      'Turno':         r.turno       || '—',
-      'Fecha':         r.date        || '—',
-      'Salida':        r.exitTime?.toDate  ? format(r.exitTime.toDate(),  'HH:mm') : '—',
-      'Regreso':       r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—',
-      'Duración':      fmtDurationMins(mins),
-      'Estado':        r.status === 'out' ? 'Fuera' : 'Regresó',
-    }
+    ws.addRow({
+      empleado:     r.nombre       || '—',
+      puesto:       r.puesto       || '—',
+      departamento: r.departamento || '—',
+      turno:        r.turno        || '—',
+      fecha:        r.date         || '—',
+      salida:       r.exitTime?.toDate   ? format(r.exitTime.toDate(),   'HH:mm') : '—',
+      regreso:      r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—',
+      duracion:     fmtDurationMins(mins),
+      estado:       r.status === 'out' ? 'Fuera' : 'Regresó',
+    })
   })
-  const ws = XLSX.utils.json_to_sheet(rows)
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Fumadores')
-  XLSX.writeFile(wb, `fumadores-${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `fumadores-${format(new Date(), 'yyyy-MM-dd')}.xlsx`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 async function generateSmokingPDF(records: any[]) {

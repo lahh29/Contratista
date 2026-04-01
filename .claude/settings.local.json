@@ -3,7 +3,12 @@
     "allow": [
       "Bash(xargs grep:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm show:*)",
+      "Bash(git stash:*)",
+      "Bash(grep -r \"rgb\\\\|hsl\" /workspaces/Contratista/src --include=\"*.tsx\" --include=\"*.ts\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")"
     ]
   }
 }

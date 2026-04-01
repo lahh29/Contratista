@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { useFirestore } from '@/firebase'
+import { useUser } from '@/firebase'
 
 /**
  * Returns the list of page paths currently in maintenance mode.
@@ -8,16 +9,17 @@ import { useFirestore } from '@/firebase'
  */
 export function useMaintenance(): string[] {
   const db = useFirestore()
+  const { user, loading: authLoading } = useUser()
   const [disabled, setDisabled] = useState<string[]>([])
 
   useEffect(() => {
-    if (!db) return
+    if (!db || authLoading || !user) return
     const ref = doc(db, 'config', 'maintenance')
     const unsub = onSnapshot(ref, (snap) => {
       setDisabled(snap.exists() ? (snap.data().pages ?? []) : [])
     })
     return unsub
-  }, [db])
+  }, [db, user, authLoading])
 
   return disabled
 }

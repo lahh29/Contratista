@@ -656,8 +656,7 @@ function BackButton() {
         bg-white/20 dark:bg-white/10
         backdrop-blur-xl
         border border-white/40 dark:border-white/20
-        shadow-[0_4px_24px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.6)]
-        dark:shadow-[0_4px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]
+        shadow-card
         text-foreground/70 hover:text-foreground
         hover:bg-white/35 dark:hover:bg-white/20
         transition-all duration-200 active:scale-95

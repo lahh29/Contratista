@@ -126,7 +126,7 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
     const avatarX = 36
     const avatarY = 30
     const avatarSize = 52
-    ctx.fillStyle = "rgba(255,255,255,0.2)"
+    ctx.fillStyle = withAlpha(headerFg, 0.2)
     ctx.beginPath()
     ctx.roundRect(avatarX, avatarY, avatarSize, avatarSize, 12)
     ctx.fill()
@@ -157,7 +157,7 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
     const badgeW = ctx.measureText(badgeLabel).width + 28
     const badgeX = 36
     const badgeY = avatarY + avatarSize + 12
-    ctx.fillStyle = "rgba(255,255,255,0.2)"
+    ctx.fillStyle = withAlpha(headerFg, 0.2)
     ctx.beginPath()
     ctx.roundRect(badgeX, badgeY, badgeW, 28, 14)
     ctx.fill()
@@ -257,9 +257,9 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
         </div>
 
         {/* Cuerpo: QR + acciones */}
-        <div className="bg-white dark:bg-zinc-900 flex flex-col items-center px-5 pt-5 pb-4 gap-4">
+        <div className="bg-card flex flex-col items-center px-5 pt-5 pb-4 gap-4">
           {/* Código QR */}
-          <div className="rounded-xl border border-border bg-white p-4 shadow-sm w-full flex justify-center">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-sm w-full flex justify-center">
             <QRCode
               id="contractor-qr-svg"
               value={qrValue}

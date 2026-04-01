@@ -53,15 +53,21 @@ const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow:
 
 // ── UserCard ──────────────────────────────────────────────────
 function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: () => void }) {
-  const cardRef = React.useRef<HTMLDivElement>(null)
-  const mouseX  = useMotionValue(0)
-  const mouseY  = useMotionValue(0)
+  const cardRef    = React.useRef<HTMLDivElement>(null)
+  const mouseX     = useMotionValue(0)
+  const mouseY     = useMotionValue(0)
+  const [shimmerColor, setShimmerColor] = React.useState('rgba(255,255,255,0.07)')
+
+  React.useEffect(() => {
+    const c = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-shimmer').trim()
+    if (c) setShimmerColor(c)
+  }, [])
 
   // Shimmer position — tracks mouse inside the card
   const shimmerBg = useTransform(
     [mouseX, mouseY],
     ([x, y]) =>
-      `radial-gradient(120px circle at ${x}px ${y}px, rgba(255,255,255,0.07), transparent 70%)`,
+      `radial-gradient(120px circle at ${x}px ${y}px, ${shimmerColor}, transparent 70%)`,
   )
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -276,11 +282,9 @@ export function AppSidebar() {
                           )}
 
                           {/* Hover layer */}
-                          <motion.span
-                            className="absolute inset-0 rounded-xl bg-white/0"
-                            whileHover={{ backgroundColor: isActive ? 'rgba(255,255,255,0)' : 'rgba(255,255,255,0.06)' }}
-                            transition={{ duration: 0.15 }}
-                          />
+                          {!isActive && (
+                            <span className="nav-item-hover absolute inset-0 rounded-xl transition-colors duration-150" />
+                          )}
 
                           {/* Icon */}
                           <motion.span

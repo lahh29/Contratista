@@ -59,7 +59,7 @@ interface ParsedResult {
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
-const REQUIRED: (keyof EmployeeRecord)[] = [
+const REQUIRED: string[] = [
   "employeeId", "Nombre", "ApellidoPaterno", "Puesto", "Departamento", "Turno",
 ]
 

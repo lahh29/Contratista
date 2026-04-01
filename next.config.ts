@@ -31,6 +31,23 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   typescript:  { ignoreBuildErrors: true },
   eslint:      { ignoreDuringBuilds: true },
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        'localhost:9002',
+        '*.app.github.dev',
+        '*.github.dev',
+      ],
+    },
+  },
+  webpack(config) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@opentelemetry/exporter-jaeger': false,
+      '@genkit-ai/firebase':            false,
+    }
+    return config
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co',        pathname: '/**' },

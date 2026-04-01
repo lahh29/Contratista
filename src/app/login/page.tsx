@@ -97,41 +97,6 @@ export default function LoginPage() {
     >
       <PWAInstallBanner />
 
-      {/* Background orbs — give glass something to blur */}
-      <div aria-hidden="true" className="pointer-events-none select-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute rounded-full"
-          style={{
-            top: "-12%", right: "-8%",
-            width: "55vmax", height: "55vmax",
-            maxWidth: 600, maxHeight: 600,
-            background: "radial-gradient(circle, hsl(216,90%,65%) 0%, hsl(216,80%,72%) 40%, transparent 70%)",
-            opacity: 0.22,
-            filter: "blur(60px)",
-          }}
-        />
-        <div
-          className="absolute rounded-full"
-          style={{
-            bottom: "-10%", left: "-8%",
-            width: "45vmax", height: "45vmax",
-            maxWidth: 480, maxHeight: 480,
-            background: "radial-gradient(circle, hsl(200,85%,60%) 0%, hsl(210,80%,68%) 40%, transparent 70%)",
-            opacity: 0.18,
-            filter: "blur(70px)",
-          }}
-        />
-        <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            width: "30vmax", height: "30vmax",
-            maxWidth: 360, maxHeight: 360,
-            background: "radial-gradient(circle, hsl(220,75%,70%) 0%, transparent 65%)",
-            opacity: 0.10,
-            filter: "blur(50px)",
-          }}
-        />
-      </div>
 
       {/* Card */}
       <motion.div
