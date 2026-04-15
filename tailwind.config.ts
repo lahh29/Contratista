@@ -10,9 +10,36 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
-        code: ['monospace'],
+        /* SF Pro on Apple devices, Inter as web fallback */
+        display: [
+          'SF Pro Display', '-apple-system', 'BlinkMacSystemFont',
+          'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif',
+        ],
+        body: [
+          'SF Pro Text', '-apple-system', 'BlinkMacSystemFont',
+          'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif',
+        ],
+        headline: [
+          'SF Pro Display', '-apple-system', 'BlinkMacSystemFont',
+          'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif',
+        ],
+        code: ['SF Mono', 'Menlo', 'monospace'],
+      },
+      fontSize: {
+        /* Apple typography scale */
+        'hero':    ['3.5rem',   { lineHeight: '1.07', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'section': ['2.5rem',   { lineHeight: '1.10', letterSpacing: '0',       fontWeight: '600' }],
+        'tile':    ['1.75rem',  { lineHeight: '1.14', letterSpacing: '0.007em', fontWeight: '400' }],
+        'card-t':  ['1.3125rem',{ lineHeight: '1.19', letterSpacing: '0.011em', fontWeight: '700' }],
+        'subhead': ['1.3125rem',{ lineHeight: '1.19', letterSpacing: '0.011em', fontWeight: '400' }],
+        'body-lg': ['1.0625rem',{ lineHeight: '1.47', letterSpacing: '-0.022em', fontWeight: '400' }],
+        'caption': ['0.875rem', { lineHeight: '1.29', letterSpacing: '-0.016em', fontWeight: '400' }],
+        'micro':   ['0.75rem',  { lineHeight: '1.33', letterSpacing: '-0.01em',  fontWeight: '400' }],
+        'nano':    ['0.625rem', { lineHeight: '1.47', letterSpacing: '-0.005em', fontWeight: '400' }],
+      },
+      letterSpacing: {
+        'apple-tight': '-0.022em',
+        'apple-display': '-0.02em',
       },
       colors: {
         background: 'hsl(var(--background))',

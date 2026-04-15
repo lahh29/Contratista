@@ -90,15 +90,15 @@ export default function DashboardLayout({
           initial={{ y: -4, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="flex h-14 shrink-0 items-center gap-3 border-b border-border/60 bg-background/80 backdrop-blur-md sticky top-0 z-10 px-4"
+          className="flex h-12 shrink-0 items-center gap-3 border-b border-border/40 bg-background/80 backdrop-blur-xl backdrop-saturate-[1.8] sticky top-0 z-10 px-4"
         >
           {/* Sidebar toggle */}
           <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" />
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
           </motion.div>
 
           {/* Divider */}
-          <div className="w-px h-4 bg-border/80 shrink-0" />
+          <div className="w-px h-4 bg-border/60 shrink-0" />
 
           {/* Dynamic page title */}
           <div className="flex-1 overflow-hidden">
@@ -109,7 +109,7 @@ export default function DashboardLayout({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="text-sm font-semibold text-foreground/70 uppercase tracking-wider truncate"
+                className="text-xs font-medium text-foreground/80 tracking-tight truncate"
               >
                 {pageTitle}
               </motion.h1>

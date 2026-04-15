@@ -43,12 +43,12 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 // ── Role config ───────────────────────────────────────────────
 const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow: string; label: string }> = {
-  admin:      { Icon: ShieldCheck, ring: 'ring-sky-400/60',    glow: 'shadow-sky-500/30',    label: 'Administrador'        },
-  guard:      { Icon: Shield,      ring: 'ring-emerald-400/60',glow: 'shadow-emerald-500/30',label: 'Guardia de Seguridad' },
-  contractor: { Icon: Briefcase,   ring: 'ring-amber-400/60',  glow: 'shadow-amber-500/30',  label: 'Contratista'          },
-  seguridad:  { Icon: HardHat,     ring: 'ring-yellow-400/60', glow: 'shadow-yellow-500/30', label: 'Seguridad e Higiene'  },
-  logistica:  { Icon: Package,     ring: 'ring-violet-400/60', glow: 'shadow-violet-500/30', label: 'Logística'            },
-  rys:        { Icon: UserPlus,    ring: 'ring-rose-400/60',   glow: 'shadow-rose-500/30',   label: 'Reclutamiento'        },
+  admin:      { Icon: ShieldCheck, ring: 'ring-white/20',      glow: '',                     label: 'Administrador'        },
+  guard:      { Icon: Shield,      ring: 'ring-white/20',      glow: '',                     label: 'Guardia de Seguridad' },
+  contractor: { Icon: Briefcase,   ring: 'ring-white/20',      glow: '',                     label: 'Contratista'          },
+  seguridad:  { Icon: HardHat,     ring: 'ring-white/20',      glow: '',                     label: 'Seguridad e Higiene'  },
+  logistica:  { Icon: Package,     ring: 'ring-white/20',      glow: '',                     label: 'Logística'            },
+  rys:        { Icon: UserPlus,    ring: 'ring-white/20',      glow: '',                     label: 'Reclutamiento'        },
 }
 
 // ── UserCard ──────────────────────────────────────────────────
@@ -91,7 +91,7 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2.5 flex items-center gap-3 group"
+      className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.04] px-3 py-2.5 flex items-center gap-3 group"
     >
       {/* Liquid glass shimmer — follows cursor */}
       <motion.span
@@ -233,7 +233,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-0 shadow-xl">
-      <div data-sidebar="header" className="flex flex-row items-center h-14 px-5 border-b border-white/10 shrink-0 gap-2">
+      <div data-sidebar="header" className="flex flex-row items-center h-12 px-5 border-b border-white/10 shrink-0 gap-2">
         <motion.span
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
@@ -309,7 +309,7 @@ export function AppSidebar() {
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.6, opacity: 0 }}
                                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                                className="relative z-10 h-5 min-w-5 px-1.5 rounded-full bg-white/20 text-white text-[10px] font-bold flex items-center justify-center leading-none tabular-nums"
+                                className="relative z-10 h-5 min-w-5 px-1.5 rounded-full bg-[#0071e3] text-white text-[10px] font-bold flex items-center justify-center leading-none tabular-nums"
                               >
                                 {item.badge > 99 ? '99+' : item.badge}
                               </motion.span>

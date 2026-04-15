@@ -97,7 +97,6 @@ export default function LoginPage() {
     >
       <PWAInstallBanner />
 
-
       {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -106,16 +105,16 @@ export default function LoginPage() {
         className="relative z-10 w-full max-w-[380px]"
       >
         {/* Glass surface */}
-        <div className="glass-card rounded-3xl overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="px-8 py-10 space-y-7">
 
             {/* Brand */}
             <div className="flex flex-col items-center gap-3">
               <div className="text-center">
-                <p className="font-black text-lg tracking-widest uppercase text-foreground leading-none">
+                <p className="font-semibold text-section tracking-tight text-foreground leading-none">
                   ViñoPlastic
                 </p>
-                <p className="text-muted-foreground text-[11px] font-medium tracking-wider mt-1">
+                <p className="text-muted-foreground text-caption mt-2">
                   Control de acceso · Planta Querétaro
                 </p>
               </div>
@@ -138,7 +137,7 @@ export default function LoginPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-2xl mt-1"
+                      className="rounded-lg mt-1"
                       onClick={() => { setResetMode(false); setResetSent(false); setResetEmail("") }}
                     >
                       Volver al inicio de sesión
@@ -159,14 +158,14 @@ export default function LoginPage() {
                         placeholder="correo@vinoplastic.com"
                         autoComplete="email"
                         inputMode="email"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                        className="h-11 rounded-lg pl-10 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#0071e3]/20 focus-visible:border-[#0071e3] dark:focus-visible:ring-[#2997ff]/20 dark:focus-visible:border-[#2997ff]"
                         value={resetEmail}
                         onChange={e => setResetEmail(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handlePasswordReset()}
                       />
                     </div>
                     <Button
-                      className="w-full h-11 rounded-2xl font-bold text-sm shadow-md shadow-primary/20"
+                      className="w-full h-11 rounded-lg font-medium text-sm bg-[#0071e3] hover:bg-[#0077ED] text-white dark:bg-[#2997ff] dark:hover:bg-[#40a9ff]"
                       disabled={resetLoading || !resetEmail}
                       onClick={handlePasswordReset}
                     >
@@ -203,7 +202,7 @@ export default function LoginPage() {
                               placeholder="correo@vinoplastic.com"
                               autoComplete="email"
                               inputMode="email"
-                              className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                              className="h-11 rounded-lg pl-10 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#0071e3]/20 focus-visible:border-[#0071e3] dark:focus-visible:ring-[#2997ff]/20 dark:focus-visible:border-[#2997ff]"
                               {...field}
                               onChange={e => { field.onChange(e); setLoginError(null) }}
                             />
@@ -226,7 +225,7 @@ export default function LoginPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Contraseña"
                               autoComplete="current-password"
-                              className="h-11 rounded-2xl pl-10 pr-11 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                              className="h-11 rounded-lg pl-10 pr-11 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#0071e3]/20 focus-visible:border-[#0071e3] dark:focus-visible:ring-[#2997ff]/20 dark:focus-visible:border-[#2997ff]"
                               {...field}
                               onChange={e => { field.onChange(e); setLoginError(null) }}
                             />
@@ -256,7 +255,7 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-11 rounded-2xl font-bold text-sm mt-1 shadow-md shadow-primary/20"
+                    className="w-full h-11 rounded-lg font-medium text-sm mt-1 bg-[#0071e3] hover:bg-[#0077ED] text-white dark:bg-[#2997ff] dark:hover:bg-[#40a9ff]"
                     disabled={loading}
                     aria-busy={loading}
                   >
@@ -284,7 +283,7 @@ export default function LoginPage() {
               <div className="pt-1">
                 <Link
                   href="/register"
-                  className="flex items-center justify-center gap-2 w-full h-10 rounded-2xl text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-[#0066cc] dark:border-[#2997ff] text-sm font-normal text-[#0066cc] dark:text-[#2997ff] hover:underline transition-colors"
                 >
                   <UserPlus className="w-4 h-4" />
                   Registrarse como proveedor
@@ -298,7 +297,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="text-center text-[11px] text-foreground/25 mt-5">
           <a
-            href="https://vertxk.xyz/"
+            href="https://vinoplasticqro.xyz"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground/50 transition-colors"
