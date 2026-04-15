@@ -175,13 +175,13 @@ export default function ContratosPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 max-w-sm">
-        <div className="rounded-xl border border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900 p-4">
-          <p className="text-2xl font-black text-green-600 dark:text-green-400">{firmados}</p>
-          <p className="text-xs text-green-600/70 dark:text-green-500 font-medium mt-0.5">Firmados</p>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-2xl font-black text-foreground">{firmados}</p>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">Firmados</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 p-4">
-          <p className="text-2xl font-black text-amber-600 dark:text-amber-400">{pendientes}</p>
-          <p className="text-xs text-amber-600/70 dark:text-amber-500 font-medium mt-0.5">Pendientes</p>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-2xl font-black text-foreground">{pendientes}</p>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">Pendientes</p>
         </div>
       </div>
 

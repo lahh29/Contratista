@@ -215,7 +215,7 @@ export default function FumadoresPage() {
     )
   }, [employee, todayRecords])
 
-  // ── Employee search ────────────────────────────────────────────────────────
+  // ── Búsqueda de Empleado ────────────────────────────────────────────────────────
   // Usa getDoc (1 lectura directa por ID de documento) en lugar de
   // getDocs + where, que escanea la colección.
   // REQUISITO: employeeId debe ser el ID del documento en "empleados".

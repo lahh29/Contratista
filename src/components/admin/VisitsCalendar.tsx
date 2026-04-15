@@ -157,7 +157,7 @@ export function VisitsCalendar({
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
         <div>
           <p className="text-base font-semibold">
-            {scheduledOnly ? 'Visitas Programadas' : 'Detalle'}
+            {scheduledOnly ? 'Visitas Programadas' : 'Calendario de Visitas'}
           </p>
           <p className="text-xs text-muted-foreground">
             {/* Solo capitaliza la primera letra */}

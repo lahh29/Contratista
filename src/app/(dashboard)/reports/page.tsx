@@ -549,14 +549,14 @@ export default function ReportsPage() {
         <Card className="border-none shadow-sm hover:ring-2 hover:ring-primary/20 transition-all">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-green-600" /> Exportar Excel
+              <FileSpreadsheet className="w-5 h-5 text-green-600" /> Descargar Excel
             </CardTitle>
             <CardDescription className="text-xs">Registros en formato .xlsx.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="secondary" className="w-full" onClick={handleExcel} disabled={genXlsx || loading}>
               {genXlsx ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Generar XLSX
+              Excel
             </Button>
           </CardContent>
         </Card>
@@ -564,14 +564,14 @@ export default function ReportsPage() {
         <Card className="border-none shadow-sm hover:ring-2 hover:ring-primary/20 transition-all">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="w-5 h-5 text-red-600" /> Reporte PDF
+              <FileText className="w-5 h-5 text-red-600" /> Descarga PDF
             </CardTitle>
             <CardDescription className="text-xs">Reporte formal de cumplimiento con tabla de accesos.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="secondary" className="w-full" onClick={handlePDF} disabled={genPdf || loading}>
               {genPdf ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Generar PDF
+              PDF
             </Button>
           </CardContent>
         </Card>
@@ -585,7 +585,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <Button variant="secondary" className="w-full" onClick={() => setSummaryOpen(true)} disabled={loading}>
-              Ver Resumen
+              Ver
             </Button>
           </CardContent>
         </Card>
@@ -609,7 +609,7 @@ export default function ReportsPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <CardTitle>Historial</CardTitle>
+              <CardTitle>Registro Accesos</CardTitle>
               <CardDescription>
                 {loading ? 'Cargando...' : `${filteredVisits.length} visitas`}
               </CardDescription>
@@ -638,7 +638,7 @@ export default function ReportsPage() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : filteredVisits.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground text-sm">No hay registros con los filtros actuales.</p>
+            <p className="text-center py-12 text-muted-foreground text-sm">Sin registros actualmente.</p>
           ) : (
             <>
               {/* Mobile — solo Empresa, Estado y Comprobante */}
@@ -667,8 +667,8 @@ export default function ReportsPage() {
                     <TableRow>
                       <TableHead className="font-semibold">Fecha</TableHead>
                       <TableHead className="font-semibold">Empresa</TableHead>
-                      <TableHead className="font-semibold">Área</TableHead>
-                      <TableHead className="font-semibold">Supervisor</TableHead>
+                      <TableHead className="font-semibold">Departamento</TableHead>
+                      <TableHead className="font-semibold">Encargado Departamento</TableHead>
                       <TableHead className="font-semibold">Personal</TableHead>
                       <TableHead className="font-semibold">Placas</TableHead>
                       <TableHead className="font-semibold">Equipo</TableHead>
@@ -935,7 +935,7 @@ export default function ReportsPage() {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="min-w-0">
                 <CardTitle className="flex items-center gap-2">
-                  <Cigarette className="w-4 h-4 text-muted-foreground" /> Historial de fumadores
+                  <Cigarette className="w-4 h-4 text-muted-foreground" /> Registro de fumadores
                 </CardTitle>
                 <CardDescription>
                   {smokeLoading ? 'Cargando…' : `${filteredSmoking.length} registros`}
@@ -968,7 +968,7 @@ export default function ReportsPage() {
               </div>
             ) : filteredSmoking.length === 0 ? (
               <p className="text-center py-12 text-muted-foreground text-sm">
-                No hay registros para el período seleccionado.
+                Sin registros actualmente.
               </p>
             ) : (
               <>

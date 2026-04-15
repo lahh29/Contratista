@@ -65,9 +65,9 @@ type FormValues = z.infer<typeof contractorSchema>
 
 // ── Step config ──────────────────────────────────────────────────────────────
 const STEPS = [
-  { label: "Documento",  Icon: UploadCloud },
+  { label: "Datos",  Icon: UploadCloud },
   { label: "Empresa",    Icon: Building2   },
-  { label: "Póliza SUA", Icon: ShieldCheck },
+  { label: "SUA", Icon: ShieldCheck },
   { label: "Planta",     Icon: MapPin      },
 ]
 
@@ -164,14 +164,14 @@ export function ContractorForm() {
         try {
           const result = await extractDocumentData({
             documentDataUri: reader.result as string,
-            documentDescription: "Documento de Seguro SUA de contratista",
+            documentDescription: "Documento de SUA de contratista",
           })
           setAnalysisResult(result)
           if (result.contractorName)   form.setValue("name",          result.contractorName)
           if (result.companyName)      form.setValue("company",        result.companyName)
           if (result.suaExpirationDate) form.setValue("suaExpiration", result.suaExpirationDate)
           if (result.policyNumber)     form.setValue("policyNumber",   result.policyNumber)
-          toast({ title: "Verificación completada", description: "Datos extraídos por IA." })
+          toast({ title: "Verificación completada", description: "Datos extraídos por Vertx IA." })
         } catch {
           toast({ variant: "destructive", title: "Error", description: "No se pudo leer el documento." })
         } finally {
@@ -247,7 +247,7 @@ export function ContractorForm() {
     // ── Step 0: Documento IA ─────────────────────────────────────────────────
     <div key="s0" className="space-y-4">
       <p className="text-sm text-muted-foreground text-center">
-        Sube el certificado SUA y la IA llenará los campos automáticamente.
+        Coloca el archivo del SUA para extraer los datos automáticamente.
       </p>
 
       <div className="border-2 border-dashed border-muted rounded-xl p-8 text-center hover:bg-muted/20 transition-colors group cursor-pointer relative">
@@ -270,7 +270,7 @@ export function ContractorForm() {
             </div>
             <div>
               <p className="font-semibold text-sm">Toca para subir el documento</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Imagen de póliza o certificado SUA</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Adjunta el documento</p>
             </div>
           </div>
         )}
@@ -309,7 +309,7 @@ export function ContractorForm() {
     <div key="s1" className="space-y-4">
       <FormField control={form.control} name="name" render={({ field }) => (
         <FormItem>
-          <FormLabel>Nombre del Contacto</FormLabel>
+          <FormLabel>Nombre del Visitante</FormLabel>
           <FormControl>
             <Input className="h-11" placeholder="Apellidos y Nombres" {...field} />
           </FormControl>
@@ -357,7 +357,7 @@ export function ContractorForm() {
       )}
       <FormField control={form.control} name="phone" render={({ field }) => (
         <FormItem>
-          <FormLabel>Teléfono <span className="text-muted-foreground font-normal text-xs">(opcional)</span></FormLabel>
+          <FormLabel>Teléfono <span className="text-muted-foreground font-normal text-xs">(Obligatorio)</span></FormLabel>
           <FormControl>
             <Input className="h-11" placeholder="+52 442…" {...field} />
           </FormControl>
@@ -366,7 +366,7 @@ export function ContractorForm() {
       )} />
       <FormField control={form.control} name="email" render={({ field }) => (
         <FormItem>
-          <FormLabel>Email <span className="text-muted-foreground font-normal text-xs">(opcional)</span></FormLabel>
+          <FormLabel>Email <span className="text-muted-foreground font-normal text-xs">(Obligatorio)</span></FormLabel>
           <FormControl>
             <Input className="h-11" type="email" placeholder="proveedor@empresa.com" {...field} />
           </FormControl>
@@ -380,9 +380,9 @@ export function ContractorForm() {
     <div key="s2" className="space-y-4">
       <FormField control={form.control} name="policyNumber" render={({ field }) => (
         <FormItem>
-          <FormLabel>N° de Póliza / SUA</FormLabel>
+          <FormLabel>No. SUA</FormLabel>
           <FormControl>
-            <Input className="h-11" placeholder="SUA" {...field} />
+            <Input className="h-11" placeholder="VE-RT-EX" {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -436,12 +436,12 @@ export function ContractorForm() {
       <FormField control={form.control} name="defaultAreaId" render={({ field }) => (
         <FormItem>
           <FormLabel className="flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5" /> Área Destino
+            <MapPin className="w-3.5 h-3.5" /> Departamento
           </FormLabel>
           <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
               <SelectTrigger className="h-11">
-                <SelectValue placeholder="Área habitual…" />
+                <SelectValue placeholder="Departamento" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
