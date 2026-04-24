@@ -3,65 +3,107 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── Apple-inspired Design System ──────────────────────────── */
+  /* ── Design-System Tokens ──────────────────────────────────
+     All colours live here as HSL channels.  Components reference
+     them via  hsl(var(--token))  so every surface, text and
+     interactive element automatically adapts to the active theme.
+     ────────────────────────────────────────────────────────── */
+
   :root {
-    /* Light theme: clean #f5f5f7 surfaces, near-black text, Apple Blue accents */
-    --background: 240 5% 96%;          /* #f5f5f7 */
-    --foreground: 0 0% 11%;            /* #1d1d1f */
-    --card: 0 0% 100%;                 /* #ffffff */
-    --card-foreground: 0 0% 11%;       /* #1d1d1f */
+    /* ── Surfaces & text ─────────────────────────────────── */
+    --background: 220 14% 96%;
+    --foreground: 0 0% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 11%;
-    --primary: 211 100% 45%;           /* #0071e3 — Apple Blue */
-    --primary-foreground: 0 0% 100%;   /* #ffffff */
-    --secondary: 240 5% 96%;           /* #f5f5f7 */
-    --secondary-foreground: 0 0% 11%;  /* #1d1d1f */
-    --muted: 240 5% 96%;              /* #f5f5f7 */
-    --muted-foreground: 0 0% 44%;     /* rgba(0,0,0,0.48) equiv */
-    --accent: 211 100% 45%;            /* #0071e3 */
+
+    /* ── Brand / interactive ─────────────────────────────── */
+    --primary: 211 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 0 0% 11%;
+    --accent: 211 100% 45%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;                /* subtle, almost invisible */
-    --input: 0 0% 90%;
-    --ring: 211 100% 45%;              /* Apple Blue focus ring */
-    --radius: 0.5rem;                  /* 8px — Apple standard */
 
-    /* Sidebar — dark translucent like Apple nav */
-    --sidebar-background: 0 0% 0%;    /* #000000 */
-    --sidebar-foreground: 0 0% 100%;  /* #ffffff */
-    --sidebar-primary: 211 100% 50%;  /* bright blue on dark */
+    /* ── Muted / helpers ─────────────────────────────────── */
+    --muted: 220 14% 96%;
+    --muted-foreground: 0 0% 44%;
+    --border: 220 9% 90%;
+    --input: 220 9% 90%;
+    --ring: 211 100% 45%;
+    --radius: 0.5rem;
+
+    /* ── Chart palette ───────────────────────────────────── */
+    --chart-1: 211 100% 45%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 43 96% 56%;
+    --chart-4: 27 96% 61%;
+    --chart-5: 0 84% 60%;
+
+    /* ── Sidebar ─────────────────────────────────────────── */
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 211 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 16%;       /* #272729 */
+    --sidebar-accent: 0 0% 16%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;       /* subtle dark border */
+    --sidebar-border: 0 0% 15%;
     --sidebar-ring: 211 100% 50%;
+    --sidebar-shimmer: 0 0% 100% / 0.07;
+    --sidebar-item-hover: 0 0% 100% / 0.06;
+
+    /* ── Glass / frosted surfaces ────────────────────────── */
+    --glass-bg: 0 0% 100% / 0.72;
+    --glass-shadow: 0 0% 0% / 0.08;
+    --glass-border: 0 0% 0% / 0.06;
+    --glass-border-hover: 0 0% 0% / 0.12;
+    --glass-input-bg: 0 0% 100% / 0.6;
+    --glass-input-bg-focus: 0 0% 100% / 0.85;
+    --glass-placeholder: 0 0% 0% / 0.36;
+
+    /* ── Shadows ─────────────────────────────────────────── */
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.08),
+                   inset 0 1px 0 hsl(0 0% 100% / 0.6);
   }
 
   .dark {
-    /* Dark theme: pure black surfaces, white text, Bright Blue links */
-    --background: 0 0% 0%;             /* #000000 */
-    --foreground: 0 0% 98%;            /* #fafafa */
-    --card: 240 3% 16%;                /* #272729 — Dark Surface 1 */
-    --card-foreground: 0 0% 98%;
+    /* ── Surfaces & text ─────────────────────────────────── */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 96%;
+    --card: 240 3% 16%;
+    --card-foreground: 0 0% 96%;
     --popover: 240 3% 16%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 213 100% 60%;           /* #2997ff — Bright Blue */
+    --popover-foreground: 0 0% 96%;
+
+    /* ── Brand / interactive ─────────────────────────────── */
+    --primary: 213 100% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 3% 16%;           /* #272729 */
+    --secondary: 240 3% 16%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 240 3% 16%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 213 100% 60%;            /* #2997ff */
+    --accent: 213 100% 60%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
+
+    /* ── Muted / helpers ─────────────────────────────────── */
+    --muted: 240 3% 16%;
+    --muted-foreground: 0 0% 60%;
     --border: 240 3% 20%;
     --input: 240 3% 20%;
     --ring: 213 100% 60%;
 
-    /* Sidebar stays consistent in dark */
-    --sidebar-background: 0 0% 0%;
+    /* ── Chart palette ───────────────────────────────────── */
+    --chart-1: 213 100% 60%;
+    --chart-2: 173 58% 49%;
+    --chart-3: 43 96% 66%;
+    --chart-4: 27 96% 71%;
+    --chart-5: 0 72% 60%;
+
+    /* ── Sidebar ─────────────────────────────────────────── */
+    --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 213 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -69,21 +111,21 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 3% 18%;
     --sidebar-ring: 213 100% 60%;
-  }
+    --sidebar-shimmer: 0 0% 100% / 0.07;
+    --sidebar-item-hover: 0 0% 100% / 0.06;
 
-  :root {
+    /* ── Glass / frosted surfaces ────────────────────────── */
+    --glass-bg: 240 3% 16% / 0.82;
+    --glass-shadow: 0 0% 0% / 0.40;
+    --glass-border: 0 0% 100% / 0.10;
+    --glass-border-hover: 0 0% 100% / 0.18;
+    --glass-input-bg: 0 0% 100% / 0.06;
+    --glass-input-bg-focus: 0 0% 100% / 0.10;
+    --glass-placeholder: 0 0% 100% / 0.30;
 
-    /* Estados interactivos del sidebar */
-    --sidebar-shimmer: rgba(255, 255, 255, 0.07);
-    --sidebar-item-hover: rgba(255, 255, 255, 0.06);
-
-    /* Sombra elevación de tarjeta */
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  }
-
-  .dark {
-    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
+    /* ── Shadows ─────────────────────────────────────────── */
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.30),
+                   inset 0 1px 0 hsl(0 0% 100% / 0.1);
   }
 }
 
@@ -94,7 +136,8 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
-  /* Override autofill azul del navegador en todos los inputs */
+
+  /* Override browser autofill to match theme */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -106,107 +149,70 @@
     caret-color: hsl(var(--foreground));
     transition: background-color 9999s ease-in-out 0s;
   }
-  /* Autofill dentro del glass-card */
+
+  /* Autofill inside glass-card */
   .glass-card input:-webkit-autofill,
   .glass-card input:-webkit-autofill:hover,
   .glass-card input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.72) inset !important;
-    -webkit-text-fill-color: #1d1d1f !important;
-    caret-color: #1d1d1f;
-    transition: background-color 9999s ease-in-out 0s;
-  }
-  .dark .glass-card input:-webkit-autofill,
-  .dark .glass-card input:-webkit-autofill:hover,
-  .dark .glass-card input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px rgba(39, 39, 41, 0.82) inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-    caret-color: #ffffff;
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--glass-bg)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    caret-color: hsl(var(--foreground));
     transition: background-color 9999s ease-in-out 0s;
   }
 }
 
 @layer components {
-  /* ── Auth pages background — Apple cinematic solid ─────── */
+  /* ── Auth background ───────────────────────────────────── */
   .auth-bg {
-    background: #f5f5f7;
-  }
-  .dark .auth-bg {
-    background: #000000;
+    background: hsl(var(--background));
   }
 
-  /* ── Glass card — Apple-style frosted surface ──────────── */
+  /* ── Glass card — frosted surface ──────────────────────── */
   .glass-card {
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
-    background: rgba(255, 255, 255, 0.72);
+    background: hsl(var(--glass-bg));
     border: none;
-    box-shadow: 0 3px 30px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 3px 30px hsl(var(--glass-shadow));
     border-radius: 18px;
   }
-  .dark .glass-card {
-    background: rgba(39, 39, 41, 0.82);
-    border: none;
-    box-shadow: 0 3px 30px rgba(0, 0, 0, 0.40);
-  }
 
-  /* Hover sobre ítem de navegación del sidebar */
+  /* Hover on sidebar nav items */
   .nav-item-hover:hover {
-    background-color: var(--sidebar-item-hover);
+    background-color: hsl(var(--sidebar-item-hover));
   }
 
-  /* Sombra semántica de tarjeta */
+  /* Semantic card shadow */
   .shadow-card {
     box-shadow: var(--shadow-card);
   }
 
+  /* ── Glass input ───────────────────────────────────────── */
   .glass-input {
     @apply w-full h-11 rounded-lg border text-sm outline-none pr-4 transition-colors duration-150;
-    border-color: rgba(0, 0, 0, 0.06);
-    background-color: rgba(255, 255, 255, 0.6);
-    color: #1d1d1f;
-  }
-  .dark .glass-input {
-    border-color: rgba(255, 255, 255, 0.10);
-    background-color: rgba(255, 255, 255, 0.06);
-    color: #ffffff;
+    border-color: hsl(var(--glass-border));
+    background-color: hsl(var(--glass-input-bg));
+    color: hsl(var(--foreground));
   }
   .glass-input::placeholder {
-    color: rgba(0, 0, 0, 0.36);
-  }
-  .dark .glass-input::placeholder {
-    color: rgba(255, 255, 255, 0.30);
+    color: hsl(var(--glass-placeholder));
   }
   .glass-input:hover {
-    border-color: rgba(0, 0, 0, 0.12);
-  }
-  .dark .glass-input:hover {
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: hsl(var(--glass-border-hover));
   }
   .glass-input:focus {
-    border-color: #0071e3;
-    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.20);
-    background-color: rgba(255, 255, 255, 0.85);
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.20);
+    background-color: hsl(var(--glass-input-bg-focus));
   }
-  .dark .glass-input:focus {
-    border-color: #2997ff;
-    box-shadow: 0 0 0 3px rgba(41, 151, 255, 0.20);
-    background-color: rgba(255, 255, 255, 0.10);
-  }
-  /* Override browser autofill — keep Apple look */
+
+  /* Override browser autofill inside glass-input */
   .glass-input:-webkit-autofill,
   .glass-input:-webkit-autofill:hover,
   .glass-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 60px #f5f5f7 inset !important;
-    -webkit-text-fill-color: #1d1d1f !important;
-    caret-color: #1d1d1f;
-    transition: background-color 9999s ease-in-out 0s;
-  }
-  .dark .glass-input:-webkit-autofill,
-  .dark .glass-input:-webkit-autofill:hover,
-  .dark .glass-input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 60px #272729 inset !important;
-    -webkit-text-fill-color: #ffffff !important;
-    caret-color: #ffffff;
+    -webkit-box-shadow: 0 0 0 60px hsl(var(--background)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    caret-color: hsl(var(--foreground));
     transition: background-color 9999s ease-in-out 0s;
   }
 }
