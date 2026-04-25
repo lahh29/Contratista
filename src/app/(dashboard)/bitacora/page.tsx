@@ -33,7 +33,8 @@ import { format, formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import type { AuditEntry } from "@/types"
 import { cn } from "@/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
+import { PillTabsBar, PillTabsContent } from "@/components/ui/pill-tabs"
+import type { PillTab } from "@/components/ui/pill-tabs"
 
 const STORAGE_KEY = "vp_audit_unlocked"
 const PAGE_SIZE = 50
@@ -252,56 +253,25 @@ function AuditLog() {
     fetchEntries(true, filter)
   }
 
-  const BITACORA_TABS = [
-    { value: "registro", label: "Registro" },
-    { value: "accesos", label: "Accesos" },
-    { value: "mantenimiento", label: "Páginas" },
-  ] as const
-  type BitacoraTabValue = typeof BITACORA_TABS[number]["value"]
+  const BITACORA_TABS: PillTab[] = [
+    { value: "registro", label: "Registro", icon: <ClipboardList className="w-3.5 h-3.5" /> },
+    { value: "accesos", label: "Accesos", icon: <Clock className="w-3.5 h-3.5" /> },
+    { value: "mantenimiento", label: "Páginas", icon: <Wrench className="w-3.5 h-3.5" /> },
+  ]
 
-  const [activeBitacoraTab, setActiveBitacoraTab] = React.useState<BitacoraTabValue>("registro")
+  const [activeBitacoraTab, setActiveBitacoraTab] = React.useState("registro")
 
   return (
     <div className="max-w-xl mx-auto space-y-4">
-      {/* Pill tabs bar */}
-      <div className="mb-4 border-b border-border/40">
-        <div className="flex flex-wrap gap-1.5 py-2">
-          {BITACORA_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveBitacoraTab(tab.value)}
-              className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
-            >
-              {activeBitacoraTab === tab.value && (
-                <motion.div
-                  layoutId="bitacora-pill"
-                  className="absolute inset-0 bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-              <span className={`relative z-10 transition-colors duration-150 flex items-center gap-1.5 font-semibold uppercase tracking-wide text-xs ${
-                activeBitacoraTab === tab.value
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground"
-              }`}>
-                {tab.value === "registro" && <ClipboardList className="w-4 h-4" />}
-                {tab.value === "accesos" && <Clock className="w-4 h-4" />}
-                {tab.value === "mantenimiento" && <Wrench className="w-4 h-4" />}
-                {tab.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <PillTabsBar
+        tabs={BITACORA_TABS}
+        value={activeBitacoraTab}
+        onValueChange={setActiveBitacoraTab}
+        layoutId="bitacora-pill"
+        className="mb-4"
+      />
 
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={activeBitacoraTab}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.18, ease: "easeOut" }}
-        >
+      <PillTabsContent value={activeBitacoraTab}>
 
       {activeBitacoraTab === "registro" && (
         <div className="space-y-4 outline-none">
@@ -385,8 +355,7 @@ function AuditLog() {
           <MaintenanceManager />
         </div>
       )}
-        </motion.div>
-      </AnimatePresence>
+      </PillTabsContent>
     </div>
   )
 }

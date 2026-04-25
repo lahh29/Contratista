@@ -20,7 +20,8 @@ import {
   Trophy,
   CheckCircle2,
 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { PillTabsBar, PillTabsContent } from "@/components/ui/pill-tabs"
+import type { PillTab } from "@/components/ui/pill-tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -476,54 +477,25 @@ export default function ReportsPage() {
     setSmokeDetailOpen(true)
   }
 
-  const REPORT_TABS = [
-    { value: "accesos", label: "Accesos" },
-    { value: "fumadores", label: "Fumadores" },
-  ] as const
-  type ReportTabValue = typeof REPORT_TABS[number]["value"]
+  const REPORT_TABS: PillTab[] = [
+    { value: "accesos", label: "Accesos", icon: <Building2 className="w-3.5 h-3.5" /> },
+    { value: "fumadores", label: "Fumadores", icon: <Cigarette className="w-3.5 h-3.5" /> },
+  ]
 
-  const [activeReportTab, setActiveReportTab] = React.useState<ReportTabValue>("accesos")
+  const [activeReportTab, setActiveReportTab] = React.useState("accesos")
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-8">
 
-    {/* Pill tabs bar */}
-    <div className="mb-5 border-b border-border/40">
-      <div className="flex flex-wrap gap-1.5 py-2">
-        {REPORT_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => setActiveReportTab(tab.value)}
-            className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
-          >
-            {activeReportTab === tab.value && (
-              <motion.div
-                layoutId="reports-pill"
-                className="absolute inset-0 bg-primary rounded-full"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
-            <span className={`relative z-10 transition-colors duration-150 flex items-center gap-1.5 ${
-              activeReportTab === tab.value
-                ? "text-primary-foreground"
-                : "text-muted-foreground"
-            }`}>
-              {tab.value === "accesos" ? <Building2 className="w-3.5 h-3.5" /> : <Cigarette className="w-3.5 h-3.5" />}
-              {tab.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
+    <PillTabsBar
+      tabs={REPORT_TABS}
+      value={activeReportTab}
+      onValueChange={setActiveReportTab}
+      layoutId="reports-pill"
+      className="mb-5"
+    />
 
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={activeReportTab}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.18, ease: "easeOut" }}
-      >
+    <PillTabsContent value={activeReportTab}>
 
       {/* ═══════════════ TAB ACCESOS ═══════════════ */}
       {activeReportTab === "accesos" && (
@@ -1220,8 +1192,7 @@ export default function ReportsPage() {
 
       </div>
       )}
-      </motion.div>
-    </AnimatePresence>
+    </PillTabsContent>
 
     </div>
   )

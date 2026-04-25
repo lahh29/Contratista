@@ -4,7 +4,8 @@ import * as React from "react"
 import { collection, query, limit, getDocs, DocumentData } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { UserCog, ShieldAlert, Settings } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { PillTabsBar, PillTabsContent } from "@/components/ui/pill-tabs"
+import type { PillTab } from "@/components/ui/pill-tabs"
 import { useAppUser } from "@/hooks/use-app-user"
 import { EmployeeManager } from "@/components/fumadores/EmployeeManager"
 import { MealSchedulesManager } from "@/components/settings/MealSchedulesManager"
@@ -14,15 +15,13 @@ import { UserManager } from "@/components/settings/UserManager"
 
 // ── Mobile tab definitions ──────────────────────────────────────────────────
 
-const MOBILE_TABS = [
+const MOBILE_TABS: PillTab[] = [
   { value: "users",       label: "Usuarios"   },
   { value: "employees",   label: "Empleados"  },
   { value: "areas",       label: "Áreas"      },
   { value: "supervisors", label: "Encargados" },
   { value: "horarios",    label: "Horarios"   },
-] as const
-
-type TabValue = typeof MOBILE_TABS[number]["value"]
+]
 
 // ── SettingsPage ────────────────────────────────────────────────────────────
 
@@ -36,7 +35,7 @@ export default function SettingsPage() {
   const [companies,          setCompanies]          = React.useState<DocumentData[] | null>(null)
   const [areasLoading,       setAreasLoading]       = React.useState(true)
   const [supervisorsLoading, setSupervisorsLoading] = React.useState(true)
-  const [activeTab,          setActiveTab]          = React.useState<TabValue>("users")
+  const [activeTab,          setActiveTab]          = React.useState("users")
 
   React.useEffect(() => {
     if (!db) return
@@ -96,7 +95,7 @@ export default function SettingsPage() {
     />
   )
 
-  const tabContent: Record<TabValue, React.ReactNode> = {
+  const tabContent: Record<string, React.ReactNode> = {
     users:       usersCard,
     employees:   employeesCard,
     areas:       areasCard,
@@ -127,44 +126,16 @@ export default function SettingsPage() {
 
       {/* ── Mobile: pill tabs ── */}
       <div className="md:hidden">
-        <div className="mb-5 border-b border-border/40">
-          <div className="flex flex-wrap gap-1.5 py-2">
-            {MOBILE_TABS.map((tab) => (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
-              >
-                {activeTab === tab.value && (
-                  <motion.div
-                    layoutId="settings-pill"
-                    className="absolute inset-0 bg-primary rounded-full"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                  />
-                )}
-                <span className={`relative z-10 transition-colors duration-150 ${
-                  activeTab === tab.value
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground"
-                }`}>
-                  {tab.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-          >
-            {tabContent[activeTab]}
-          </motion.div>
-        </AnimatePresence>
+        <PillTabsBar
+          tabs={MOBILE_TABS}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          layoutId="settings-pill"
+          className="mb-5"
+        />
+        <PillTabsContent value={activeTab}>
+          {tabContent[activeTab]}
+        </PillTabsContent>
       </div>
 
       {/* ── Desktop: grid ── */}
