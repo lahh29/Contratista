@@ -140,7 +140,7 @@ export function UserManager({ db, companies }: UserManagerProps) {
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-3 pb-3 pt-0">
           {loading ? (
             <div className="flex justify-center py-6">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
