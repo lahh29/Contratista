@@ -3,6 +3,7 @@
 import * as React from "react"
 import { collection, query, limit, getDocs, DocumentData } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
+import { useCompanies } from "@/hooks/use-companies"
 import { UserCog, ShieldAlert, Settings } from "lucide-react"
 import { PillTabsBar, PillTabsContent } from "@/components/ui/pill-tabs"
 import type { PillTab } from "@/components/ui/pill-tabs"
@@ -32,7 +33,6 @@ export default function SettingsPage() {
   const [refreshKey,         setRefreshKey]         = React.useState(0)
   const [areas,              setAreas]              = React.useState<DocumentData[] | null>(null)
   const [supervisors,        setSupervisors]        = React.useState<DocumentData[] | null>(null)
-  const [companies,          setCompanies]          = React.useState<DocumentData[] | null>(null)
   const [areasLoading,       setAreasLoading]       = React.useState(true)
   const [supervisorsLoading, setSupervisorsLoading] = React.useState(true)
   const [activeTab,          setActiveTab]          = React.useState("users")
@@ -55,12 +55,7 @@ export default function SettingsPage() {
       .finally(() => setSupervisorsLoading(false))
   }, [db, refreshKey])
 
-  React.useEffect(() => {
-    if (!db) return
-    getDocs(query(collection(db, "companies"), limit(200)))
-      .then(snap => setCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
-      .catch(() => setCompanies([]))
-  }, [db])
+  const { companies } = useCompanies()
 
   const handleRefresh = React.useCallback(() => setRefreshKey(k => k + 1), [])
 

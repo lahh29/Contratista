@@ -416,7 +416,7 @@ function LastAccess() {
 
   React.useEffect(() => {
     if (!db) return
-    getDocs(collection(db, "users")).then(snap => {
+    getDocs(query(collection(db, "users"), limit(200))).then(snap => {
       const data = snap.docs.map(d => ({ uid: d.id, ...d.data() })) as AccessUser[]
       data.sort((a, b) => {
         const ta = a.lastLoginAt?.toDate?.()?.getTime() ?? 0

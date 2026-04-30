@@ -50,7 +50,7 @@ export default function BajasPage() {
     setLoading(true)
     try {
       const snap = await getDocs(
-        query(collection(db, 'bajas'), orderBy('fechaBaja', 'desc'))
+        query(collection(db, 'bajas'), orderBy('fechaBaja', 'desc'), limit(500))
       )
       setBajas(snap.docs.map(d => ({ id: d.id, ...d.data() } as Baja)))
     } finally {

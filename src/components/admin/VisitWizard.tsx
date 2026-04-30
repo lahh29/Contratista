@@ -42,23 +42,22 @@ import {
   getDocs,
 } from 'firebase/firestore'
 
-// Caché a nivel módulo con TTL
-// Áreas y supervisores: 30 min (cambian muy raramente)
-// Empresas: 2 min (pueden agregarse con frecuencia, pero evita lecturas en cada apertura del wizard)
+// Caché a nivel módulo con TTL — áreas y supervisores (30 min, cambian raramente)
+// Empresas se obtienen del CompaniesProvider compartido
 interface _CacheEntry { data: any[]; ts: number }
 const _TTL_LONG  = 30 * 60_000
-const _TTL_SHORT =  2 * 60_000
 function _fresh(c: _CacheEntry | null, ttl: number): boolean {
   return c !== null && Date.now() - c.ts < ttl
 }
 
 let _areasCache:       _CacheEntry | null = null
 let _supervisorsCache: _CacheEntry | null = null
-let _companiesCache:   _CacheEntry | null = null
+
 import { useToast } from '@/hooks/use-toast'
 import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
 import { useAppUser } from '@/hooks/use-app-user'
+import { useCompanies } from '@/hooks/use-companies'
 
 // Verifica si el SUA está vencido considerando la fecha real (timezone Querétaro)
 function isSuaExpired(company: any): boolean {
@@ -179,7 +178,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     }
   }
 
-  const [allCompanies, setAllCompanies] = React.useState<any[]>(_companiesCache?.data ?? [])
+  const { companies: allCompanies } = useCompanies()
   const [areas,        setAreas]        = React.useState<any[]>(_areasCache?.data ?? [])
   const [supervisors,  setSupervisors]  = React.useState<any[]>(_supervisorsCache?.data ?? [])
 
@@ -199,14 +198,6 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
         getDocs(query(collection(db, 'supervisors'), limit(100))).then(snap => {
           _supervisorsCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
           setSupervisors(_supervisorsCache.data)
-        }).catch(() => {})
-      )
-    }
-    if (!_fresh(_companiesCache, _TTL_SHORT)) {
-      fetches.push(
-        getDocs(query(collection(db, 'companies'), limit(500))).then(snap => {
-          _companiesCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
-          setAllCompanies(_companiesCache.data)
         }).catch(() => {})
       )
     }

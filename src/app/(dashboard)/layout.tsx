@@ -12,6 +12,7 @@ import { NotificationBell } from "@/components/layout/NotificationBell"
 import { motion, AnimatePresence } from "framer-motion"
 import { useMaintenance } from "@/hooks/use-maintenance"
 import { MealConfigProvider } from "@/hooks/use-meal-config"
+import { CompaniesProvider } from "@/hooks/use-companies"
 
 export default function DashboardLayout({
   children,
@@ -81,6 +82,7 @@ export default function DashboardLayout({
   const pageTitle = PAGE_TITLES[pathname] ?? 'ViñoPlastic'
 
   return (
+    <CompaniesProvider>
     <MealConfigProvider>
     <NotificationBanner />
     <SidebarProvider>
@@ -183,5 +185,6 @@ export default function DashboardLayout({
       </SidebarInset>
     </SidebarProvider>
     </MealConfigProvider>
+    </CompaniesProvider>
   )
 }
