@@ -12,6 +12,8 @@ import {
   RefreshCw,
   X,
   AlertCircle,
+  FileJson,
+  UserPlus,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,6 +24,8 @@ import { doc, getDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { useDebounce } from "@/hooks/use-debounce"
 import { EditEmployeeDialog, type EmployeeData } from "@/components/fumadores/EditEmployeeDialog"
+import { JsonImporterSheet } from "@/components/fumadores/JsonImporterSheet"
+import { CreateEmployeeDialog } from "@/components/fumadores/CreateEmployeeDialog"
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -39,6 +43,10 @@ export function EmployeeManager() {
   // ── Edit sheet state ──
   const [editOpen, setEditOpen] = React.useState(false)
   const [editEmployee, setEditEmployee] = React.useState<EmployeeData | null>(null)
+
+  // ── Import / Create dialogs ──
+  const [importOpen, setImportOpen] = React.useState(false)
+  const [createOpen, setCreateOpen] = React.useState(false)
 
   // ── Recent edits (session only) ──
   const [recentEdits, setRecentEdits] = React.useState<EmployeeData[]>([])
@@ -109,15 +117,39 @@ export function EmployeeManager() {
     <>
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Users className="w-4 h-4 text-primary" aria-hidden="true" />
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4 text-primary" aria-hidden="true" />
+                </div>
+                Empleados
+              </CardTitle>
+              <CardDescription className="text-sm mt-1.5">
+                Busca por número de empleado para editar sus datos o eliminarlo.
+              </CardDescription>
             </div>
-            Empleados
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Busca por número de empleado para editar sus datos o eliminarlo.
-          </CardDescription>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setCreateOpen(true)}
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Nuevo</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setImportOpen(true)}
+              >
+                <FileJson className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Importar JSON</span>
+              </Button>
+            </div>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -271,6 +303,16 @@ export function EmployeeManager() {
         employee={editEmployee}
         onUpdated={handleUpdated}
         onDeleted={handleDeleted}
+      />
+
+      <JsonImporterSheet
+        open={importOpen}
+        onOpenChange={setImportOpen}
+      />
+
+      <CreateEmployeeDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
       />
     </>
   )
