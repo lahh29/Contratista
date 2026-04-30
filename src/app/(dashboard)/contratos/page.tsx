@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, limit } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { CheckCircle2, Clock, Loader2, FileText, Printer, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -30,8 +30,8 @@ export default function ContratosPage() {
     ;(async () => {
       // 2 lecturas en batch en lugar de 1 + N lecturas individuales
       const [companiesSnap, contratosSnap] = await Promise.all([
-        getDocs(collection(db, 'companies')),
-        getDocs(collection(db, 'contratos')),
+        getDocs(query(collection(db, 'companies'), limit(500))),
+        getDocs(query(collection(db, 'contratos'), limit(500))),
       ])
 
       const contratosMap = new Map(contratosSnap.docs.map(d => [d.id, d.data()]))

@@ -6,11 +6,12 @@ import { VisitsTable } from "@/components/admin/VisitsTable"
 import { VisitsCalendar } from "@/components/admin/VisitsCalendar"
 import { EditVisitSheet } from "@/components/admin/EditVisitSheet"
 import { useFirestore, useCollection, useUser } from "@/firebase"
-import { collection, query, where, limit, updateDoc, doc, serverTimestamp, getDoc, getDocs } from "firebase/firestore"
+import { collection, query, where, limit, updateDoc, doc, serverTimestamp, getDoc } from "firebase/firestore"
 import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
 import { logAudit } from "@/app/actions/audit"
 import { useAppUser } from "@/hooks/use-app-user"
+import { useCompanies } from "@/hooks/use-companies"
 
 export default function DashboardPage() {
   const db = useFirestore()
@@ -34,13 +35,7 @@ export default function DashboardPage() {
   const activeVisits = React.useMemo(() => visitsForRole?.filter(v => v.status === "Activa") ?? null, [visitsForRole])
   const scheduledVisits = React.useMemo(() => visitsForRole?.filter(v => v.status === "Programada") ?? null, [visitsForRole])
 
-  const [companies, setCompanies] = React.useState<any[]>([])
-  React.useEffect(() => {
-    if (!db || !user || authLoading) return
-    getDocs(query(collection(db, "companies"), limit(500)))
-      .then(snap => setCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
-      .catch(() => {})
-  }, [db, user, authLoading])
+  const { companies } = useCompanies()
 
   const handleFinishVisit = async (visitId: string) => {
     if (!db || !appUser) return

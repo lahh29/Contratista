@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { collection, setDoc, getDocs, doc, Firestore, DocumentData } from "firebase/firestore"
+import { collection, setDoc, getDocs, doc, query, limit, Firestore, DocumentData } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -48,7 +48,7 @@ export function UserManager({ db, companies }: UserManagerProps) {
     if (!db) return
     setLoading(true)
     try {
-      const snap = await getDocs(collection(db, "users"))
+      const snap = await getDocs(query(collection(db, "users"), limit(200)))
       setUsers(snap.docs.map((d) => ({ uid: d.id, ...d.data() })))
     } catch {
       toastRef.current({ variant: "destructive", title: "Error al cargar usuarios" })

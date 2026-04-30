@@ -41,6 +41,7 @@ import { QRScanner } from "@/components/contractor/QRScanner"
 import { sendNotification } from '@/app/actions/notify'
 import { logAudit } from '@/app/actions/audit'
 import { useAppUser } from '@/hooks/use-app-user'
+import { useCompanies } from '@/hooks/use-companies'
 
 // ── LocalStorage helpers ───────────────────────────────────────────────────
 
@@ -154,8 +155,8 @@ export default function ScannerPage() {
     }
   }
   const [scanHistory, setScanHistory] = React.useState<HistoryEntry[]>(loadHistory)
-  const [allCompanies, setAllCompanies] = React.useState<import('@/types').Company[]>([])
-  const [loadingCompanies, setLoadingCompanies] = React.useState(false)
+  const { companies: cachedCompanies, loading: loadingCompanies } = useCompanies()
+  const allCompanies = (cachedCompanies ?? []) as import('@/types').Company[]
   const [showManualSearch, setShowManualSearch] = React.useState(false)
   const [manualQuery, setManualQuery] = React.useState('')
   const [exitMotivo, setExitMotivo] = React.useState<string | null>(null)
@@ -165,10 +166,18 @@ export default function ScannerPage() {
     return raw ? parseInt(raw, 10) : null
   })
 
-  const areasQuery = React.useMemo(() => db ? query(collection(db, 'areas'), limit(100)) : null, [db])
-  const supervisorsQuery = React.useMemo(() => db ? query(collection(db, 'supervisors'), limit(100)) : null, [db])
-  const { data: areas } = useCollection(areasQuery)
-  const { data: supervisors } = useCollection(supervisorsQuery)
+  const [areas, setAreas] = React.useState<any[] | null>(null)
+  const [supervisors, setSupervisors] = React.useState<any[] | null>(null)
+
+  React.useEffect(() => {
+    if (!db) return
+    getDocs(query(collection(db, 'areas'), limit(100)))
+      .then(snap => setAreas(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .catch(() => setAreas([]))
+    getDocs(query(collection(db, 'supervisors'), limit(100)))
+      .then(snap => setSupervisors(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .catch(() => setSupervisors([]))
+  }, [db])
 
   React.useEffect(() => { saveHistory(scanHistory) }, [scanHistory])
   React.useEffect(() => {
@@ -206,16 +215,8 @@ export default function ScannerPage() {
     } catch { /* non-critical */ }
   }, [db])
 
-  const openManualSearch = async () => {
+  const openManualSearch = () => {
     setShowManualSearch(true)
-    if (allCompanies.length > 0 || !db) return
-    setLoadingCompanies(true)
-    try {
-      const snap = await getDocs(query(collection(db, 'companies'), limit(200)))
-      setAllCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() } as import('@/types').Company)))
-    } finally {
-      setLoadingCompanies(false)
-    }
   }
 
   const handleQRDetected = async (qrText: string) => {

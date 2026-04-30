@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import Link from "next/link"
 import { useFirestore } from "@/firebase"
-import { collection, query, orderBy, limit, doc, updateDoc, deleteDoc, getDocs } from "firebase/firestore"
+import { doc, updateDoc, deleteDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import { CompanyDetailSheet } from "@/components/contractors/CompanyDetailSheet"
@@ -61,12 +61,13 @@ import { FirestorePermissionError } from "@/firebase/errors"
 import { sendNotification } from "@/app/actions/notify"
 import { logAudit } from "@/app/actions/audit"
 import { useAppUser } from "@/hooks/use-app-user"
+import { useCompanies } from "@/hooks/use-companies"
 import type { Company } from "@/types"
 import { Plus } from "lucide-react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { getSuaStatus } from "@/lib/utils"
 import { SkeletonTable, SkeletonRows } from "@/components/ui/skeletons"
-import { toastWithUndo, toastError } from "@/lib/toast-helpers"
+import { toastWithUndo } from "@/lib/toast-helpers"
 
 type ActiveDialog = 'qr' | 'detail' | 'visits' | 'edit' | 'block' | 'delete' | null
 
@@ -145,23 +146,7 @@ export default function ContractorsPage() {
   const { toast } = useToast()
   const { appUser } = useAppUser()
 
-  const [companies, setCompanies] = React.useState<any[] | null>(null)
-  const [loading, setLoading] = React.useState(true)
-
-  const fetchCompanies = React.useCallback(async () => {
-    if (!db) return
-    setLoading(true)
-    try {
-      const snap = await getDocs(query(collection(db, "companies"), orderBy("createdAt", "desc"), limit(500)))
-      setCompanies(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-    } catch {
-      setCompanies([])
-    } finally {
-      setLoading(false)
-    }
-  }, [db])
-
-  React.useEffect(() => { fetchCompanies() }, [fetchCompanies])
+  const { companies, loading, refresh: fetchCompanies } = useCompanies()
 
   const filteredCompanies = React.useMemo(() => {
     if (!companies) return []
