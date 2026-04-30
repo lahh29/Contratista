@@ -269,12 +269,14 @@ export function JsonImporterSheet({ open, onOpenChange }: JsonImporterSheetProps
             <Tabs defaultValue="validos">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="validos" className="text-xs gap-1.5">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Válidos ({validCount})
+                  <CheckCircle2 className="w-3 h-3 md:hidden" />
+                  <span className="hidden md:inline">Válidos ({validCount})</span>
+                  <span className="md:hidden">({validCount})</span>
                 </TabsTrigger>
                 <TabsTrigger value="errores" className="text-xs gap-1.5" disabled={invalidCount === 0}>
-                  <AlertCircle className="w-3 h-3" />
-                  Con errores ({invalidCount})
+                  <AlertCircle className="w-3 h-3 md:hidden" />
+                  <span className="hidden md:inline">Con errores ({invalidCount})</span>
+                  <span className="md:hidden">({invalidCount})</span>
                 </TabsTrigger>
               </TabsList>
 

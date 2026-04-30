@@ -4,7 +4,7 @@ import * as React from "react"
 import { collection, query, limit, getDocs, DocumentData } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useCompanies } from "@/hooks/use-companies"
-import { UserCog, ShieldAlert, Settings } from "lucide-react"
+import { UserCog, ShieldAlert, Settings, Users, Briefcase, MapPin, Clock } from "lucide-react"
 import { PillTabsBar, PillTabsContent } from "@/components/ui/pill-tabs"
 import type { PillTab } from "@/components/ui/pill-tabs"
 import { useAppUser } from "@/hooks/use-app-user"
@@ -17,11 +17,11 @@ import { UserManager } from "@/components/settings/UserManager"
 // ── Mobile tab definitions ──────────────────────────────────────────────────
 
 const MOBILE_TABS: PillTab[] = [
-  { value: "users",       label: "Usuarios"   },
-  { value: "employees",   label: "Empleados"  },
-  { value: "areas",       label: "Áreas"      },
-  { value: "supervisors", label: "Encargados" },
-  { value: "horarios",    label: "Horarios"   },
+  { value: "users",       label: "Usuarios",   icon: <Users className="w-3.5 h-3.5" /> },
+  { value: "employees",   label: "Empleados",  icon: <Briefcase className="w-3.5 h-3.5" /> },
+  { value: "areas",       label: "Áreas",      icon: <MapPin className="w-3.5 h-3.5" /> },
+  { value: "supervisors", label: "Encargados", icon: <UserCog className="w-3.5 h-3.5" /> },
+  { value: "horarios",    label: "Horarios",   icon: <Clock className="w-3.5 h-3.5" /> },
 ]
 
 // ── SettingsPage ────────────────────────────────────────────────────────────

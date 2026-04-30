@@ -742,12 +742,12 @@ export function MealSchedulesManager() {
           <Tabs defaultValue="horarios">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="horarios" className="text-xs gap-1.5">
-                <UtensilsCrossed className="w-3 h-3" />
-                Por departamento
+                <UtensilsCrossed className="w-3 h-3 md:hidden" />
+                <span className="hidden md:inline">Por departamento</span>
               </TabsTrigger>
               <TabsTrigger value="grupos" className="text-xs gap-1.5">
-                <Users className="w-3 h-3" />
-                Grupos
+                <Users className="w-3 h-3 md:hidden" />
+                <span className="hidden md:inline">Grupos</span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="horarios" className="mt-4">
