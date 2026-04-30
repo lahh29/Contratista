@@ -62,8 +62,8 @@ export function PillTabsBar({
                   isActive ? "text-primary-foreground" : "text-muted-foreground",
                 )}
               >
-                {tab.icon}
-                {tab.label}
+                {tab.icon && <span className="md:hidden">{tab.icon}</span>}
+                <span className={tab.icon ? "hidden md:inline" : ""}>{tab.label}</span>
                 {tab.badge}
               </span>
             </button>
