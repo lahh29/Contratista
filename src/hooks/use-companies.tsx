@@ -24,15 +24,16 @@ const ROLES_WITH_COMPANIES_ACCESS = new Set(['admin', 'guard', 'seguridad', 'log
 
 export function CompaniesProvider({ children }: { children: ReactNode }) {
   const db = useFirestore()
-  const { appUser } = useAppUser()
+  const { appUser, loading: userLoading } = useAppUser()
   const [companies, setCompanies] = useState<DocumentData[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   const canAccess = appUser ? ROLES_WITH_COMPANIES_ACCESS.has(appUser.role) : false
 
   const refresh = useCallback(async () => {
-    if (!db || !canAccess) {
-      setCompanies(canAccess ? null : [])
+    if (!db || userLoading) return
+    if (!canAccess) {
+      setCompanies([])
       setLoading(false)
       return
     }
@@ -47,7 +48,7 @@ export function CompaniesProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }, [db, canAccess])
+  }, [db, canAccess, userLoading])
 
   useEffect(() => { refresh() }, [refresh])
 
