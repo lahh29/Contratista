@@ -51,8 +51,15 @@ export function AuthLayout({ children }: Props) {
 
       {/* ── Right: Form panel ──────────────────────────────────── */}
       <div className="relative z-10 w-full lg:w-[40%] flex items-center justify-center px-5 lg:px-10">
-        {/* Desktop: solid bg panel | Mobile: transparent (carousel behind) */}
-        <div className="hidden lg:block absolute inset-0 bg-background" />
+        {/* Desktop: blur fade from carousel → solid bg */}
+        <div
+          className="hidden lg:block absolute inset-y-0 -left-32 w-32 backdrop-blur-xl pointer-events-none"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent, black)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black)',
+          }}
+        />
+        <div className="hidden lg:block absolute inset-y-0 -left-8 right-0 bg-gradient-to-r from-background/0 via-background/80 via-[12%] to-background to-[28%] pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.98 }}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
 // ── Blueprint images from public/imagenes-login ───────────────────────────────
 
@@ -43,7 +44,7 @@ export function BlueprintCarousel({ className = '' }: Props) {
   }, [advance])
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={cn('relative overflow-hidden', className)}>
       <AnimatePresence initial={false}>
         <motion.div
           key={index}
