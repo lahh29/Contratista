@@ -117,7 +117,7 @@ export default function RegisterPage() {
               ViñoPlastic
             </p>
             <p className="text-muted-foreground text-xs mt-1">
-              Portal Contratista · Registro
+              Registro para Proveedor
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default function RegisterPage() {
                     Correo electrónico
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Usa el correo registrado con tu empresa
+                    <strong>¡Importante! </strong>Debes usar un correo electrónico válido.
                   </p>
                 </div>
 

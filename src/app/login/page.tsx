@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth"
-import { Loader2, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Loader2, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2, GhostIcon, HashIcon, OrbitIcon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -82,6 +82,19 @@ export default function LoginPage() {
     }
   }
 
+  async function handlePasswordReset() {
+    if (!auth || !resetEmail) return
+    setResetLoading(true)
+    try {
+      await sendPasswordResetEmail(auth, resetEmail)
+    } catch {
+      // No revelar si el correo existe — siempre mostrar éxito
+    } finally {
+      setResetSent(true)
+      setResetLoading(false)
+    }
+  }
+
   if (authLoading || user) return null
 
   return (
@@ -95,101 +108,190 @@ export default function LoginPage() {
               ViñoPlastic
             </p>
             <p className="text-muted-foreground text-sm mt-2">
-              Control de acceso · Planta Querétaro
+              Planta Querétaro
             </p>
           </div>
 
-          {/* Form */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-
-              {/* Email */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder="correo@vinoplastic.com"
-                          className="h-11 pl-10"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+          <AnimatePresence mode="wait">
+            {resetMode ? (
+              /* ── Recuperar contraseña ─────────────────────── */
+              <motion.div
+                key="reset"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-4"
+              >
+                {resetSent ? (
+                  <div className="flex flex-col items-center gap-3 py-2 text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                      className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center"
+                    >
+                      <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    </motion.div>
+                    <div>
+                      <p className="font-bold text-sm">Correo enviado</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Si el correo está registrado, recibirás las instrucciones para restablecer tu contraseña.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg mt-1"
+                      onClick={() => { setResetMode(false); setResetSent(false); setResetEmail("") }}
+                    >
+                      Volver al inicio de sesión
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <p className="font-bold text-sm">Recuperar contraseña</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ingresa tu correo y te enviaremos el enlace de recuperación.
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="email"
+                        placeholder="correo@vinoplastic.com"
+                        autoComplete="email"
+                        inputMode="email"
+                        className="h-11 pl-10"
+                        value={resetEmail}
+                        onChange={e => setResetEmail(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handlePasswordReset()}
+                      />
+                    </div>
+                    <Button
+                      className="w-full h-11"
+                      disabled={resetLoading || !resetEmail}
+                      onClick={handlePasswordReset}
+                    >
+                      {resetLoading
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : "Enviar enlace"
+                      }
+                    </Button>
+                    <button
+                      type="button"
+                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                      onClick={() => setResetMode(false)}
+                    >
+                      <OrbitIcon className="w-4 h-4" />
+                    </button>
+                  </>
                 )}
-              />
+              </motion.div>
+            ) : (
+              /* ── Login form ───────────────────────────────── */
+              <motion.div
+                key="login"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 30 }}
+                transition={{ duration: 0.25 }}
+              >
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
 
-              {/* Password */}
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    {/* Email */}
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                {...field}
+                                type="email"
+                                placeholder="correo@vinoplastic.com"
+                                className="h-11 pl-10"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                        <Input
-                          {...field}
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Contraseña"
-                          className="h-11 pl-10 pr-11"
-                        />
+                    {/* Password */}
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <Input
+                                {...field}
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Contraseña"
+                                className="h-11 pl-10 pr-11"
+                              />
+                              <button
+                                type="button"
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                onClick={() => setShowPassword(v => !v)}
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                        <button
-                          type="button"
-                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowPassword(v => !v)}
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                    {/* Error */}
+                    {loginError && (
+                      <div className="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                        <AlertCircle className="w-4 h-4 text-red-500" />
+                        <p className="text-xs text-red-600">{loginError}</p>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    )}
 
-              {/* Error */}
-              {loginError && (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
-                  <p className="text-xs text-red-600">{loginError}</p>
-                </div>
-              )}
+                    {/* Submit */}
+                    <Button className="w-full h-11">
+                      {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Iniciar sesión"}
+                    </Button>
 
-              {/* Submit */}
-              <Button className="w-full h-11">
-                {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Iniciar sesión"}
-              </Button>
+                    {/* Forgot */}
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setResetMode(true)}
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </button>
+                    </div>
 
-              {/* Forgot */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
-
-            </form>
-          </Form>
+                  </form>
+                </Form>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Register */}
-          <Link
-            href="/register"
-            className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-primary text-primary text-sm hover:underline"
-          >
-            <UserPlus className="w-4 h-4" />
-            Registrarse como proveedor
-          </Link>
+          {!resetMode && (
+            <Link
+              href="/register"
+              className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-primary text-primary text-sm hover:underline"
+            >
+              <UserPlus className="w-4 h-4" />
+              Registrarse como proveedor
+            </Link>
+          )}
 
         </div>
       </div>
