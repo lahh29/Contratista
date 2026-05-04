@@ -99,6 +99,17 @@
       0 4px 24px hsl(0 0% 0% / 0.08),
       inset 0 1px 0 hsl(0 0% 100% / 0.6);
 
+    /* ── Portal: Estado SUA ────────────────────────────── */
+    --sua-valid: 152 76% 36%;
+    --sua-valid-bg: 152 76% 97%;
+    --sua-valid-border: 152 50% 80%;
+    --sua-expired: 0 84% 55%;
+    --sua-expired-bg: 0 84% 97%;
+    --sua-expired-border: 0 60% 82%;
+    --sua-pending: 38 92% 50%;
+    --sua-pending-bg: 38 92% 97%;
+    --sua-pending-border: 38 70% 80%;
+
     /* ── Estados semánticos: FUERA (ámbar) ───────────────────
        Empleado actualmente fuera a fumar.
        ─────────────────────────────────────────────────────── */
@@ -230,6 +241,17 @@
     --shadow-card:
       0 4px 24px hsl(0 0% 0% / 0.30),
       inset 0 1px 0 hsl(0 0% 100% / 0.1);
+
+    /* ── Portal: Estado SUA (oscuro) ──────────────────── */
+    --sua-valid: 152 60% 55%;
+    --sua-valid-bg: 152 60% 12%;
+    --sua-valid-border: 152 40% 25%;
+    --sua-expired: 0 72% 60%;
+    --sua-expired-bg: 0 72% 12%;
+    --sua-expired-border: 0 50% 25%;
+    --sua-pending: 38 80% 60%;
+    --sua-pending-bg: 38 80% 12%;
+    --sua-pending-border: 38 60% 25%;
 
     /* ── Estados semánticos: FUERA (ámbar oscuro) ──────────── */
     --status-out-bg-opacity: 0.15;

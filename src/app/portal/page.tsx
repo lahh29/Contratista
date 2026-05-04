@@ -9,17 +9,8 @@ import { useAppUser } from "@/hooks/use-app-user"
 import { useNotifications } from "@/hooks/use-notifications"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { generateVoucherPDF } from "@/lib/generate-voucher"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import Link from "next/link"
 import {
   ShieldCheck,
@@ -27,13 +18,6 @@ import {
   ShieldX,
   Bell,
   BellOff,
-  Calendar,
-  Hash,
-  Phone,
-  User,
-  Building2,
-  Loader2,
-  AlertTriangle,
   Clock,
   Download,
   MapPin,
@@ -44,99 +28,52 @@ import {
   CalendarClock,
   RefreshCw,
   CheckCheck,
-  FileText as FileTextIcon,
-  MapPin as MapPinIcon,
+  Phone,
+  User,
+  Hash,
+  Calendar,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Company, Visit } from "@/types"
 import { sendNotification } from "@/app/actions/notify"
 
-// ── Sub-components ─────────────────────────────────────────
+// ── Animation variants ─────────────────────────────────────────
 
-function SuaStatusCard({ company }: { company: Company }) {
-  const validUntil = company.sua?.validUntil
-
-  const status: 'Valid' | 'Expired' | 'Pending' = useMemo(() => {
-    if (validUntil) {
-      const today = new Date().toISOString().slice(0, 10)
-      return validUntil < today ? 'Expired' : 'Valid'
-    }
-    const s = company.sua?.status
-    if (s === 'Valid' || s === 'Expired') return s
-    return 'Pending'
-  }, [validUntil, company.sua?.status])
-
-  const config = {
-    Valid: { bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-800 dark:text-green-300', muted: 'text-green-600 dark:text-green-400', label: 'Vigente', icon: ShieldCheck },
-    Expired: { bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800', text: 'text-red-800 dark:text-red-300', muted: 'text-red-600 dark:text-red-400', label: 'Vencido', icon: ShieldX },
-    Pending: { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-800 dark:text-orange-300', muted: 'text-orange-600 dark:text-orange-400', label: 'Pendiente', icon: ShieldAlert },
-  }[status]
-
-  const Icon = config.icon
-
-  const daysLeft = useMemo(() => {
-    if (!validUntil) return null
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    const expiry = new Date(validUntil + 'T00:00:00')
-    return Math.round((expiry.getTime() - today.getTime()) / 864e5)
-  }, [validUntil])
-
-  const daysLabel = daysLeft === null ? null
-    : daysLeft > 0 ? `Vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`
-      : daysLeft === 0 ? 'Vence hoy'
-        : `Venció hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) !== 1 ? 's' : ''}`
-
-  return (
-    <Card className={`border ${config.border} ${config.bg} shadow-none`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0">
-              <Icon className={`w-10 h-10 ${config.text}`} />
-            </div>
-            <div>
-              <p className={`text-xs font-bold uppercase tracking-widest ${config.muted}`}>Estado SUA</p>
-              <p className={`text-3xl font-black ${config.text} leading-tight`}>{config.label}</p>
-              {daysLabel && (
-                <div className={`flex items-center gap-1.5 mt-1 ${config.muted}`}>
-                  <Clock className="w-3.5 h-3.5" />
-                  <p className="text-sm font-medium">{daysLabel}</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="hidden sm:flex flex-col items-end gap-1">
-            <Badge
-              variant={status === 'Valid' ? 'default' : status === 'Expired' ? 'destructive' : 'secondary'}
-              className="text-sm px-4 py-1.5 rounded-xl"
-            >
-              {status ?? 'N/A'}
-            </Badge>
-            {validUntil && (
-              <p className={`text-xs ${config.muted}`}>hasta {validUntil}</p>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | null }) {
-  if (!value) return null
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+}
+
+// ── Skeleton components ────────────────────────────────────────
+
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-muted ${className}`} />
+}
+
+function PortalSkeleton() {
   return (
-    <div className="flex items-center gap-3 py-3 border-b last:border-0">
-      <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-muted-foreground" />
+    <div className="space-y-6 p-1">
+      <Skeleton className="h-44 w-full rounded-2xl" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Skeleton className="h-32 rounded-2xl" />
+        <Skeleton className="h-32 rounded-2xl" />
+        <Skeleton className="h-32 rounded-2xl" />
       </div>
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold mt-0.5 truncate">{value}</p>
-      </div>
+      <Skeleton className="h-64 w-full rounded-2xl" />
     </div>
   )
 }
+
+// ── Helper ─────────────────────────────────────────────────────
 
 function visitDuration(entry: Date, exit: Date) {
   const ms = exit.getTime() - entry.getTime()
@@ -145,7 +82,45 @@ function visitDuration(entry: Date, exit: Date) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
-// ── Main page ──────────────────────────────────────────────
+// ── SUA status style maps (full class strings for Tailwind) ────
+
+const SUA_STYLES = {
+  Valid: {
+    border: 'border-[hsl(var(--sua-valid-border))]',
+    bg: 'bg-[hsl(var(--sua-valid-bg))]',
+    text: 'text-[hsl(var(--sua-valid))]',
+    iconBg: 'bg-[hsl(var(--sua-valid)/0.12)]',
+    progressTrack: 'bg-[hsl(var(--sua-valid)/0.15)]',
+    progressBar: 'bg-[hsl(var(--sua-valid))]',
+    hoverBg: 'hover:bg-[hsl(var(--sua-valid)/0.08)]',
+    label: 'Vigente',
+    icon: ShieldCheck,
+  },
+  Expired: {
+    border: 'border-[hsl(var(--sua-expired-border))]',
+    bg: 'bg-[hsl(var(--sua-expired-bg))]',
+    text: 'text-[hsl(var(--sua-expired))]',
+    iconBg: 'bg-[hsl(var(--sua-expired)/0.12)]',
+    progressTrack: 'bg-[hsl(var(--sua-expired)/0.15)]',
+    progressBar: 'bg-[hsl(var(--sua-expired))]',
+    hoverBg: 'hover:bg-[hsl(var(--sua-expired)/0.08)]',
+    label: 'Vencido',
+    icon: ShieldX,
+  },
+  Pending: {
+    border: 'border-[hsl(var(--sua-pending-border))]',
+    bg: 'bg-[hsl(var(--sua-pending-bg))]',
+    text: 'text-[hsl(var(--sua-pending))]',
+    iconBg: 'bg-[hsl(var(--sua-pending)/0.12)]',
+    progressTrack: 'bg-[hsl(var(--sua-pending)/0.15)]',
+    progressBar: 'bg-[hsl(var(--sua-pending))]',
+    hoverBg: 'hover:bg-[hsl(var(--sua-pending)/0.08)]',
+    label: 'Pendiente',
+    icon: ShieldAlert,
+  },
+} as const
+
+// ── Main page ──────────────────────────────────────────────────
 
 export default function PortalPage() {
   const { appUser, loading: authLoading } = useAppUser()
@@ -156,11 +131,10 @@ export default function PortalPage() {
     if (typeof window === 'undefined') return false
     const stored = localStorage.getItem(`sua_renewal_${appUser?.companyId}`)
     if (!stored) return false
-    return Date.now() - Number(stored) < 24 * 60 * 60 * 1000 // 24 h cooldown
+    return Date.now() - Number(stored) < 24 * 60 * 60 * 1000
   })
   const [sendingRenewal, setSendingRenewal] = useState(false)
 
-  // Use companyId (string) as dep — more stable than the appUser object reference
   const companyId = appUser?.companyId
   const companyRef = useMemo(
     () => companyId && db ? doc(db, 'companies', companyId) : null,
@@ -169,7 +143,6 @@ export default function PortalPage() {
   const { data: rawCompany, loading: companyLoading } = useDoc(companyRef)
   const company = rawCompany as Company | null
 
-  // All visits for this company — single-field query avoids composite index requirement
   const visitsQuery = useMemo(() => {
     if (!db || !companyId) return null
     return query(
@@ -180,7 +153,6 @@ export default function PortalPage() {
   }, [db, companyId])
   const { data: rawVisits, loading: visitsLoading } = useCollection(visitsQuery)
 
-  // Sort and derive client-side (no composite index needed)
   const visits = useMemo(() => {
     if (!rawVisits) return null
     return [...rawVisits]
@@ -192,7 +164,6 @@ export default function PortalPage() {
       .slice(0, 20) as Visit[]
   }, [rawVisits])
 
-  // Visitas programadas — ordenadas por fecha/hora asc
   const upcomingVisits = useMemo(() => {
     if (!rawVisits) return null
     return [...rawVisits]
@@ -221,28 +192,28 @@ export default function PortalPage() {
     }
   }
 
+  // ── Loading state ────────────────────────────────────────────
   if (authLoading || companyLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
+    return <PortalSkeleton />
   }
 
+  // ── Error states ─────────────────────────────────────────────
   if (!appUser?.companyId) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] px-4">
-        <Card className="border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 max-w-md w-full">
-          <CardContent className="p-6 flex gap-3 items-start">
-            <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-orange-800 dark:text-orange-300">Sin empresa asignada</p>
-              <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
-                Tu cuenta no está vinculada a ninguna empresa. Contacta al administrador de ViñoPlastic.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-2xl border border-[hsl(var(--sua-pending-border))] bg-[hsl(var(--sua-pending-bg))] p-6 flex gap-3 items-start max-w-md w-full"
+        >
+          <AlertTriangle className="w-5 h-5 text-[hsl(var(--sua-pending))] shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-[hsl(var(--sua-pending))]">Sin empresa asignada</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Tu cuenta no está vinculada a ninguna empresa. Contacta al administrador de ViñoPlastic.
+            </p>
+          </div>
+        </motion.div>
       </div>
     )
   }
@@ -250,361 +221,407 @@ export default function PortalPage() {
   if (!company) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="border-destructive/30 bg-destructive/5 max-w-md w-full">
-          <CardContent className="p-6 flex gap-3 items-start">
-            <ShieldAlert className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-destructive">Empresa no encontrada</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                No se pudo cargar la información de tu empresa. Intenta más tarde.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 flex gap-3 items-start max-w-md w-full"
+        >
+          <ShieldAlert className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive">Empresa no encontrada</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              No se pudo cargar la información de tu empresa. Intenta más tarde.
+            </p>
+          </div>
+        </motion.div>
       </div>
     )
   }
 
+  // ── SUA status logic ─────────────────────────────────────────
+  const validUntil = company.sua?.validUntil
+  const suaStatus: 'Valid' | 'Expired' | 'Pending' = (() => {
+    if (validUntil) {
+      const today = new Date().toISOString().slice(0, 10)
+      return validUntil < today ? 'Expired' : 'Valid'
+    }
+    const s = company.sua?.status
+    if (s === 'Valid' || s === 'Expired') return s
+    return 'Pending'
+  })()
+
+  const daysLeft = validUntil
+    ? Math.round((new Date(validUntil + 'T00:00:00').getTime() - new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00').getTime()) / 864e5)
+    : null
+
+  const sua = SUA_STYLES[suaStatus]
+  const SuaIcon = sua.icon
+
+  const progressPercent = daysLeft !== null
+    ? Math.max(0, Math.min(100, (daysLeft / 365) * 100))
+    : 50
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+    <motion.div
+      variants={stagger}
+      initial="hidden"
+      animate="visible"
+      className="space-y-5 pb-24 md:pb-10"
+    >
 
-      {/* Header empresa */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight">{company.name}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="gap-2 shrink-0"
-            onClick={() => setQrOpen(true)}
-          >
-            <QrCode className="w-4 h-4" />
-            <span className="hidden sm:inline">Mi QR</span>
-          </Button>
-          <Button asChild variant="outline" className="gap-2 shrink-0">
-            <Link href="/portal/contrato">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Reglamento</span>
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Banner: empresa bloqueada */}
-      {company.status === 'Blocked' && (
-        <Card className="border-destructive/40 bg-destructive/5 shadow-none">
-          <CardContent className="p-4 flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Ban className="w-5 h-5 text-destructive" />
+      {/* ── Hero: SUA Status ─────────────────────────────────── */}
+      <motion.div
+        variants={fadeUp}
+        className={`relative overflow-hidden rounded-2xl border ${sua.border} ${sua.bg} p-6 md:p-8`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className={`w-14 h-14 rounded-2xl ${sua.iconBg} flex items-center justify-center shrink-0`}>
+              <SuaIcon className={`w-7 h-7 ${sua.text}`} />
             </div>
             <div>
-              <p className="font-bold text-destructive text-sm">Acceso bloqueado</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Tu empresa ha sido bloqueada temporalmente y no puede registrar nuevas visitas.
-                Contacta al administrador de ViñoPlastic para más información.
+              <p className={`text-xs font-bold uppercase tracking-widest ${sua.text}`}>
+                Estado SUA
               </p>
+              <p className={`text-2xl md:text-3xl font-black ${sua.text} leading-tight`}>
+                {sua.label}
+              </p>
+              {daysLeft !== null && (
+                <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {daysLeft > 0
+                    ? `Vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`
+                    : daysLeft === 0 ? 'Vence hoy'
+                      : `Venció hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) !== 1 ? 's' : ''}`
+                  }
+                </p>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* En Planta — banner en tiempo real */}
-      {activeVisit && (
-        <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 shadow-none">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
-              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+          </div>
+          {validUntil && (
+            <div className="text-right hidden sm:block">
+              <Badge
+                variant={suaStatus === 'Valid' ? 'default' : suaStatus === 'Expired' ? 'destructive' : 'secondary'}
+                className="text-sm px-4 py-1.5 rounded-xl"
+              >
+                {suaStatus}
+              </Badge>
+              <p className="text-xs text-muted-foreground mt-1">hasta {validUntil}</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-green-800 dark:text-green-300">Actualmente dentro de planta</p>
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
-                {activeVisit.areaName && (
-                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
-                    <MapPin className="w-3 h-3" /> {activeVisit.areaName}
-                  </span>
-                )}
-                {activeVisit.personnelCount && (
-                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
-                    <Users className="w-3 h-3" /> {activeVisit.personnelCount} personas
-                  </span>
-                )}
-                {activeVisit.entryTime && (
-                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
-                    <Clock className="w-3 h-3" />
-                    Ingresó {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}
-                  </span>
-                )}
-              </div>
-            </div>
-            <Badge className="shrink-0 bg-green-600 text-white border-green-700 px-3 py-1">
-              En Planta
-            </Badge>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
 
-      {/* SUA status */}
-      <SuaStatusCard company={company} />
+        {/* Progress bar */}
+        <div className="mt-5">
+          <div className={`h-2 w-full rounded-full ${sua.progressTrack} overflow-hidden`}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+              className={`h-full rounded-full ${sua.progressBar}`}
+            />
+          </div>
+        </div>
 
-      {/* Solicitar renovación SUA */}
-      <Card className="border-none shadow-sm">
-        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${renewalSent ? 'bg-green-100 dark:bg-green-900/40' : 'bg-muted'}`}>
+        {/* Renewal inline */}
+        <div className={`mt-4 pt-4 border-t ${sua.border} flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            {renewalSent
+              ? <CheckCheck className="w-4 h-4 text-[hsl(var(--sua-valid))] shrink-0" />
+              : <RefreshCw className="w-4 h-4 text-muted-foreground shrink-0" />
+            }
+            <p className="text-sm text-muted-foreground truncate">
               {renewalSent
-                ? <CheckCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                : <RefreshCw className="w-5 h-5 text-muted-foreground" />
+                ? 'Solicitud enviada — el administrador actualizará tu póliza.'
+                : '¿Ya renovaste tu SUA? Notifica para actualizar el sistema.'
               }
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold leading-tight">
-                {renewalSent ? 'Solicitud enviada' : 'Notificar renovación de SUA'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {renewalSent
-                  ? 'El administrador ha sido notificado y actualizará tu póliza pronto.'
-                  : 'Si ya renovaste tu póliza SUA, avísanos para que actualicemos el sistema.'}
-              </p>
-            </div>
+            </p>
           </div>
           {!renewalSent && (
             <Button
               size="sm"
               variant="outline"
-              className="shrink-0 gap-2 self-end sm:self-auto"
+              className={`shrink-0 gap-2 ${sua.border} ${sua.hoverBg}`}
               onClick={handleRenewalRequest}
               disabled={sendingRenewal}
             >
-              {sendingRenewal
-                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                : <RefreshCw className="w-3.5 h-3.5" />
-              }
-              Notificar renovación
+              <RefreshCw className={`w-3.5 h-3.5 ${sendingRenewal ? 'animate-spin' : ''}`} />
+              Notificar
             </Button>
           )}
-        </CardContent>
-      </Card>
-
-      {/* 2 columnas en desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        {/* Datos de la empresa */}
-        <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2 pt-5 px-5">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Información de la empresa
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-5 pb-5 space-y-0">
-            <InfoRow icon={Building2} label="Razón Social" value={company.name} />
-            <InfoRow icon={User} label="Contacto Principal" value={company.contact} />
-            <InfoRow icon={Phone} label="Teléfono" value={company.phone} />
-            <InfoRow icon={FileTextIcon} label="RFC" value={company.rfc} />
-            <InfoRow icon={MapPinIcon} label="Dirección" value={company.address} />
-          </CardContent>
-        </Card>
-
-        {/* Datos SUA */}
-        <Card className="border-none shadow-sm">
-          <CardHeader className="pb-2 pt-5 px-5">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Datos SUA / Póliza
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-5 pb-5 space-y-0">
-            <InfoRow icon={Hash} label="N° de Póliza / SUA" value={company.sua?.number} />
-            <InfoRow icon={Calendar} label="Vencimiento SUA" value={company.sua?.validUntil} />
-          </CardContent>
-        </Card>
-
-        {/* Notificaciones */}
-        {supported && (
-          <Card className="border-none shadow-sm lg:col-span-2">
-            <CardContent className="p-5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${permission === 'granted' ? 'bg-green-100 dark:bg-green-900/40' : 'bg-muted'}`}>
-                  {permission === 'granted'
-                    ? <Bell className="w-5 h-5 text-green-700 dark:text-green-400" />
-                    : <BellOff className="w-5 h-5 text-muted-foreground" />
-                  }
-                </div>
-                <div>
-                  <p className="font-semibold">
-                    {permission === 'granted' ? 'Notificaciones activas' : 'Activar notificaciones push'}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {permission === 'granted'
-                      ? 'Recibirás alertas de vencimiento de SUA en este dispositivo'
-                      : 'Recibe alertas cuando tu SUA esté por vencer o haya vencido'}
-                  </p>
-                </div>
-              </div>
-              {permission !== 'granted' ? (
-                <Button onClick={requestPermission} className="shrink-0">Activar</Button>
-              ) : (
-                <Badge className="shrink-0 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 px-3 py-1.5">Activo</Badge>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Visitas Programadas */}
-      {upcomingVisits && upcomingVisits.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <CalendarClock className="w-4 h-4 text-blue-500" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Próximas visitas
-            </h2>
-            <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 font-semibold px-2 py-0.5 rounded-full">
-              {upcomingVisits.length}
-            </span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {upcomingVisits.map(visit => (
-              <Card key={visit.id} className="border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-none">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      {/* Fecha y hora */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-black text-blue-900 dark:text-blue-100">
-                          {visit.scheduledDate
-                            ? new Date(visit.scheduledDate + 'T12:00:00').toLocaleDateString('es-MX', {
-                              weekday: 'long', day: 'numeric', month: 'long',
-                            })
-                            : '—'}
-                        </p>
-                        {(visit as any).scheduledTime && (
-                          <span className="text-xs font-semibold bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full font-mono">
-                            {(visit as any).scheduledTime}
-                          </span>
-                        )}
-                      </div>
-                      {/* Área y supervisor */}
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-                        {visit.areaName && (
-                          <span className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-400">
-                            <MapPin className="w-3 h-3 shrink-0" />
-                            {visit.areaName}
-                          </span>
-                        )}
-                        {visit.personnelCount && (
-                          <span className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-400">
-                            <Users className="w-3 h-3 shrink-0" />
-                            {visit.personnelCount} persona{visit.personnelCount !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                      {/* Actividad */}
-                      {(visit as any).activity && (
-                        <p className="text-xs text-blue-600 dark:text-blue-500 mt-1 line-clamp-1">
-                          {(visit as any).activity}
-                        </p>
-                      )}
-                    </div>
-                    <Badge className="shrink-0 bg-blue-600 text-white border-none text-xs px-2.5 py-1">
-                      Programada
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
+      </motion.div>
+
+      {/* ── Blocked banner ───────────────────────────────────── */}
+      {company.status === 'Blocked' && (
+        <motion.div
+          variants={fadeUp}
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 flex items-start gap-3"
+        >
+          <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
+            <Ban className="w-5 h-5 text-destructive" />
+          </div>
+          <div>
+            <p className="font-bold text-destructive text-sm">Acceso bloqueado</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Tu empresa ha sido bloqueada temporalmente. Contacta al administrador.
+            </p>
+          </div>
+        </motion.div>
       )}
 
-      {/* Historial de visitas */}
-      <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="flex-row items-center justify-between space-y-0 px-5 pt-5 pb-2">
-          <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+      {/* ── Quick Actions ────────────────────────────────────── */}
+      <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <motion.button
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => setQrOpen(true)}
+          className="flex flex-col items-center gap-2.5 p-5 rounded-2xl border border-border bg-card hover:shadow-md transition-shadow cursor-pointer"
+        >
+          <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+            <QrCode className="w-5 h-5 text-primary" />
+          </div>
+          <span className="text-sm font-medium">Mi QR</span>
+        </motion.button>
+
+        <Link href="/portal/contrato" className="block">
+          <motion.div
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex flex-col items-center gap-2.5 p-5 rounded-2xl border border-border bg-card hover:shadow-md transition-shadow h-full"
+          >
+            <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <span className="text-sm font-medium">Reglamento</span>
+          </motion.div>
+        </Link>
+
+        {supported && (
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={permission !== 'granted' ? requestPermission : undefined}
+            className="flex flex-col items-center gap-2.5 p-5 rounded-2xl border border-border bg-card hover:shadow-md transition-shadow cursor-pointer col-span-2 sm:col-span-1"
+          >
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${permission === 'granted' ? 'bg-[hsl(var(--sua-valid)/0.12)]' : 'bg-muted'}`}>
+              {permission === 'granted'
+                ? <Bell className="w-5 h-5 text-[hsl(var(--sua-valid))]" />
+                : <BellOff className="w-5 h-5 text-muted-foreground" />
+              }
+            </div>
+            <span className="text-sm font-medium">
+              {permission === 'granted' ? 'Alertas activas' : 'Activar alertas'}
+            </span>
+          </motion.button>
+        )}
+      </motion.div>
+
+      {/* ── Bento: Info + Upcoming ───────────────────────────── */}
+      <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Company info */}
+        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Mi Empresa</p>
+          <div className="space-y-0">
+            <InfoRow icon={User} label="Contacto" value={company.contact} />
+            <InfoRow icon={Phone} label="Teléfono" value={company.phone} />
+            <InfoRow icon={Hash} label="N° Póliza / SUA" value={company.sua?.number} />
+            <InfoRow icon={Calendar} label="Vencimiento" value={company.sua?.validUntil} />
+          </div>
+        </div>
+
+        {/* Upcoming visits */}
+        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Próximas visitas</p>
+            {upcomingVisits && upcomingVisits.length > 0 && (
+              <Badge variant="secondary" className="text-xs">{upcomingVisits.length}</Badge>
+            )}
+          </div>
+          {upcomingVisits && upcomingVisits.length > 0 ? (
+            <div className="space-y-0">
+              {upcomingVisits.slice(0, 3).map(visit => (
+                <div key={visit.id} className="flex items-start gap-3 py-2.5 border-b border-border/50 last:border-0">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <CalendarClock className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold leading-tight">
+                      {visit.scheduledDate
+                        ? new Date(visit.scheduledDate + 'T12:00:00').toLocaleDateString('es-MX', {
+                          weekday: 'short', day: 'numeric', month: 'short',
+                        })
+                        : '—'}
+                      {(visit as any).scheduledTime && (
+                        <span className="ml-2 text-xs font-mono text-muted-foreground">{(visit as any).scheduledTime}</span>
+                      )}
+                    </p>
+                    <div className="flex gap-3 mt-0.5">
+                      {visit.areaName && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />{visit.areaName}
+                        </span>
+                      )}
+                      {visit.personnelCount && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Users className="w-3 h-3" />{visit.personnelCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-4 text-center">Sin visitas programadas</p>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── Visit History ────────────────────────────────────── */}
+      <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Historial de visitas
-          </CardTitle>
+          </p>
           {visits && visits.length > 0 && (
             <span className="text-xs text-muted-foreground">{visits.length} registro{visits.length !== 1 ? 's' : ''}</span>
           )}
-        </CardHeader>
-        <CardContent className="px-0 pb-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow>
-                  <TableHead className="pl-5">Fecha</TableHead>
-                  <TableHead className="hidden sm:table-cell">Área</TableHead>
-                  <TableHead className="hidden md:table-cell">Entrada</TableHead>
-                  <TableHead className="hidden md:table-cell">Salida</TableHead>
-                  <TableHead className="hidden sm:table-cell">Duración</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="pr-5 text-right">Voucher</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {visitsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                ) : visits && visits.length > 0 ? (
-                  visits.map((visit) => {
+        </div>
+
+        {visitsLoading ? (
+          <div className="p-8 flex justify-center">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : visits && visits.length > 0 ? (
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-t border-border/50 bg-muted/30">
+                    <th className="text-left font-medium text-muted-foreground px-5 py-3 text-xs uppercase tracking-wide">Fecha</th>
+                    <th className="text-left font-medium text-muted-foreground px-3 py-3 text-xs uppercase tracking-wide">Área</th>
+                    <th className="text-left font-medium text-muted-foreground px-3 py-3 text-xs uppercase tracking-wide">Entrada</th>
+                    <th className="text-left font-medium text-muted-foreground px-3 py-3 text-xs uppercase tracking-wide">Salida</th>
+                    <th className="text-left font-medium text-muted-foreground px-3 py-3 text-xs uppercase tracking-wide">Duración</th>
+                    <th className="text-left font-medium text-muted-foreground px-3 py-3 text-xs uppercase tracking-wide">Estado</th>
+                    <th className="text-right font-medium text-muted-foreground px-5 py-3 text-xs uppercase tracking-wide">PDF</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {visits.map(visit => {
                     const entryDate = visit.entryTime?.toDate()
                     const exitDate = visit.exitTime?.toDate()
                     return (
-                      <TableRow key={visit.id} className="hover:bg-muted/20 transition-colors">
-                        <TableCell className="pl-5 py-4 font-medium text-sm">
-                          {entryDate
-                            ? entryDate.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : '—'}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-sm">{visit.areaName ?? '—'}</TableCell>
-                        <TableCell className="hidden md:table-cell text-xs font-mono">
-                          {entryDate ? entryDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—'}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-xs font-mono">
-                          {exitDate ? exitDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '—'}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-xs">
+                      <tr key={visit.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-5 py-3.5 font-medium">
+                          {entryDate?.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) ?? '—'}
+                        </td>
+                        <td className="px-3 py-3.5">{visit.areaName ?? '—'}</td>
+                        <td className="px-3 py-3.5 font-mono text-xs">
+                          {entryDate?.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) ?? '—'}
+                        </td>
+                        <td className="px-3 py-3.5 font-mono text-xs">
+                          {exitDate?.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) ?? '—'}
+                        </td>
+                        <td className="px-3 py-3.5 text-xs">
                           {entryDate && exitDate ? visitDuration(entryDate, exitDate) : '—'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={visit.status === 'Completed' ? 'secondary' : 'default'}
-                            className={
-                              visit.status === 'Activa' ? 'bg-green-100 text-green-700 border-green-200' :
-                                visit.status === 'Programada' ? 'bg-blue-100 text-blue-700 border-blue-200' : ''
-                            }
-                          >
-                            {visit.status === 'Activa' ? 'Activa' : visit.status === 'Programada' ? 'Programada' : 'Completada'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="pr-5 text-right">
+                        </td>
+                        <td className="px-3 py-3.5">
+                          <VisitStatusBadge status={visit.status} />
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:bg-muted rounded-full"
-                            title="Descargar voucher"
+                            className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
                             onClick={() => generateVoucherPDF(visit, company)}
                           >
-                            <Download className="w-4 h-4" />
+                            <Download className="w-3.5 h-3.5" />
                           </Button>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     )
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground pl-5">
-                      No hay visitas registradas aún.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile timeline */}
+            <div className="md:hidden divide-y divide-border/50">
+              {visits.map(visit => {
+                const entryDate = visit.entryTime?.toDate()
+                const exitDate = visit.exitTime?.toDate()
+                return (
+                  <div key={visit.id} className="px-5 py-4 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold">
+                          {entryDate?.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }) ?? '—'}
+                        </p>
+                        <VisitStatusBadge status={visit.status} />
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        {visit.areaName && (
+                          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{visit.areaName}</span>
+                        )}
+                        {entryDate && exitDate && (
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{visitDuration(entryDate, exitDate)}</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full text-muted-foreground shrink-0"
+                      onClick={() => generateVoucherPDF(visit, company)}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        ) : (
+          <div className="py-12 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+              <CalendarClock className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">No hay visitas registradas aún.</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </motion.div>
+
+      {/* ── Floating pill: Active visit ──────────────────────── */}
+      <AnimatePresence>
+        {activeVisit && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-auto md:max-w-sm z-50"
+          >
+            <div className="rounded-2xl border border-[hsl(var(--sua-valid-border))] bg-[hsl(var(--sua-valid-bg))] backdrop-blur-xl shadow-lg px-5 py-3.5 flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-[hsl(var(--sua-valid))] animate-pulse shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-[hsl(var(--sua-valid))]">En Planta</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {activeVisit.areaName && (
+                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{activeVisit.areaName}</span>
+                  )}
+                  {activeVisit.entryTime && (
+                    <span>· {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* QR Dialog */}
       {company && (
@@ -614,7 +631,46 @@ export default function PortalPage() {
           onOpenChange={setQrOpen}
         />
       )}
+    </motion.div>
+  )
+}
 
+// ── Sub-components ─────────────────────────────────────────────
+
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | null }) {
+  if (!value) return null
+  return (
+    <div className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0">
+      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-muted-foreground" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-semibold truncate">{value}</p>
+      </div>
     </div>
+  )
+}
+
+function VisitStatusBadge({ status }: { status: Visit['status'] }) {
+  if (status === 'Activa') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-[hsl(var(--sua-valid))] bg-[hsl(var(--sua-valid-bg))] border border-[hsl(var(--sua-valid-border))] px-2 py-0.5 rounded-full">
+        <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--sua-valid))] animate-pulse" />
+        Activa
+      </span>
+    )
+  }
+  if (status === 'Programada') {
+    return (
+      <span className="inline-flex items-center text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+        Programada
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+      Completada
+    </span>
   )
 }
