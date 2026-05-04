@@ -113,7 +113,7 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <div className="glass-card lg:bg-transparent lg:border-0 lg:shadow-none lg:backdrop-blur-none rounded-3xl overflow-hidden">
+      <div className="glass-card max-lg:bg-background/85 max-lg:backdrop-blur-2xl lg:bg-transparent lg:border-0 lg:shadow-none lg:backdrop-blur-none rounded-3xl overflow-hidden">
         <div className="px-8 py-10 space-y-7">
 
           {/* Brand */}
