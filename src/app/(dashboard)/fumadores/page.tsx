@@ -417,13 +417,11 @@ export default function FumadoresPage() {
       {/* Header — solo título, sin botones */}
       <CardHeader className="px-4 py-3 md:px-6">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Search className="w-4 h-4 text-primary" aria-hidden="true" />
-          </div>
           <CardTitle className="flex-1 min-w-0 text-sm font-semibold leading-tight">
             Consultas / Registros
           </CardTitle>
         </div>
+        <p className="text-sm text-muted-foreground">Registra entradas y salidas al área de fumadores. </p>
       </CardHeader>
 
       <CardContent className="space-y-4 px-4 pb-4 pt-0 md:px-6">
@@ -474,117 +472,103 @@ export default function FumadoresPage() {
         {employee && (
           <div className="rounded-xl border border-border/50 overflow-hidden">
 
-            {/* ── Identidad: centrada, jerarquía vertical ── */}
-            <div className="flex flex-col items-center gap-1 px-4 pt-5 pb-4 bg-muted/20">
-              {/* Número de empleado */}
-              <span className="text-xs font-mono text-muted-foreground">
-                #{employee.employeeId}
-              </span>
-
-              {/* Nombre */}
-              <p className="text-base font-semibold leading-tight text-center">
-                {employee.Nombre}
-              </p>
-
-              {/* Apellidos */}
-              <p className="text-sm font-medium leading-tight text-center text-foreground/70">
+            {/* Identidad centrada: número, nombre, apellidos, puesto */}
+            <div className="employee-identity">
+              <span className="employee-id">#{employee.employeeId}</span>
+              <p className="employee-name">{employee.Nombre}</p>
+              <p className="employee-lastname">
                 {[employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' ')}
               </p>
-
-              {/* Puesto */}
-              <p className="text-xs text-muted-foreground text-center mt-0.5">
-                {employee.Puesto}
-              </p>
+              <p className="employee-role">{employee.Puesto}</p>
             </div>
 
-            {/* ── Departamento + Turno ── */}
+            {/* Departamento y turno en dos celdas separadas */}
             <div className="grid grid-cols-2 border-t border-border/40">
-              <div className="flex flex-col items-center py-3 px-4 gap-0.5 border-r border-border/40">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Departamento</span>
-                <span className="text-xs font-semibold text-center leading-tight">{employee.Departamento}</span>
+              <div className="flex flex-col items-center py-3 px-4 gap-1 border-r border-border/40">
+                <span className="meta-label">Departamento</span>
+                <span className="meta-value">{employee.Departamento}</span>
               </div>
-              <div className="flex flex-col items-center py-3 px-4 gap-0.5">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Turno</span>
-                <span className="text-xs font-semibold text-center leading-tight">{employee.Turno}</span>
+              <div className="flex flex-col items-center py-3 px-4 gap-1">
+                <span className="meta-label">Turno</span>
+                <span className="meta-value">{employee.Turno}</span>
               </div>
             </div>
 
-            {/* ── Horario de comida + estado ── */}
-            <div className="flex flex-col items-center gap-2 px-4 py-3 border-t border-border/40">
-              {/* Horario asignado */}
-              {mealSchedule ? (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
-                  <span>Comida: <span className="font-medium text-foreground">{mealSchedule.label}</span></span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
+            {/* Horario de comida asignado y badges de estado */}
+            <div className="flex flex-col items-center gap-2.5 px-4 py-4 border-t border-border/40">
+              {/* Horario de comida */}
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <UtensilsCrossed className="w-4 h-4 shrink-0" />
+                {mealSchedule ? (
+                  <span>
+                    Comida:
+                    <span className="font-semibold text-foreground">{mealSchedule.label}</span>
+                  </span>
+                ) : (
                   <span>Sin horario de comida asignado</span>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Estado: en turno + en comida */}
+              {/* Badges de estado: turno y comida */}
               <div className="flex items-center gap-2 flex-wrap justify-center">
                 {shiftStatus === true && (
-                  <Badge className="bg-sky-500/10 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/50 text-[11px] gap-1">
-                    <Clock className="w-3 h-3" /> En turno
+                  <Badge className="badge-shift border text-xs gap-1.5 px-2.5 py-1">
+                    <Clock className="w-3.5 h-3.5" /> En turno
                   </Badge>
                 )}
                 {shiftStatus === false && (
-                  <Badge variant="outline" className="text-[11px] gap-1 text-muted-foreground">
-                    <Clock className="w-3 h-3" /> Fuera de turno
+                  <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" /> Fuera de turno
                   </Badge>
                 )}
                 {mealSchedule && (
                   mealStatus === true ? (
-                    <Badge className="bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] gap-1">
-                      <UtensilsCrossed className="w-3 h-3" /> En horario
+                    <Badge className="badge-in border text-xs gap-1.5 px-2.5 py-1">
+                      <UtensilsCrossed className="w-3.5 h-3.5" /> En horario
                     </Badge>
                   ) : (
-                    <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1">
-                      <ShieldAlert className="w-3 h-3" /> Fuera de horario
+                    <Badge variant="outline" className="text-xs gap-1.5 px-2.5 py-1 border-destructive/40 text-destructive">
+                      <ShieldAlert className="w-3.5 h-3.5" /> Fuera de horario
                     </Badge>
                   )
                 )}
               </div>
             </div>
 
-            {/* ── Acción principal ── */}
-            <div className="px-4 pb-4 pt-1 border-t border-border/40">
+            {/* Acción principal: salida, regreso o denegado */}
+            <div className="px-4 pb-5 pt-1 border-t border-border/40">
               {activeRecord ? (
-                <div className="space-y-2 pt-3">
-                  <div className="flex items-center justify-center gap-2 py-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                      Fuera desde {fmtTime(activeRecord.exitTime)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      · <LiveDuration exitTime={activeRecord.exitTime} />
+                <div className="space-y-3 pt-3">
+                  {/* Banner: empleado actualmente fuera */}
+                  <div className="banner-active-out">
+                    <span className="dot-out w-2 h-2 rounded-full animate-pulse shrink-0" />
+                    <span>Fuera desde {fmtTime(activeRecord.exitTime)}</span>
+                    <span className="ml-auto opacity-70">
+                      <LiveDuration exitTime={activeRecord.exitTime} />
                     </span>
                   </div>
-                  <Button onClick={handleReturn} disabled={actionLoading} className="gap-2 w-full">
+                  <Button onClick={handleReturn} disabled={actionLoading} className="gap-2 w-full h-11 text-sm">
                     <CornerDownLeft className="w-4 h-4" />
                     Registrar regreso
                   </Button>
                 </div>
               ) : exitBlocked ? (
-                <div className="space-y-1.5 pt-3">
+                <div className="space-y-2 pt-3">
                   <Button
                     disabled
                     variant="outline"
-                    className="gap-2 w-full border-destructive/30 text-destructive bg-destructive/5 cursor-not-allowed"
+                    className="gap-2 w-full h-11 text-sm border-destructive/30 text-destructive bg-destructive/5 cursor-not-allowed"
                   >
                     <ShieldAlert className="w-4 h-4" />
                     Salida denegada
                   </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Fuera de su horario de comida
+                  <p className="text-sm text-muted-foreground text-center">
+                    Notifica que debe regresar al área.
                   </p>
                 </div>
               ) : (
                 <div className="pt-3">
-                  <Button onClick={handleExit} disabled={actionLoading} variant="outline" className="gap-2 w-full">
+                  <Button onClick={handleExit} disabled={actionLoading} variant="outline" className="gap-2 w-full h-11 text-sm">
                     <LogOut className="w-4 h-4" />
                     Registrar salida
                   </Button>
@@ -612,8 +596,8 @@ export default function FumadoresPage() {
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Fuera */}
             {outCount > 0 && (
-              <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <Badge className="badge-out border text-xs gap-1">
+                <span className="dot-out w-1.5 h-1.5 rounded-full animate-pulse" />
                 {outCount} fuera
               </Badge>
             )}
@@ -668,49 +652,47 @@ export default function FumadoresPage() {
                   return (
                     <div
                       key={record.id}
-                      className={`rounded-xl border p-3 space-y-2 transition-colors ${isOut
-                        ? "border-amber-200 dark:border-amber-800/50 bg-amber-500/5"
-                        : "border-border/50 bg-muted/20"
+                      className={`rounded-xl border p-3.5 space-y-2.5 transition-colors ${isOut ? "record-card-out" : "border-border/50 bg-muted/20"
                         }`}
                     >
-                      {/* Fila superior: nombre + estado */}
+                      {/* Nombre + badge de estado */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="font-semibold text-sm leading-tight truncate">{displayName}</p>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">{record.departamento} · T{record.turno}</p>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {record.departamento} · T{record.turno}
+                          </p>
                         </div>
                         {isOut ? (
-                          <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[10px] gap-1 font-medium shrink-0">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Fuera
+                          <Badge className="badge-out border text-xs gap-1 shrink-0">
+                            <span className="dot-out w-1.5 h-1.5 rounded-full animate-pulse" /> Fuera
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60 shrink-0">
-                            <CheckCircle2 className="w-3 h-3" /> Regresó
+                          <Badge className="badge-in border text-xs gap-1 shrink-0">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Regresó
                           </Badge>
                         )}
                       </div>
 
-                      {/* Fila inferior: horarios + comida */}
+                      {/* Horario de salida → regreso + indicador de comida */}
                       <div className="flex items-center gap-2 pt-1 border-t border-border/30">
-                        {/* Salida → Regreso / duración */}
-                        <div className="flex items-center gap-1 text-xs font-mono tabular-nums text-muted-foreground flex-1 min-w-0">
-                          <Clock className="w-3 h-3 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-xs font-mono tabular-nums text-muted-foreground flex-1 min-w-0">
+                          <Clock className="w-3.5 h-3.5 shrink-0" />
                           <span>{fmtTime(record.exitTime)}</span>
-                          <span className="text-border">→</span>
+                          <span>→</span>
                           {isOut
                             ? <LiveDuration exitTime={record.exitTime} />
                             : <span>{fmtTime(record.returnTime)}</span>
                           }
                         </div>
-                        {/* Comida */}
                         {inMeal !== null && (
                           inMeal ? (
-                            <Badge variant="outline" className="text-[10px] gap-0.5 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50 shrink-0 px-1.5">
-                              <UtensilsCrossed className="w-3 h-3" />
+                            <Badge className="badge-in border text-xs gap-0.5 shrink-0 px-1.5">
+                              <UtensilsCrossed className="w-3.5 h-3.5" />
                             </Badge>
                           ) : (
-                            <Badge className="bg-destructive/8 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[10px] gap-0.5 shrink-0 px-1.5">
-                              <ShieldAlert className="w-3 h-3" />
+                            <Badge variant="outline" className="border-destructive/40 text-destructive text-xs gap-0.5 shrink-0 px-1.5">
+                              <ShieldAlert className="w-3.5 h-3.5" />
                             </Badge>
                           )
                         )}
@@ -743,7 +725,7 @@ export default function FumadoresPage() {
                       : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
                     const isOut = record.status === "out"
                     return (
-                      <TableRow key={record.id} className={isOut ? "bg-amber-500/3 hover:bg-amber-500/6" : ""}>
+                      <TableRow key={record.id} className={isOut ? "table-row-out" : ""}>
                         <TableCell className="pl-6">
                           <p className="font-medium text-sm leading-tight">{record.nombre}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">{record.puesto}</p>
@@ -759,24 +741,24 @@ export default function FumadoresPage() {
                         </TableCell>
                         <TableCell>
                           {inMeal === null ? (
-                            <span className="text-[11px] text-muted-foreground/40">—</span>
+                            <span className="text-xs text-muted-foreground/40">—</span>
                           ) : inMeal ? (
-                            <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50">
+                            <Badge className="badge-in border text-xs gap-1">
                               <UtensilsCrossed className="w-3 h-3" /> En horario
                             </Badge>
                           ) : (
-                            <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1">
+                            <Badge variant="outline" className="border-destructive/40 text-destructive text-xs gap-1">
                               <ShieldAlert className="w-3 h-3" /> Fuera
                             </Badge>
                           )}
                         </TableCell>
                         <TableCell>
                           {isOut ? (
-                            <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5 font-medium">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Fuera
+                            <Badge className="badge-out border text-xs gap-1.5">
+                              <span className="dot-out w-1.5 h-1.5 rounded-full animate-pulse" /> Fuera
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                            <Badge className="badge-in border text-xs gap-1">
                               <CheckCircle2 className="w-3 h-3" /> Regresó
                             </Badge>
                           )}
@@ -812,7 +794,7 @@ export default function FumadoresPage() {
       label: "Registros",
       icon: <Cigarette className="w-3.5 h-3.5" />,
       badge: outCount > 0 ? (
-        <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[10px] px-1 py-0 font-medium ml-0.5">
+        <Badge className="badge-out border text-[10px] px-1 py-0 ml-0.5">
           {outCount}
         </Badge>
       ) : undefined,

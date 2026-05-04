@@ -2,15 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  /* ── Design-System Tokens ──────────────────────────────────
-     All colours live here as HSL channels.  Components reference
-     them via  hsl(var(--token))  so every surface, text and
-     interactive element automatically adapts to the active theme.
-     ────────────────────────────────────────────────────────── */
+/* ============================================================
+   SISTEMA DE DISEÑO — TOKENS GLOBALES
+   ============================================================
+   Todos los colores viven aquí como canales HSL separados.
+   Los componentes los consumen con:  hsl(var(--token))
+   Esto permite que cada superficie, texto e interactivo
+   se adapte automáticamente al tema activo (claro / oscuro).
+   ============================================================ */
 
+@layer base {
+
+  /* ----------------------------------------------------------
+     TEMA CLARO  (raíz del documento)
+     ---------------------------------------------------------- */
   :root {
-    /* ── Surfaces & text ─────────────────────────────────── */
+
+    /* ── Superficies y texto ─────────────────────────────── */
     --background: 220 14% 96%;
     --foreground: 0 0% 11%;
     --card: 0 0% 100%;
@@ -18,32 +26,41 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 11%;
 
-    /* ── Brand / interactive ─────────────────────────────── */
+    /* ── Marca e interactivos ────────────────────────────── */
     --primary: 211 100% 45%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 14% 96%;
     --secondary-foreground: 0 0% 11%;
     --accent: 211 100% 45%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 100% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    /* ── Muted / helpers ─────────────────────────────────── */
+    /* ── Atenuados y auxiliares ──────────────────────────── */
     --muted: 220 14% 96%;
     --muted-foreground: 0 0% 44%;
     --border: 220 9% 90%;
     --input: 220 9% 90%;
     --ring: 211 100% 45%;
-    --radius: 0.5rem;
 
-    /* ── Chart palette ───────────────────────────────────── */
+    /* ── Escala de radios ────────────────────────────────── */
+    --radius-sm: 0.375rem;
+    /* 6px  — inputs, badges        */
+    --radius: 0.5rem;
+    /* 8px  — tarjetas estándar     */
+    --radius-md: 0.75rem;
+    /* 12px — modales, popovers     */
+    --radius-lg: 1.125rem;
+    /* 18px — cards grandes, glass  */
+
+    /* ── Paleta de gráficas ──────────────────────────────── */
     --chart-1: 211 100% 45%;
     --chart-2: 173 58% 39%;
     --chart-3: 43 96% 56%;
     --chart-4: 27 96% 61%;
     --chart-5: 0 84% 60%;
 
-    /* ── Sidebar ─────────────────────────────────────────── */
+    /* ── Barra lateral ───────────────────────────────────── */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 11%;
     --sidebar-primary: 211 100% 45%;
@@ -52,25 +69,76 @@
     --sidebar-accent-foreground: 0 0% 11%;
     --sidebar-border: 220 9% 90%;
     --sidebar-ring: 211 100% 45%;
-    --sidebar-shimmer: 0 0% 0% / 0.05;
-    --sidebar-item-hover: 0 0% 0% / 0.04;
 
-    /* ── Glass / frosted surfaces ────────────────────────── */
-    --glass-bg: 0 0% 100% / 0.72;
-    --glass-shadow: 0 0% 0% / 0.08;
-    --glass-border: 0 0% 0% / 0.06;
-    --glass-border-hover: 0 0% 0% / 0.12;
-    --glass-input-bg: 0 0% 100% / 0.6;
-    --glass-input-bg-focus: 0 0% 100% / 0.85;
-    --glass-placeholder: 0 0% 0% / 0.36;
+    /* Efectos de la barra lateral — opacidad sobre negro */
+    --sidebar-shimmer-opacity: 0.05;
+    --sidebar-item-hover-opacity: 0.04;
 
-    /* ── Shadows ─────────────────────────────────────────── */
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.08),
-                   inset 0 1px 0 hsl(0 0% 100% / 0.6);
+    /* ── Superficies "glass" (esmeriladas) ───────────────── */
+    --glass-bg: 0 0% 100%;
+    --glass-bg-opacity: 0.72;
+    --glass-shadow: 0 0% 0%;
+    --glass-shadow-opacity: 0.08;
+    --glass-border: 0 0% 0%;
+    --glass-border-opacity: 0.06;
+    --glass-border-hover-opacity: 0.12;
+    --glass-input-bg-opacity: 0.60;
+    --glass-input-bg-focus-opacity: 0.85;
+    --glass-placeholder-opacity: 0.36;
+
+    /* ── Sombra semántica de tarjeta ─────────────────────── */
+    --shadow-card:
+      0 4px 24px hsl(0 0% 0% / 0.08),
+      inset 0 1px 0 hsl(0 0% 100% / 0.6);
+
+    /* ── Estados semánticos: FUERA (ámbar) ───────────────────
+       Empleado actualmente fuera a fumar.
+       ─────────────────────────────────────────────────────── */
+    --status-out-h: 42;
+    --status-out-s: 100%;
+    --status-out-l: 50%;
+    --status-out-bg-opacity: 0.10;
+    --status-out-text: 32 95% 40%;
+    --status-out-border-opacity: 0.30;
+
+    /* ── Estados semánticos: REGRESÓ (esmeralda) ─────────────
+       Empleado que ya volvió de fumar.
+       ─────────────────────────────────────────────────────── */
+    --status-in-h: 152;
+    --status-in-s: 60%;
+    --status-in-l: 40%;
+    --status-in-bg-opacity: 0.10;
+    --status-in-text: 152 60% 35%;
+    --status-in-border-opacity: 0.30;
+
+    /* ── Estados semánticos: TURNO ACTIVO (cielo) ────────────
+       Empleado dentro de su ventana de turno asignada.
+       ─────────────────────────────────────────────────────── */
+    --status-shift-h: 200;
+    --status-shift-s: 90%;
+    --status-shift-l: 50%;
+    --status-shift-bg-opacity: 0.10;
+    --status-shift-text: 200 90% 40%;
+    --status-shift-border-opacity: 0.25;
+
+    /* ── Escala tipográfica funcional ────────────────────────
+       Tamaños para etiquetas, datos y metainformación
+       usados en tarjetas de empleado y registros.
+       ─────────────────────────────────────────────────────── */
+    --font-size-label: 0.6875rem;
+    /* 11px — etiquetas secundarias */
+    --font-size-data: 0.875rem;
+    /* 14px — datos principales     */
+    --font-size-name: 1rem;
+    /* 16px — nombre del empleado   */
   }
 
+  /* ----------------------------------------------------------
+     TEMA OSCURO
+     ---------------------------------------------------------- */
   .dark {
-    /* ── Surfaces & text ─────────────────────────────────── */
+
+    /* ── Superficies y texto ─────────────────────────────── */
     --background: 0 0% 5%;
     --foreground: 0 0% 96%;
     --card: 240 3% 16%;
@@ -78,7 +146,7 @@
     --popover: 240 3% 16%;
     --popover-foreground: 0 0% 96%;
 
-    /* ── Brand / interactive ─────────────────────────────── */
+    /* ── Marca e interactivos ────────────────────────────── */
     --primary: 213 100% 60%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 3% 16%;
@@ -88,21 +156,23 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* ── Muted / helpers ─────────────────────────────────── */
+    /* ── Atenuados y auxiliares ──────────────────────────── */
     --muted: 240 3% 16%;
     --muted-foreground: 0 0% 60%;
     --border: 240 3% 20%;
     --input: 240 3% 20%;
     --ring: 213 100% 60%;
 
-    /* ── Chart palette ───────────────────────────────────── */
+    /* Los radios no cambian entre temas */
+
+    /* ── Paleta de gráficas (versión oscura) ─────────────── */
     --chart-1: 213 100% 60%;
     --chart-2: 173 58% 49%;
     --chart-3: 43 96% 66%;
     --chart-4: 27 96% 71%;
     --chart-5: 0 72% 60%;
 
-    /* ── Sidebar ─────────────────────────────────────────── */
+    /* ── Barra lateral ───────────────────────────────────── */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 213 100% 60%;
@@ -111,33 +181,61 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 3% 18%;
     --sidebar-ring: 213 100% 60%;
-    --sidebar-shimmer: 0 0% 100% / 0.07;
-    --sidebar-item-hover: 0 0% 100% / 0.06;
 
-    /* ── Glass / frosted surfaces ────────────────────────── */
-    --glass-bg: 240 3% 16% / 0.82;
-    --glass-shadow: 0 0% 0% / 0.40;
-    --glass-border: 0 0% 100% / 0.10;
-    --glass-border-hover: 0 0% 100% / 0.18;
-    --glass-input-bg: 0 0% 100% / 0.06;
-    --glass-input-bg-focus: 0 0% 100% / 0.10;
-    --glass-placeholder: 0 0% 100% / 0.30;
+    /* Efectos de la barra lateral — opacidad sobre blanco */
+    --sidebar-shimmer-opacity: 0.07;
+    --sidebar-item-hover-opacity: 0.06;
 
-    /* ── Shadows ─────────────────────────────────────────── */
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.30),
-                   inset 0 1px 0 hsl(0 0% 100% / 0.1);
+    /* ── Superficies "glass" (oscuras) ───────────────────── */
+    --glass-bg: 240 3% 16%;
+    --glass-bg-opacity: 0.82;
+    --glass-shadow: 0 0% 0%;
+    --glass-shadow-opacity: 0.40;
+    --glass-border: 0 0% 100%;
+    --glass-border-opacity: 0.10;
+    --glass-border-hover-opacity: 0.18;
+    --glass-input-bg-opacity: 0.06;
+    --glass-input-bg-focus-opacity: 0.10;
+    --glass-placeholder-opacity: 0.30;
+
+    /* ── Sombra semántica de tarjeta (oscura) ────────────── */
+    --shadow-card:
+      0 4px 24px hsl(0 0% 0% / 0.30),
+      inset 0 1px 0 hsl(0 0% 100% / 0.1);
+
+    /* ── Estados semánticos: FUERA (ámbar oscuro) ──────────── */
+    --status-out-bg-opacity: 0.15;
+    --status-out-text: 42 100% 65%;
+    --status-out-border-opacity: 0.35;
+    --status-out-l: 60%;
+    /* punto más brillante en oscuro */
+
+    /* ── Estados semánticos: REGRESÓ (esmeralda oscuro) ────── */
+    --status-in-bg-opacity: 0.15;
+    --status-in-text: 152 60% 55%;
+    --status-in-border-opacity: 0.35;
+
+    /* ── Estados semánticos: TURNO ACTIVO (cielo oscuro) ────── */
+    --status-shift-bg-opacity: 0.15;
+    --status-shift-text: 200 90% 65%;
+    --status-shift-border-opacity: 0.30;
   }
-}
 
-@layer base {
+  /* ----------------------------------------------------------
+     RESET Y BASE GLOBAL
+     ---------------------------------------------------------- */
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground antialiased;
   }
 
-  /* Override browser autofill to match theme */
+  /* ── Corrección de autorrelleno del navegador ────────────────
+     Evita que el fondo amarillo del autocompletado rompa
+     el tema de la aplicación en cualquier input.
+     ─────────────────────────────────────────────────────────── */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -147,66 +245,75 @@
     -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset !important;
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
     caret-color: hsl(var(--foreground));
+    /* Truco: retrasa la transición 9999 s para que
+       el estilo inyectado por el navegador sea invisible */
     transition: background-color 9999s ease-in-out 0s;
   }
 
-  /* Autofill inside glass-card */
+  /* ── Corrección de autorrelleno dentro de tarjetas glass ─── */
   .glass-card input:-webkit-autofill,
   .glass-card input:-webkit-autofill:hover,
   .glass-card input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 1000px hsl(var(--glass-bg)) inset !important;
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--glass-bg) / var(--glass-bg-opacity)) inset !important;
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
     caret-color: hsl(var(--foreground));
     transition: background-color 9999s ease-in-out 0s;
   }
 }
 
+/* ============================================================
+   COMPONENTES REUTILIZABLES
+   ============================================================ */
 @layer components {
-  /* ── Auth background ───────────────────────────────────── */
+
+  /* ── Fondo de pantallas de autenticación ────────────────── */
   .auth-bg {
     background: hsl(var(--background));
   }
 
-  /* ── Glass card — frosted surface ──────────────────────── */
+  /* ── Tarjeta "glass" — superficie esmerilada ─────────────── */
   .glass-card {
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
-    background: hsl(var(--glass-bg));
-    border: none;
-    box-shadow: 0 3px 30px hsl(var(--glass-shadow));
-    border-radius: 18px;
+    background: hsl(var(--glass-bg) / var(--glass-bg-opacity));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+    box-shadow: 0 3px 30px hsl(var(--glass-shadow) / var(--glass-shadow-opacity));
+    border-radius: var(--radius-lg);
   }
 
-  /* Hover on sidebar nav items */
-  .nav-item-hover:hover {
-    background-color: hsl(var(--sidebar-item-hover));
-  }
-
-  /* Semantic card shadow */
+  /* ── Sombra semántica de tarjeta ─────────────────────────── */
   .shadow-card {
     box-shadow: var(--shadow-card);
   }
 
-  /* ── Glass input ───────────────────────────────────────── */
+  /* ── Hover sobre elementos de navegación lateral ─────────── */
+  .nav-item-hover:hover {
+    background-color: hsl(var(--sidebar-foreground) / var(--sidebar-item-hover-opacity));
+  }
+
+  /* ── Input "glass" ───────────────────────────────────────── */
   .glass-input {
-    @apply w-full h-11 rounded-lg border text-sm outline-none pr-4 transition-colors duration-150;
-    border-color: hsl(var(--glass-border));
-    background-color: hsl(var(--glass-input-bg));
+    @apply w-full h-11 rounded-lg text-sm outline-none pr-4 transition-colors duration-150;
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
+    background-color: hsl(var(--glass-bg) / var(--glass-input-bg-opacity));
     color: hsl(var(--foreground));
   }
+
   .glass-input::placeholder {
-    color: hsl(var(--glass-placeholder));
+    color: hsl(var(--foreground) / var(--glass-placeholder-opacity));
   }
+
   .glass-input:hover {
-    border-color: hsl(var(--glass-border-hover));
+    border-color: hsl(var(--glass-border) / var(--glass-border-hover-opacity));
   }
+
   .glass-input:focus {
     border-color: hsl(var(--primary));
     box-shadow: 0 0 0 3px hsl(var(--ring) / 0.20);
-    background-color: hsl(var(--glass-input-bg-focus));
+    background-color: hsl(var(--glass-bg) / var(--glass-input-bg-focus-opacity));
   }
 
-  /* Override browser autofill inside glass-input */
+  /* Corrección de autorrelleno en inputs glass */
   .glass-input:-webkit-autofill,
   .glass-input:-webkit-autofill:hover,
   .glass-input:-webkit-autofill:focus {
@@ -214,5 +321,146 @@
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
     caret-color: hsl(var(--foreground));
     transition: background-color 9999s ease-in-out 0s;
+  }
+
+  /* ── Badge: empleado FUERA (fumando — ámbar) ─────────────────
+     Se aplica en el indicador de estado y en el buscador
+     cuando alguien está activamente fuera.
+     ─────────────────────────────────────────────────────────── */
+  .badge-out {
+    background-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-bg-opacity));
+    color: hsl(var(--status-out-text));
+    border-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-border-opacity));
+  }
+
+  /* ── Badge: empleado REGRESÓ (esmeralda) ─────────────────────
+     Se aplica en registros completados (status = returned).
+     ─────────────────────────────────────────────────────────── */
+  .badge-in {
+    background-color: hsl(var(--status-in-h) var(--status-in-s) var(--status-in-l) / var(--status-in-bg-opacity));
+    color: hsl(var(--status-in-text));
+    border-color: hsl(var(--status-in-h) var(--status-in-s) var(--status-in-l) / var(--status-in-border-opacity));
+  }
+
+  /* ── Badge: TURNO ACTIVO (cielo) ─────────────────────────────
+     Indica que el empleado está dentro de su ventana de turno.
+     ─────────────────────────────────────────────────────────── */
+  .badge-shift {
+    background-color: hsl(var(--status-shift-h) var(--status-shift-s) var(--status-shift-l) / var(--status-shift-bg-opacity));
+    color: hsl(var(--status-shift-text));
+    border-color: hsl(var(--status-shift-h) var(--status-shift-s) var(--status-shift-l) / var(--status-shift-border-opacity));
+  }
+
+  /* ── Tarjeta de registro ACTIVO (fuera) ──────────────────────
+     Resalta visualmente la tarjeta cuando el empleado
+     todavía no ha regresado de fumar.
+     ─────────────────────────────────────────────────────────── */
+  .record-card-out {
+    background-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-bg-opacity));
+    border-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-border-opacity));
+  }
+
+  /* ── Fila de tabla ACTIVA (fuera) ────────────────────────────
+     Tinte sutil en filas de tabla para registros activos.
+     ─────────────────────────────────────────────────────────── */
+  .table-row-out {
+    background-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-bg-opacity));
+  }
+
+  .table-row-out:hover {
+    /* Oscurece ligeramente el fondo en hover sin perder el tinte */
+    background-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / calc(var(--status-out-bg-opacity) + 0.05));
+  }
+
+  /* ── Pulso del indicador "fuera" ─────────────────────────────
+     Punto animado junto al badge cuando el empleado
+     está activamente fuera de su lugar de trabajo.
+     ─────────────────────────────────────────────────────────── */
+  .dot-out {
+    background-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l));
+  }
+
+  /* ── Sección de identidad del empleado ───────────────────────
+     Cabecera centrada en la tarjeta de resultado de búsqueda.
+     ─────────────────────────────────────────────────────────── */
+  .employee-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 1.5rem 1.25rem 1.25rem;
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  /* Número de empleado — monoespaciado, texto secundario */
+  .employee-id {
+    font-family: ui-monospace, monospace;
+    font-size: var(--font-size-label);
+    color: hsl(var(--muted-foreground));
+    letter-spacing: 0.04em;
+  }
+
+  /* Nombre del empleado — principal, negrita */
+  .employee-name {
+    font-size: var(--font-size-name);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    color: hsl(var(--foreground));
+  }
+
+  /* Apellidos — ligeramente atenuados respecto al nombre */
+  .employee-lastname {
+    font-size: var(--font-size-data);
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    color: hsl(var(--foreground) / 0.70);
+  }
+
+  /* Puesto o cargo del empleado */
+  .employee-role {
+    font-size: var(--font-size-label);
+    color: hsl(var(--muted-foreground));
+    text-align: center;
+    margin-top: 0.125rem;
+  }
+
+  /* ── Etiqueta de metadato (texto pequeño secundario) ─────────
+     Usado en celdas de Departamento / Turno.
+     ─────────────────────────────────────────────────────────── */
+  .meta-label {
+    font-size: 0.625rem;
+    /* 10px */
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Valor del metadato */
+  .meta-value {
+    font-size: var(--font-size-label);
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+    color: hsl(var(--foreground));
+  }
+
+  /* ── Banner "fuera desde" ─────────────────────────────────────
+     Indicador ámbar que aparece cuando el empleado ya registró
+     su salida y está activamente fuera del área de trabajo.
+     ─────────────────────────────────────────────────────────── */
+  .banner-active-out {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background-color: hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-bg-opacity));
+    border: 1px solid hsl(var(--status-out-h) var(--status-out-s) var(--status-out-l) / var(--status-out-border-opacity));
+    color: hsl(var(--status-out-text));
+    font-size: var(--font-size-label);
+    font-weight: 500;
   }
 }

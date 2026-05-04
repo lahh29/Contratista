@@ -146,7 +146,7 @@ export function EmployeeManager() {
                 aria-label="Importar JSON"
               >
                 <FileJson className="w-3.5 h-3.5 md:hidden" />
-                <span className="hidden md:inline">Importar JSON</span>
+                <span className="hidden md:inline">Upload</span>
               </Button>
             </div>
           </div>
