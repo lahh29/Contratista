@@ -257,7 +257,7 @@ export default function ContractorsPage() {
             <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={fetchCompanies} disabled={loading} title="Actualizar lista">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
-            <Button asChild size="sm" className="bg-primary text-white shrink-0 h-10 w-10 p-0">
+            <Button asChild size="sm" className="bg-primary text-primary-foreground shrink-0 h-10 w-10 p-0">
               <Link href="/contractors/new">
                 <Plus className="w-4 h-4" />
               </Link>
