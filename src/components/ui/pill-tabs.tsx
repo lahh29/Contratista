@@ -38,7 +38,7 @@ export function PillTabsBar({
 }: PillTabsBarProps) {
   return (
     <div className={cn("border-b border-border/40", className)}>
-      <div className="flex flex-wrap gap-1.5 py-2" role="tablist">
+      <div className="flex flex-wrap gap-2 py-2.5" role="tablist">
         {tabs.map((tab) => {
           const isActive = tab.value === value
           return (
@@ -47,7 +47,7 @@ export function PillTabsBar({
               role="tab"
               aria-selected={isActive}
               onClick={() => onValueChange(tab.value)}
-              className="relative shrink-0 px-3.5 py-1.5 text-xs font-medium rounded-full outline-none transition-colors"
+              className="relative shrink-0 rounded-full px-4 py-2 text-sm font-medium outline-none transition-colors"
             >
               {isActive && (
                 <motion.div
@@ -58,7 +58,7 @@ export function PillTabsBar({
               )}
               <span
                 className={cn(
-                  "relative z-10 flex items-center gap-1.5 transition-colors duration-150",
+                  "relative z-10 flex min-h-5 items-center gap-2 transition-colors duration-150",
                   isActive ? "text-primary-foreground" : "text-muted-foreground",
                 )}
               >

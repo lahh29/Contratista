@@ -113,12 +113,12 @@ export function CollectionManager({ title, description, icon: Icon, collectionNa
           <Button
             onClick={handleAdd}
             disabled={!newName.trim()}
-            size="sm"
-            className="gap-1.5 shrink-0 h-10 px-3 md:px-4"
+            size="responsive"
+            className="shrink-0"
             aria-label={`Agregar ${title.toLowerCase()}`}
           >
-            <Plus className="w-4 h-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Agregar</span>
+            <Plus className="w-4 h-4 md:hidden" aria-hidden="true" />
+            <span className="hidden md:inline">Agregar</span>
           </Button>
         </div>
 
@@ -141,7 +141,7 @@ export function CollectionManager({ title, description, icon: Icon, collectionNa
                         if (e.key === "Escape") setEditId(null)
                       }}
                     />
-                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/40"
+                    <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-primary hover:text-primary hover:bg-primary/10"
                       onClick={() => handleUpdate(item.id)} aria-label="Guardar">
                       <Check className="w-4 h-4" />
                     </Button>

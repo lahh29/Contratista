@@ -4,7 +4,7 @@ import * as React from "react"
 import { collection, query, limit, getDocs, DocumentData } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useCompanies } from "@/hooks/use-companies"
-import { UserCog, ShieldAlert, Settings, Users, Briefcase, MapPin, Clock } from "lucide-react"
+import { UserCog, ShieldAlert, Users, Briefcase, MapPin, Clock } from "lucide-react"
 import { PillTabsBar, PillTabsContent } from "@/components/ui/pill-tabs"
 import type { PillTab } from "@/components/ui/pill-tabs"
 import { useAppUser } from "@/hooks/use-app-user"
@@ -17,11 +17,11 @@ import { UserManager } from "@/components/settings/UserManager"
 // ── Mobile tab definitions ──────────────────────────────────────────────────
 
 const MOBILE_TABS: PillTab[] = [
-  { value: "users",       label: "Usuarios",   icon: <Users className="w-3.5 h-3.5" /> },
-  { value: "employees",   label: "Empleados",  icon: <Briefcase className="w-3.5 h-3.5" /> },
-  { value: "areas",       label: "Áreas",      icon: <MapPin className="w-3.5 h-3.5" /> },
-  { value: "supervisors", label: "Encargados", icon: <UserCog className="w-3.5 h-3.5" /> },
-  { value: "horarios",    label: "Horarios",   icon: <Clock className="w-3.5 h-3.5" /> },
+  { value: "users",       label: "Usuarios",   icon: <Users className="h-4 w-4" /> },
+  { value: "employees",   label: "Empleados",  icon: <Briefcase className="h-4 w-4" /> },
+  { value: "areas",       label: "Áreas",      icon: <MapPin className="h-4 w-4" /> },
+  { value: "supervisors", label: "Encargados", icon: <UserCog className="h-4 w-4" /> },
+  { value: "horarios",    label: "Horarios",   icon: <Clock className="h-4 w-4" /> },
 ]
 
 // ── SettingsPage ────────────────────────────────────────────────────────────
@@ -106,19 +106,6 @@ export default function SettingsPage() {
       pb-8
       supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]
     ">
-      {/* Page description — desktop only */}
-      <div className="hidden md:flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <Settings className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">Configuración del sistema</h2>
-          <p className="text-sm text-muted-foreground">
-            Administra usuarios, áreas, encargados y horarios de la planta.
-          </p>
-        </div>
-      </div>
-
       {/* ── Mobile: pill tabs ── */}
       <div className="md:hidden">
         <PillTabsBar

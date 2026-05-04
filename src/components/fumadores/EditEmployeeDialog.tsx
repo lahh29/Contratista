@@ -389,9 +389,10 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, onUpdated, on
                     className="flex-1 h-11 gap-1.5"
                     onClick={handleSubmit}
                     disabled={saving || deleting}
+                    aria-label="Guardar empleado"
                   >
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Guardar
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin md:hidden" /> : <Check className="w-4 h-4 md:hidden" />}
+                    <span className="hidden md:inline">Guardar</span>
                   </Button>
                 ) : (
                   <Button type="button" className="flex-1 h-11 gap-1.5" onClick={handleNext}>

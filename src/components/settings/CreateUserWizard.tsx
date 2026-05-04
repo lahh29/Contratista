@@ -431,10 +431,10 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
                 Siguiente <ChevronRight className="w-4 h-4" />
               </Button>
             ) : (
-              <Button className="flex-1 gap-2" onClick={handleSubmit} disabled={submitting}>
+              <Button className="flex-1 gap-2" onClick={handleSubmit} disabled={submitting} aria-label="Crear usuario">
                 {submitting
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Creando…</>
-                  : <><Check className="w-4 h-4" /> Crear usuario</>
+                  ? <><Loader2 className="w-4 h-4 animate-spin md:hidden" /> <span className="hidden md:inline">Creando…</span></>
+                  : <><Check className="w-4 h-4 md:hidden" /> <span className="hidden md:inline">Crear usuario</span></>
                 }
               </Button>
             )}

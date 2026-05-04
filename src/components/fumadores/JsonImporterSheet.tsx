@@ -216,12 +216,13 @@ export function JsonImporterSheet({ open, onOpenChange }: JsonImporterSheetProps
           <div className="flex items-center gap-3 flex-wrap">
             <Button
               variant="outline"
-              size="sm"
-              className="gap-2 shrink-0"
+              size="responsiveSm"
+              className="shrink-0"
               onClick={() => fileInputRef.current?.click()}
+              aria-label="Cargar archivo JSON"
             >
-              <Upload className="w-4 h-4" />
-              Cargar archivo .json
+              <Upload className="w-4 h-4 md:hidden" />
+              <span className="hidden md:inline">Cargar archivo .json</span>
             </Button>
             <input
               ref={fileInputRef}
@@ -375,13 +376,16 @@ export function JsonImporterSheet({ open, onOpenChange }: JsonImporterSheetProps
               className="flex-1 gap-2"
               onClick={handleUpload}
               disabled={uploading || validCount === 0 || !db}
+              aria-label={uploading ? "Subiendo empleados" : `Subir ${validCount} empleados`}
             >
               {uploading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin md:hidden" />
               ) : (
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4 md:hidden" />
               )}
-              {uploading ? "Subiendo…" : `Subir ${validCount} empleados`}
+              <span className="hidden md:inline">
+                {uploading ? "Subiendo…" : `Subir ${validCount} empleados`}
+              </span>
             </Button>
           </div>
         </div>
