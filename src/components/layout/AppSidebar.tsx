@@ -43,12 +43,12 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 // ── Role config ───────────────────────────────────────────────
 const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow: string; label: string }> = {
-  admin:      { Icon: ShieldCheck, ring: 'ring-white/20',      glow: '',                     label: 'Administrador'        },
-  guard:      { Icon: Shield,      ring: 'ring-white/20',      glow: '',                     label: 'Guardia de Seguridad' },
-  contractor: { Icon: Briefcase,   ring: 'ring-white/20',      glow: '',                     label: 'Contratista'          },
-  seguridad:  { Icon: HardHat,     ring: 'ring-white/20',      glow: '',                     label: 'Seguridad e Higiene'  },
-  logistica:  { Icon: Package,     ring: 'ring-white/20',      glow: '',                     label: 'Logística'            },
-  rys:        { Icon: UserPlus,    ring: 'ring-white/20',      glow: '',                     label: 'Reclutamiento'        },
+  admin:      { Icon: ShieldCheck, ring: 'ring-sidebar-foreground/20', glow: '', label: 'Administrador'        },
+  guard:      { Icon: Shield,      ring: 'ring-sidebar-foreground/20', glow: '', label: 'Guardia de Seguridad' },
+  contractor: { Icon: Briefcase,   ring: 'ring-sidebar-foreground/20', glow: '', label: 'Contratista'          },
+  seguridad:  { Icon: HardHat,     ring: 'ring-sidebar-foreground/20', glow: '', label: 'Seguridad e Higiene'  },
+  logistica:  { Icon: Package,     ring: 'ring-sidebar-foreground/20', glow: '', label: 'Logística'            },
+  rys:        { Icon: UserPlus,    ring: 'ring-sidebar-foreground/20', glow: '', label: 'Reclutamiento'        },
 }
 
 // ── UserCard ──────────────────────────────────────────────────
@@ -56,11 +56,11 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
   const cardRef    = React.useRef<HTMLDivElement>(null)
   const mouseX     = useMotionValue(0)
   const mouseY     = useMotionValue(0)
-  const [shimmerColor, setShimmerColor] = React.useState('rgba(255,255,255,0.07)')
+  const [shimmerColor, setShimmerColor] = React.useState('hsl(0 0% 0% / 0.05)')
 
   React.useEffect(() => {
     const c = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-shimmer').trim()
-    if (c) setShimmerColor(c)
+    if (c) setShimmerColor(`hsl(${c})`)
   }, [])
 
   // Shimmer position — tracks mouse inside the card
@@ -91,7 +91,7 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.04] px-3 py-2.5 flex items-center gap-3 group"
+      className="relative overflow-hidden rounded-xl border border-sidebar-border bg-sidebar-foreground/[0.04] px-3 py-2.5 flex items-center gap-3 group"
     >
       {/* Liquid glass shimmer — follows cursor */}
       <motion.span
@@ -103,17 +103,17 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
       <motion.div
         whileHover={{ scale: 1.08 }}
         transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        className={`relative w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 text-white ring-2 ${config.ring} shadow-lg ${config.glow}`}
+        className={`relative w-8 h-8 rounded-full bg-sidebar-foreground/10 flex items-center justify-center shrink-0 text-sidebar-foreground ring-2 ${config.ring} shadow-lg ${config.glow}`}
       >
         <Icon className="w-4 h-4" />
       </motion.div>
 
       {/* Name + role */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-white truncate leading-tight">
+        <p className="text-sm font-semibold text-sidebar-foreground truncate leading-tight">
           {displayName}
         </p>
-        <p className="text-[11px] text-white/50 truncate leading-tight">
+        <p className="text-[11px] text-sidebar-foreground/50 truncate leading-tight">
           {displayRole}
         </p>
       </div>
@@ -124,7 +124,7 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
         whileTap={{ scale: 0.92 }}
         onClick={onLogout}
         title="Cerrar sesión"
-        className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0"
+        className="w-7 h-7 rounded-lg flex items-center justify-center text-sidebar-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
       >
         <LogOut className="w-3.5 h-3.5" />
       </motion.button>
@@ -233,12 +233,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-0 shadow-xl">
-      <div data-sidebar="header" className="flex flex-row items-center h-12 px-5 border-b border-white/10 shrink-0 gap-2">
+      <div data-sidebar="header" className="flex flex-row items-center h-12 px-5 border-b border-sidebar-border shrink-0 gap-2">
         <motion.span
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-base font-black tracking-widest text-white uppercase flex-1"
+          className="text-base font-black tracking-widest text-sidebar-foreground uppercase flex-1"
         >
           ViñoPlastic
         </motion.span>
@@ -253,7 +253,7 @@ export function AppSidebar() {
         >
           {navigation.map((group) => (
             <SidebarGroup key={group.title}>
-              <SidebarGroupLabel className="text-white/40 font-bold px-3 pb-1 uppercase tracking-widest text-[9px]">
+              <SidebarGroupLabel className="text-sidebar-foreground/40 font-bold px-3 pb-1 uppercase tracking-widest text-[9px]">
                 {group.title}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -276,7 +276,7 @@ export function AppSidebar() {
                           {isActive && (
                             <motion.span
                               layoutId="nav-active-pill"
-                              className="absolute inset-0 rounded-xl bg-white/15"
+                              className="absolute inset-0 rounded-xl bg-sidebar-foreground/15"
                               transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                             />
                           )}
@@ -288,7 +288,7 @@ export function AppSidebar() {
 
                           {/* Icon */}
                           <motion.span
-                            className={`relative z-10 shrink-0 ${isActive ? 'text-white' : 'text-white/55'}`}
+                            className={`relative z-10 shrink-0 ${isActive ? 'text-sidebar-foreground' : 'text-sidebar-foreground/55'}`}
                             whileHover={{ scale: 1.12 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                           >
@@ -296,7 +296,7 @@ export function AppSidebar() {
                           </motion.span>
 
                           {/* Label */}
-                          <span className={`relative z-10 flex-1 text-sm font-medium truncate transition-colors duration-150 ${isActive ? 'text-white' : 'text-white/60'}`}>
+                          <span className={`relative z-10 flex-1 text-sm font-medium truncate transition-colors duration-150 ${isActive ? 'text-sidebar-foreground' : 'text-sidebar-foreground/60'}`}>
                             {item.name}
                           </span>
 
@@ -309,7 +309,7 @@ export function AppSidebar() {
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.6, opacity: 0 }}
                                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                                className="relative z-10 h-5 min-w-5 px-1.5 rounded-full bg-[#0071e3] text-white text-[10px] font-bold flex items-center justify-center leading-none tabular-nums"
+                                className="relative z-10 h-5 min-w-5 px-1.5 rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-[10px] font-bold flex items-center justify-center leading-none tabular-nums"
                               >
                                 {item.badge > 99 ? '99+' : item.badge}
                               </motion.span>
@@ -326,7 +326,7 @@ export function AppSidebar() {
         </motion.nav>
       </SidebarContent>
 
-<SidebarFooter className="p-3 mt-auto border-t border-white/10">
+<SidebarFooter className="p-3 mt-auto border-t border-sidebar-border">
         <UserCard appUser={appUser} onLogout={handleLogout} />
       </SidebarFooter>
     </Sidebar>

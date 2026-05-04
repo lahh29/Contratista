@@ -19,7 +19,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
   return (
     <div className="max-w-md mx-auto space-y-8 animate-in zoom-in-95 duration-500">
       <div className="text-center space-y-4">
-        <div className="w-24 h-24 rounded-full bg-primary mx-auto flex items-center justify-center text-white text-4xl font-black border-4 border-white shadow-xl ring-4 ring-primary/20">
+        <div className="w-24 h-24 rounded-full bg-primary mx-auto flex items-center justify-center text-primary-foreground text-4xl font-black border-4 border-background shadow-xl ring-4 ring-primary/20">
           {contractor?.name?.[0]}
         </div>
         <div>
@@ -31,20 +31,20 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
       </div>
 
       <div className="grid gap-4">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+        <div className="bg-card p-6 rounded-3xl shadow-sm border border-border space-y-4">
           <div className="flex items-start justify-between border-b pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+              <div className="p-2 bg-primary/10 rounded-xl text-primary">
                 <MapPin className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Área Asignada</p>
-                <p className="font-bold text-slate-800">{contractor?.areaName || '—'}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Área Asignada</p>
+                <p className="font-bold text-foreground">{contractor?.areaName || '—'}</p>
               </div>
             </div>
             <div className="text-right">
-               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Encargado</p>
-               <p className="font-bold text-slate-800">{contractor?.supervisorName || '—'}</p>
+               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Encargado</p>
+               <p className="font-bold text-foreground">{contractor?.supervisorName || '—'}</p>
             </div>
           </div>
 
@@ -52,7 +52,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
             <div className="flex items-center gap-3">
               <Clock className="w-5 h-5 text-primary" />
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Entrada</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">Entrada</p>
                 <p className="font-bold">
                   {contractor?.entryTime
                     ? new Date(contractor.entryTime.toDate()).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
@@ -63,7 +63,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-primary" />
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Personal</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">Personal</p>
                 <p className="font-bold">{contractor?.personnelCount ?? '—'}</p>
               </div>
             </div>
@@ -71,7 +71,7 @@ export function ContractorDashboard({ contractor, onExit }: ContractorDashboardP
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" className="h-16 rounded-2xl border-2 gap-2 font-bold text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+          <Button variant="outline" className="h-16 rounded-2xl border-2 gap-2 font-bold text-primary hover:bg-primary/10 hover:text-primary">
             <Phone className="w-5 h-5" /> Llamar
           </Button>
           <Button 

@@ -593,12 +593,12 @@ export default function ReportsPage() {
               <Button variant="outline" size="sm" className="gap-2 relative" onClick={() => setFilterOpen(true)}>
                 <Filter className="w-4 h-4" />
                 {activeFilters > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
                     {activeFilters}
                   </span>
                 )}
               </Button>
-              <Button size="sm" className="bg-primary text-white" onClick={handleAll} disabled={genAll || loading}>
+              <Button size="sm" className="bg-primary text-primary-foreground" onClick={handleAll} disabled={genAll || loading}>
                 {genAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               </Button>
             </div>

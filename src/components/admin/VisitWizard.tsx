@@ -625,11 +625,11 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
                     }`}
                   >
                     {done ? (
-                      <CheckCircle2 className="w-4 h-4 text-white" />
+                      <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
                     ) : (
                       <span
                         className={`text-xs font-bold ${
-                          current ? 'text-white' : 'text-muted-foreground'
+                          current ? 'text-primary-foreground' : 'text-muted-foreground'
                         }`}
                       >
                         {i + 1}

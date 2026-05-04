@@ -502,8 +502,8 @@ export function ContractorForm() {
                           done || current ? "bg-primary" : "bg-muted" 
                         }`}>
                         {done
-                          ? <CheckCircle2 className="w-4 h-4 text-white" />
-                          : <Icon className={`w-4 h-4 ${current ? "text-white" : "text-muted-foreground"}`} />
+                          ? <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
+                          : <Icon className={`w-4 h-4 ${current ? "text-primary-foreground" : "text-muted-foreground"}`} />
                         }
                       </motion.div>
                       <span className={`text-[10px] font-medium leading-none ${current ? "text-foreground" : "text-muted-foreground"}`}>

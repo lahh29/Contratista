@@ -158,14 +158,14 @@ export default function LoginPage() {
                         placeholder="correo@vinoplastic.com"
                         autoComplete="email"
                         inputMode="email"
-                        className="h-11 rounded-lg pl-10 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#0071e3]/20 focus-visible:border-[#0071e3] dark:focus-visible:ring-[#2997ff]/20 dark:focus-visible:border-[#2997ff]"
+                        className="h-11 rounded-lg pl-10 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary"
                         value={resetEmail}
                         onChange={e => setResetEmail(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handlePasswordReset()}
                       />
                     </div>
                     <Button
-                      className="w-full h-11 rounded-lg font-medium text-sm bg-[#0071e3] hover:bg-[#0077ED] text-white dark:bg-[#2997ff] dark:hover:bg-[#40a9ff]"
+                      className="w-full h-11 rounded-lg font-medium text-sm bg-primary hover:bg-primary/90 text-primary-foreground"
                       disabled={resetLoading || !resetEmail}
                       onClick={handlePasswordReset}
                     >
@@ -202,7 +202,7 @@ export default function LoginPage() {
                               placeholder="correo@vinoplastic.com"
                               autoComplete="email"
                               inputMode="email"
-                              className="h-11 rounded-lg pl-10 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#0071e3]/20 focus-visible:border-[#0071e3] dark:focus-visible:ring-[#2997ff]/20 dark:focus-visible:border-[#2997ff]"
+                              className="h-11 rounded-lg pl-10 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary"
                               {...field}
                               onChange={e => { field.onChange(e); setLoginError(null) }}
                             />
@@ -225,7 +225,7 @@ export default function LoginPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Contraseña"
                               autoComplete="current-password"
-                              className="h-11 rounded-lg pl-10 pr-11 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-[#0071e3]/20 focus-visible:border-[#0071e3] dark:focus-visible:ring-[#2997ff]/20 dark:focus-visible:border-[#2997ff]"
+                              className="h-11 rounded-lg pl-10 pr-11 bg-white/60 dark:bg-white/[0.06] border-black/[0.06] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary"
                               {...field}
                               onChange={e => { field.onChange(e); setLoginError(null) }}
                             />
@@ -255,7 +255,7 @@ export default function LoginPage() {
 
                   <Button
                     type="submit"
-                    className="w-full h-11 rounded-lg font-medium text-sm mt-1 bg-[#0071e3] hover:bg-[#0077ED] text-white dark:bg-[#2997ff] dark:hover:bg-[#40a9ff]"
+                    className="w-full h-11 rounded-lg font-medium text-sm mt-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                     disabled={loading}
                     aria-busy={loading}
                   >
@@ -283,7 +283,7 @@ export default function LoginPage() {
               <div className="pt-1">
                 <Link
                   href="/register"
-                  className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-[#0066cc] dark:border-[#2997ff] text-sm font-normal text-[#0066cc] dark:text-[#2997ff] hover:underline transition-colors"
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-primary text-sm font-normal text-primary hover:underline transition-colors"
                 >
                   <UserPlus className="w-4 h-4" />
                   Registrarse como proveedor

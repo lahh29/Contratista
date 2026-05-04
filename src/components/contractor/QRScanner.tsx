@@ -103,7 +103,7 @@ export function QRScanner({ onQRDetected, isProcessing }: QRScannerProps) {
           <Button
             onClick={startScanner}
             disabled={isProcessing}
-            className="flex-1 h-14 text-base font-bold rounded-2xl gap-2 bg-primary hover:bg-primary/90 text-white shadow-lg"
+            className="flex-1 h-14 text-base font-bold rounded-2xl gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
           >
             {isProcessing ? (
               <Loader2 className="w-5 h-5 animate-spin" />
