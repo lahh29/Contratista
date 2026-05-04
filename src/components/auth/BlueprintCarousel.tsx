@@ -7,12 +7,12 @@ import Image from 'next/image'
 // ── Blueprint images from public/imagenes-login ───────────────────────────────
 
 const SLIDES = [
-  { src: '/imagenes-login/imagen 1.png', alt: 'ViñoPlastic Industrial Facility — plano arquitectónico' },
-  { src: '/imagenes-login/imagen 2.png', alt: 'Técnico de Mantenimiento — inspección y limpieza' },
-  { src: '/imagenes-login/imagen 3.png', alt: 'Sumitomo Demag Systec 1450 — máquina de inyección' },
-  { src: '/imagenes-login/imagen 4.png', alt: 'Máquina de Medición por Coordenadas — Innovalia' },
-  { src: '/imagenes-login/imagen 5.png', alt: 'Técnico de Inspección — inspección visual' },
-  { src: '/imagenes-login/imagen 6.png', alt: 'Faro Delantero Tesla — plano técnico' },
+  { src: '/imagenes-login/imagen-1.png', alt: 'ViñoPlastic Industrial Facility — plano arquitectónico' },
+  { src: '/imagenes-login/imagen-2.png', alt: 'Técnico de Mantenimiento — inspección y limpieza' },
+  { src: '/imagenes-login/imagen-3.png', alt: 'Sumitomo Demag Systec 1450 — máquina de inyección' },
+  { src: '/imagenes-login/imagen-4.png', alt: 'Máquina de Medición por Coordenadas — Innovalia' },
+  { src: '/imagenes-login/imagen-5.png', alt: 'Técnico de Inspección — inspección visual' },
+  { src: '/imagenes-login/imagen-6.png', alt: 'Faro Delantero Tesla — plano técnico' },
 ]
 
 const INTERVAL_MS = 6000
