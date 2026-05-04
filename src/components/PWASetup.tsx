@@ -14,12 +14,16 @@ export function PWASetup() {
       console.warn('[SW] Service workers not supported in this browser')
       return
     }
-    // Registrar en scope "/" — mismo scope que usa getFCMToken() en messaging.ts.
-    // Esto es necesario para que Firebase pueda asociar el SW al origen
-    // y entregar los mensajes push correctamente.
+    // Scope dedicado "/fcm-sw/" para NO colisionar con sw.js de next-pwa (scope "/").
+    // Firebase vincula el token FCM al objeto de registro, no al scope,
+    // por lo que los mensajes push llegan correctamente a este SW.
     navigator.serviceWorker
-      .register('/firebase-messaging-sw.js', { scope: '/' })
-      .then(reg => console.log('[SW] FCM SW registered at scope:', reg.scope))
+      .register('/firebase-messaging-sw.js', { scope: '/fcm-sw/' })
+      .then(reg => {
+        console.log('[SW] FCM SW registered at scope:', reg.scope)
+        // Forzar activación inmediata si hay una versión esperando
+        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+      })
       .catch(err => console.error('[SW] FCM SW registration failed:', err))
   }, [])
   return null

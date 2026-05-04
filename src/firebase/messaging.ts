@@ -16,11 +16,14 @@ export function getFirebaseMessaging(): Messaging | null {
   }
 }
 
-// El SW de FCM debe estar en scope "/" para recibir push.
-// Coexiste con next-pwa porque ambos SWs se registran por separado;
-// el navegador enruta cada push al SW cuyo scope coincida con la URL de destino.
+// El SW de FCM usa un scope dedicado para NO colisionar con sw.js de next-pwa.
+// Ambos operan en el mismo origen pero con scopes distintos:
+//   sw.js                  → scope "/"          (next-pwa / Workbox)
+//   firebase-messaging-sw  → scope "/fcm-sw/"   (FCM push)
+// Firebase vincula el token al SW por su objeto de registro, no por su scope,
+// por lo que los pushes llegan correctamente al SW de FCM.
 const FCM_SW_URL = '/firebase-messaging-sw.js'
-const FCM_SW_SCOPE = '/'
+const FCM_SW_SCOPE = '/fcm-sw/'
 
 /**
  * Espera a que un ServiceWorkerRegistration esté en estado 'active'.

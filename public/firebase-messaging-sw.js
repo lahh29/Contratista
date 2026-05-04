@@ -1,6 +1,28 @@
 importScripts('https://www.gstatic.com/firebasejs/11.9.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/11.9.0/firebase-messaging-compat.js')
 
+// ── Ciclo de vida del SW ──────────────────────────────────────────────────────
+// skipWaiting garantiza que una nueva versión del SW se active
+// inmediatamente sin esperar a que el usuario cierre todas las pestañas.
+self.addEventListener('install', () => {
+  console.log('[FCM-SW] Installed — calling skipWaiting')
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event) => {
+  console.log('[FCM-SW] Activated')
+  // Tomar control de todos los clientes abiertos inmediatamente
+  event.waitUntil(self.clients.claim())
+})
+
+// Escuchar mensaje SKIP_WAITING enviado desde PWASetup.tsx
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    console.log('[FCM-SW] SKIP_WAITING received')
+    self.skipWaiting()
+  }
+})
+
 firebase.initializeApp({
   apiKey: "AIzaSyDCI86FTRzFLfUjg751KJD72OmiB7jxmN8",
   authDomain: "contratistas-d30db.firebaseapp.com",
