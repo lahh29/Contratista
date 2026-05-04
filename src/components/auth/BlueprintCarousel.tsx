@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 
 // ── Blueprint images from public/imagenes-login ───────────────────────────────
 
@@ -45,41 +44,36 @@ export function BlueprintCarousel({ className = '' }: Props) {
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence initial={false}>
         <motion.div
           key={index}
-          initial={{ opacity: 0, scale: 1.1, filter: 'blur(8px)' }}
-          animate={{
-            opacity: 1,
-            scale: [1.05, 1],
-            filter: 'blur(0px)',
-          }}
-          exit={{ opacity: 0, filter: 'blur(4px)' }}
-          transition={{
-            opacity: { duration: 0.8, ease: 'easeInOut' },
-            scale: { duration: INTERVAL_MS / 1000, ease: 'linear' },
-            filter: { duration: 0.6 },
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
           className="absolute inset-0"
-          style={{ transformOrigin: KEN_BURNS_ORIGINS[index % KEN_BURNS_ORIGINS.length] }}
         >
-          <Image
+          <motion.img
             src={SLIDES[index].src}
             alt={SLIDES[index].alt}
-            fill
-            priority={index === 0}
-            className="object-cover"
-            sizes="(min-width: 1024px) 60vw, 100vw"
+            initial={{ scale: 1.08, filter: 'blur(4px)' }}
+            animate={{ scale: 1, filter: 'blur(0px)' }}
+            transition={{
+              scale: { duration: INTERVAL_MS / 1000, ease: 'linear' },
+              filter: { duration: 0.6 },
+            }}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ transformOrigin: KEN_BURNS_ORIGINS[index % KEN_BURNS_ORIGINS.length] }}
           />
         </motion.div>
       </AnimatePresence>
 
       {/* Dark gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 pointer-events-none z-[1]" />
 
       {/* Scan line effect */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
+      <div
+        className="absolute inset-0 pointer-events-none z-[2]"
         style={{
           background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 4px)',
         }}
