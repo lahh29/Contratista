@@ -132,21 +132,21 @@ export function EmployeeManager() {
             <div className="flex items-center gap-1.5 shrink-0">
               <Button
                 variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs"
+                size="responsiveSm"
                 onClick={() => setCreateOpen(true)}
+                aria-label="Nuevo empleado"
               >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Nuevo</span>
+                <UserPlus className="w-3.5 h-3.5 md:hidden" />
+                <span className="hidden md:inline">Nuevo</span>
               </Button>
               <Button
                 variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs"
+                size="responsiveSm"
                 onClick={() => setImportOpen(true)}
+                aria-label="Importar JSON"
               >
-                <FileJson className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Importar JSON</span>
+                <FileJson className="w-3.5 h-3.5 md:hidden" />
+                <span className="hidden md:inline">Importar JSON</span>
               </Button>
             </div>
           </div>
@@ -233,13 +233,14 @@ export function EmployeeManager() {
                   </div>
                 </div>
                 <Button
-                  size="sm"
+                  size="responsiveSm"
                   variant="outline"
                   className="gap-1.5 shrink-0"
                   onClick={() => handleEdit(employee)}
+                  aria-label="Editar empleado"
                 >
-                  <Pencil className="w-3.5 h-3.5" />
-                  Editar
+                  <Pencil className="w-3.5 h-3.5 md:hidden" />
+                  <span className="hidden md:inline">Editar</span>
                 </Button>
               </div>
             </div>

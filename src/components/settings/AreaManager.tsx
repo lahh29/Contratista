@@ -128,10 +128,10 @@ export function AreaManager({ db, areas, supervisors, loading, onRefresh }: Area
               className="h-10"
               autoCapitalize="words"
             />
-            <Button onClick={handleAdd} disabled={!newName.trim()} size="sm"
-              className="gap-1.5 shrink-0 h-10 px-3 md:px-4" aria-label="Agregar área">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Agregar</span>
+            <Button onClick={handleAdd} disabled={!newName.trim()} size="responsive"
+              className="shrink-0" aria-label="Agregar área">
+              <Plus className="w-4 h-4 md:hidden" />
+              <span className="hidden md:inline">Agregar</span>
             </Button>
           </div>
           <Select value={newSupervisorId} onValueChange={setNewSupervisorId}>
@@ -185,7 +185,7 @@ export function AreaManager({ db, areas, supervisors, loading, onRefresh }: Area
                           {item.restricted ? "Zona restringida (toca para quitar)" : "Marcar como zona restringida"}
                         </button>
                       </div>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/40"
+                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-primary hover:text-primary hover:bg-primary/10"
                         onClick={() => handleUpdate(item.id)} aria-label="Guardar">
                         <Check className="w-4 h-4" />
                       </Button>

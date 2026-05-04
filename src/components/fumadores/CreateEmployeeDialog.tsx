@@ -360,9 +360,10 @@ export function CreateEmployeeDialog({ open, onOpenChange, onCreated }: CreateEm
                   className="flex-1 h-11 gap-1.5"
                   onClick={handleSubmit}
                   disabled={saving}
+                  aria-label="Registrar empleado"
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Registrar
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin md:hidden" /> : <Check className="w-4 h-4 md:hidden" />}
+                  <span className="hidden md:inline">Registrar</span>
                 </Button>
               ) : (
                 <Button type="button" className="flex-1 h-11 gap-1.5" onClick={handleNext}>

@@ -213,9 +213,9 @@ function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button className="flex-1 gap-2" onClick={handleSave} disabled={!canSave || saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            {isEdit ? "Guardar" : "Agregar"}
+          <Button className="flex-1 gap-2" onClick={handleSave} disabled={!canSave || saving} aria-label={isEdit ? "Guardar" : "Agregar"}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin md:hidden" /> : <Check className="w-4 h-4 md:hidden" />}
+            <span className="hidden md:inline">{isEdit ? "Guardar" : "Agregar"}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -290,8 +290,9 @@ function HorariosTab() {
       />
 
       <div className="space-y-4">
-        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openAdd}>
-          <Plus className="w-4 h-4" /> Agregar horario
+        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openAdd} aria-label="Agregar horario">
+          <Plus className="w-4 h-4 md:hidden" />
+          <span className="hidden md:inline">Agregar horario</span>
         </Button>
 
         <div className="space-y-2 min-h-[80px]">
@@ -505,9 +506,9 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button className="flex-1 gap-2" onClick={handleSave} disabled={!canSave || saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            {initial?.id ? "Guardar cambios" : "Crear grupo"}
+          <Button className="flex-1 gap-2" onClick={handleSave} disabled={!canSave || saving} aria-label={initial?.id ? "Guardar cambios" : "Crear grupo"}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin md:hidden" /> : <Check className="w-4 h-4 md:hidden" />}
+            <span className="hidden md:inline">{initial?.id ? "Guardar cambios" : "Crear grupo"}</span>
           </Button>
         </SheetFooter>
       </SheetContent>
@@ -586,8 +587,9 @@ function GruposTab() {
       />
 
       <div className="space-y-4">
-        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openNew}>
-          <Plus className="w-4 h-4" /> Agregar grupo
+        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openNew} aria-label="Agregar grupo">
+          <Plus className="w-4 h-4 md:hidden" />
+          <span className="hidden md:inline">Agregar grupo</span>
         </Button>
 
         <div className="space-y-2 min-h-[80px]">
@@ -727,26 +729,27 @@ export function MealSchedulesManager() {
               </p>
             </div>
             <Button
-              size="sm"
+              size="responsiveSm"
               variant="outline"
-              className="shrink-0 gap-1.5 text-xs h-8"
+              className="shrink-0"
               onClick={handleSeedDefaults}
               disabled={seeding}
+              aria-label="Inicializar datos predeterminados"
             >
-              {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <DatabaseZap className="w-3.5 h-3.5" />}
-              Inicializar
+              {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin md:hidden" /> : <DatabaseZap className="w-3.5 h-3.5 md:hidden" />}
+              <span className="hidden md:inline">Inicializar</span>
             </Button>
           </div>
 
           {/* Tabs: Horarios / Grupos */}
           <Tabs defaultValue="horarios">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="horarios" className="text-xs gap-1.5">
-                <UtensilsCrossed className="w-3 h-3 md:hidden" />
+            <TabsList className="grid h-12 w-full grid-cols-2 md:h-10">
+              <TabsTrigger value="horarios" className="h-10 gap-2 text-sm md:h-auto md:text-xs">
+                <UtensilsCrossed className="h-4 w-4 md:hidden" />
                 <span className="hidden md:inline">Por departamento</span>
               </TabsTrigger>
-              <TabsTrigger value="grupos" className="text-xs gap-1.5">
-                <Users className="w-3 h-3 md:hidden" />
+              <TabsTrigger value="grupos" className="h-10 gap-2 text-sm md:h-auto md:text-xs">
+                <Users className="h-4 w-4 md:hidden" />
                 <span className="hidden md:inline">Grupos</span>
               </TabsTrigger>
             </TabsList>

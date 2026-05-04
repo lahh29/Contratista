@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Trash2, Plus, Pencil, Users, Loader2, ShieldCheck, Shield, Briefcase, HardHat, Package, UserPlus, User, MoreHorizontal } from "lucide-react"
+import { Trash2, Plus, Pencil, Users, Loader2, ShieldCheck, Shield, Briefcase, HardHat, Package, UserPlus, User, MoreHorizontal, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { logAudit } from "@/app/actions/audit"
@@ -133,9 +133,9 @@ export function UserManager({ db, companies }: UserManagerProps) {
               </div>
               Usuarios del sistema
             </CardTitle>
-            <Button size="sm" className="gap-1.5 h-8 px-3 shrink-0" onClick={() => setWizardOpen(true)}>
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Nuevo</span>
+            <Button size="responsiveSm" className="shrink-0" onClick={() => setWizardOpen(true)} aria-label="Nuevo usuario">
+              <Plus className="w-4 h-4 md:hidden" />
+              <span className="hidden md:inline">Nuevo</span>
             </Button>
           </div>
         </CardHeader>
@@ -245,11 +245,13 @@ export function UserManager({ db, companies }: UserManagerProps) {
           </div>
 
           <SheetFooter className="mt-6 flex-row gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => { setEditUid(null); setEditUser(null) }}>
-              Cancelar
+            <Button variant="outline" className="flex-1" onClick={() => { setEditUid(null); setEditUser(null) }} aria-label="Cancelar">
+              <X className="w-4 h-4 md:hidden" />
+              <span className="hidden md:inline">Cancelar</span>
             </Button>
-            <Button className="flex-1" onClick={() => editUid && saveEdit(editUid)}>
-              Guardar
+            <Button className="flex-1" onClick={() => editUid && saveEdit(editUid)} aria-label="Guardar">
+              <ShieldCheck className="w-4 h-4 md:hidden" />
+              <span className="hidden md:inline">Guardar</span>
             </Button>
           </SheetFooter>
         </SheetContent>
