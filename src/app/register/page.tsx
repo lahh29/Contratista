@@ -142,7 +142,7 @@ export default function RegisterPage() {
                     <Input
                       type="email"
                       placeholder="correo@empresa.com"
-                      className="h-11 rounded-lg pl-10 bg-white/70 dark:bg-white/[0.06] border-black/[0.08] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground"
+                      className="h-11 pl-10"
                       value={email}
                       onChange={e => { setEmail(e.target.value); setEmailError('') }}
                       onKeyDown={e => e.key === 'Enter' && handleEmailNext()}
@@ -190,7 +190,7 @@ export default function RegisterPage() {
                     <Input
                       type="password"
                       placeholder="Contraseña"
-                      className="h-11 rounded-lg pl-10 bg-white/70 dark:bg-white/[0.06] border-black/[0.08] dark:border-white/[0.10]"
+                      className="h-11 pl-10"
                       value={password}
                       onChange={e => { setPassword(e.target.value); setPassError('') }}
                     />
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                     <Input
                       type="password"
                       placeholder="Confirmar contraseña"
-                      className="h-11 rounded-lg pl-10 bg-white/70 dark:bg-white/[0.06] border-black/[0.08] dark:border-white/[0.10]"
+                      className="h-11 pl-10"
                       value={confirm}
                       onChange={e => { setConfirm(e.target.value); setPassError('') }}
                       onKeyDown={e => e.key === 'Enter' && handleRegister()}
@@ -225,8 +225,8 @@ export default function RegisterPage() {
               <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
 
                 <div className="flex justify-center">
-                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
-                    <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <div className="success-icon-circle w-16 h-16">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
                 </div>
 

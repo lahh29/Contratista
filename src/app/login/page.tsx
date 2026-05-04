@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth"
-import { Loader2, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2, GhostIcon, HashIcon, OrbitIcon } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { Loader2, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react"
+import { motion, AnimatePresence, type Transition } from "framer-motion"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,15 +22,8 @@ const schema = z.object({
   password: z.string().min(6, "Mínimo 6 caracteres"),
 })
 
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
-}
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-}
+/** Shared transition for panel swaps */
+const panelTransition: Transition = { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
 
 export default function LoginPage() {
   const [loading, setLoading] = React.useState(false)
@@ -120,7 +113,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.25 }}
+                transition={panelTransition}
                 className="space-y-4"
               >
                 {resetSent ? (
@@ -129,14 +122,17 @@ export default function LoginPage() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                      className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center"
+                      className="success-icon-circle w-12 h-12"
                     >
-                      <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+                      <CheckCircle2 className="w-6 h-6" />
                     </motion.div>
                     <div>
-                      <p className="font-bold text-sm">Correo enviado</p>
+                      <p className="font-bold text-sm text-foreground">Correo enviado</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Si el correo está registrado, recibirás las instrucciones para restablecer tu contraseña.
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 mt-1.5">
+                        Revisa tu bandeja de spam o correo no deseado si no lo encuentras.
                       </p>
                     </div>
                     <Button
@@ -151,7 +147,7 @@ export default function LoginPage() {
                 ) : (
                   <>
                     <div className="text-center">
-                      <p className="font-bold text-sm">Recuperar contraseña</p>
+                      <p className="font-bold text-sm text-foreground">Recuperar contraseña</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Ingresa tu correo y te enviaremos el enlace de recuperación.
                       </p>
@@ -181,10 +177,11 @@ export default function LoginPage() {
                     </Button>
                     <button
                       type="button"
-                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1"
+                      className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
                       onClick={() => setResetMode(false)}
+                      aria-label="Volver al login"
                     >
-                      <OrbitIcon className="w-4 h-4" />
+                      ← Volver
                     </button>
                   </>
                 )}
@@ -196,7 +193,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30 }}
-                transition={{ duration: 0.25 }}
+                transition={panelTransition}
               >
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
@@ -240,8 +237,9 @@ export default function LoginPage() {
                               />
                               <button
                                 type="button"
-                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                 onClick={() => setShowPassword(v => !v)}
+                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                               >
                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                               </button>
@@ -253,15 +251,25 @@ export default function LoginPage() {
                     />
 
                     {/* Error */}
-                    {loginError && (
-                      <div className="flex items-center gap-2 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
-                        <AlertCircle className="w-4 h-4 text-red-500" />
-                        <p className="text-xs text-red-600">{loginError}</p>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {loginError && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="alert-error">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            <p className="text-xs">{loginError}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Submit */}
-                    <Button className="w-full h-11">
+                    <Button className="w-full h-11" disabled={loading}>
                       {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Iniciar sesión"}
                     </Button>
 
@@ -269,7 +277,7 @@ export default function LoginPage() {
                     <div className="text-center">
                       <button
                         type="button"
-                        className="text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         onClick={() => setResetMode(true)}
                       >
                         ¿Olvidaste tu contraseña?
@@ -286,7 +294,7 @@ export default function LoginPage() {
           {!resetMode && (
             <Link
               href="/register"
-              className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-primary text-primary text-sm hover:underline"
+              className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-primary text-primary text-sm hover:bg-primary/5 transition-colors"
             >
               <UserPlus className="w-4 h-4" />
               Registrarse como proveedor

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { BlueprintCarousel } from '@/components/auth/BlueprintCarousel'
+import { TrustBadgeCarousel } from '@/components/auth/TrustBadgeCarousel'
 import { PWAInstallBanner } from '@/components/PWAInstallBanner'
 
 interface Props {
@@ -50,7 +51,7 @@ export function AuthLayout({ children }: Props) {
       </div>
 
       {/* ── Right: Form panel ──────────────────────────────────── */}
-      <div className="relative z-10 w-full lg:w-[40%] flex items-center justify-center px-5 lg:px-10">
+      <div className="relative z-10 w-full lg:w-[40%] flex flex-col items-center justify-center px-5 lg:px-10">
         {/* Desktop: blur fade from carousel → solid bg */}
         <div
           className="hidden lg:block absolute inset-y-0 -left-32 w-32 backdrop-blur-xl pointer-events-none"
@@ -65,10 +66,21 @@ export function AuthLayout({ children }: Props) {
           initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative z-10 w-full max-w-[380px]"
+          className="relative z-10 w-full max-w-[380px] -mt-10"
         >
           {children}
         </motion.div>
+      </div>
+
+      {/* Trust badges marquee */}
+      <div 
+        className="absolute bottom-10 right-0 left-0 lg:left-auto lg:right-0 lg:w-[40%] z-10 overflow-hidden pointer-events-none"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+        }}
+      >
+        <TrustBadgeCarousel />
       </div>
 
       {/* Footer */}

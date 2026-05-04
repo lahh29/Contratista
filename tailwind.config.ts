@@ -115,10 +115,33 @@ export default {
             height: '0',
           },
         },
+        'ken-burns': {
+          from: {
+            transform: 'scale(1.08)',
+            filter: 'blur(4px)',
+          },
+          '10%': {
+            filter: 'blur(0px)',
+          },
+          to: {
+            transform: 'scale(1)',
+            filter: 'blur(0px)',
+          },
+        },
+        'marquee': {
+          from: {
+            transform: 'translateX(0)',
+          },
+          to: {
+            transform: 'translateX(-50%)',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'ken-burns': 'ken-burns 6s linear forwards',
+        'marquee': 'marquee 20s linear infinite',
       },
     },
   },

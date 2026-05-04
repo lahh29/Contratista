@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -44,7 +45,12 @@ export function BlueprintCarousel({ className = '' }: Props) {
   }, [advance])
 
   return (
-    <div className={cn('relative overflow-hidden', className)}>
+    <div
+      className={cn('relative overflow-hidden', className)}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Imágenes de la planta"
+    >
       <AnimatePresence initial={false}>
         <motion.div
           key={index}
@@ -53,30 +59,37 @@ export function BlueprintCarousel({ className = '' }: Props) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8, ease: 'easeInOut' }}
           className="absolute inset-0"
+          aria-live="polite"
         >
-          <motion.img
-            src={SLIDES[index].src}
-            alt={SLIDES[index].alt}
-            initial={{ scale: 1.08, filter: 'blur(4px)' }}
-            animate={{ scale: 1, filter: 'blur(0px)' }}
-            transition={{
-              scale: { duration: INTERVAL_MS / 1000, ease: 'linear' },
-              filter: { duration: 0.6 },
-            }}
-            className="absolute inset-0 w-full h-full object-cover"
+          <div
+            className="absolute inset-0 animate-ken-burns"
             style={{ transformOrigin: KEN_BURNS_ORIGINS[index % KEN_BURNS_ORIGINS.length] }}
-          />
+          >
+            <Image
+              src={SLIDES[index].src}
+              alt={SLIDES[index].alt}
+              fill
+              sizes="(max-width: 1024px) 100vw, 60vw"
+              className="object-cover"
+              priority={index === 0}
+            />
+          </div>
         </motion.div>
       </AnimatePresence>
 
       {/* Dark gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 pointer-events-none z-[1]" />
+      <div
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{
+          background: `linear-gradient(to top, hsl(var(--carousel-overlay-from)), hsl(var(--carousel-overlay-via)), hsl(var(--carousel-overlay-to)))`,
+        }}
+      />
 
       {/* Scan line effect */}
       <div
         className="absolute inset-0 pointer-events-none z-[2]"
         style={{
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.015) 2px, rgba(255,255,255,0.015) 4px)',
+          background: `repeating-linear-gradient(0deg, transparent, transparent 2px, hsl(var(--carousel-scanline)) 2px, hsl(var(--carousel-scanline)) 4px)`,
         }}
       />
 
@@ -86,12 +99,14 @@ export function BlueprintCarousel({ className = '' }: Props) {
           <button
             key={i}
             onClick={() => setIndex(i)}
-            aria-label={`Imagen ${i + 1}`}
-            className="relative w-8 h-1 rounded-full overflow-hidden bg-white/20 transition-colors"
+            aria-label={`Imagen ${i + 1} de ${SLIDES.length}`}
+            className="relative w-8 h-1 rounded-full overflow-hidden transition-colors"
+            style={{ backgroundColor: `hsl(var(--carousel-dot-bg))` }}
           >
             {i === index && (
               <motion.div
-                className="absolute inset-y-0 left-0 bg-white/80 rounded-full"
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{ backgroundColor: `hsl(var(--carousel-dot-active))` }}
                 initial={{ width: '0%' }}
                 animate={{ width: '100%' }}
                 transition={{ duration: INTERVAL_MS / 1000, ease: 'linear' }}
