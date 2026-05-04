@@ -248,7 +248,10 @@ export async function sendFCM(
 
     const res = await messaging.sendEachForMulticast({
       tokens: chunkTokens,
-      notification: { title, body },
+      // SIN notification a nivel raíz — si se incluye, FCM/browser
+      // la muestra automáticamente sin pasar por el SW y onBackgroundMessage
+      // nunca se ejecuta. Todo va por webpush.notification para que el SW
+      // tenga control total (icon, badge, vibrate, actions, data).
       webpush: {
         notification: {
           title,
@@ -257,9 +260,12 @@ export async function sendFCM(
           badge: '/api/pwa-icon?size=96',
           vibrate: [200, 100, 200],
           requireInteraction: event.type === 'sua_expiring',
+          // silent: false garantiza que el sistema operativo emita sonido
+          silent: false,
         },
         fcmOptions: { link: url },
       },
+      // data siempre disponible en el SW via payload.data
       data: { type: event.type, url },
     })
 
