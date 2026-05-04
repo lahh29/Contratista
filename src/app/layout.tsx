@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'ViñoPlastic',
     startupImage: ['/api/pwa-icon?size=512'],
   },
@@ -49,7 +49,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/api/pwa-icon?size=192" />
         <link rel="apple-touch-icon" sizes="152x152" href="/api/pwa-icon?size=152" />
         <link rel="apple-touch-icon" sizes="120x120" href="/api/pwa-icon?size=120" />
-        <link rel="icon" type="image/png" sizes="32x32"  href="/api/pwa-icon?size=32" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/api/pwa-icon?size=32" />
         <link rel="icon" type="image/png" sizes="192x192" href="/api/pwa-icon?size=192" />
       </head>
       <body className="font-body antialiased">
