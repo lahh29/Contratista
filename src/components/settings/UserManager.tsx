@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Trash2, Plus, Pencil, Users, Loader2, ShieldCheck, Shield, Briefcase, HardHat, Package, UserPlus, User, MoreHorizontal, X } from "lucide-react"
+import { Trash2, Plus, Pencil, Users, Loader2, User, MoreHorizontal, X, Check as CheckIcon } from "lucide-react"
+import { RoleIcon, getRoleTheme, getRoleLabel, ROLE_THEMES } from "@/components/ui/RoleIcon"
 import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { logAudit } from "@/app/actions/audit"
@@ -20,14 +21,7 @@ interface UserManagerProps {
   companies: DocumentData[] | null | undefined
 }
 
-const ROLE_CONFIG: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  admin: { label: "Admin", icon: ShieldCheck, className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400" },
-  guard: { label: "Guardia", icon: Shield, className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
-  contractor: { label: "Contratista", icon: Briefcase, className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
-  seguridad: { label: "Seg. e Higiene", icon: HardHat, className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" },
-  logistica: { label: "Logística", icon: Package, className: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400" },
-  rys: { label: "Reclutamiento", icon: UserPlus, className: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400" },
-}
+
 
 export function UserManager({ db, companies }: UserManagerProps) {
   const [users, setUsers] = React.useState<DocumentData[]>([])
@@ -148,15 +142,7 @@ export function UserManager({ db, companies }: UserManagerProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {users.map((u) => (
                 <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0 border border-border/40 hover:bg-muted/60 transition-colors">
-                  {(() => {
-                    const rc = ROLE_CONFIG[u.role]
-                    const RoleIcon = rc?.icon ?? User
-                    return (
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${rc?.className ?? "bg-muted text-muted-foreground"}`}>
-                        <RoleIcon className="w-4 h-4" />
-                      </div>
-                    )
-                  })()}
+                  <RoleIcon role={u.role ?? 'admin'} size={16} />
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate leading-tight">
@@ -165,7 +151,7 @@ export function UserManager({ db, companies }: UserManagerProps) {
                     <p className="text-xs text-muted-foreground leading-tight mt-0.5 truncate">
                       {u.role === "contractor" && u.companyId
                         ? (companies?.find((c) => c.id === u.companyId)?.name ?? u.email ?? "")
-                        : (u.email ?? ROLE_CONFIG[u.role]?.label ?? u.role)}
+                        : (u.email ?? getRoleLabel(u.role) ?? u.role)}
                     </p>
                   </div>
 
@@ -247,7 +233,7 @@ export function UserManager({ db, companies }: UserManagerProps) {
               <span className="hidden md:inline">Cancelar</span>
             </Button>
             <Button className="flex-1" onClick={() => editUid && saveEdit(editUid)} aria-label="Guardar">
-              <ShieldCheck className="w-4 h-4 md:hidden" />
+              <CheckIcon className="w-4 h-4 md:hidden" />
               <span className="hidden md:inline">Guardar</span>
             </Button>
           </SheetFooter>
