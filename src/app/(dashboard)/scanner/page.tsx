@@ -114,9 +114,9 @@ export default function ScannerPage() {
     }
     setDateInput(formatted)
     if (digits.length === 8) {
-      const day   = parseInt(digits.slice(0, 2), 10)
+      const day = parseInt(digits.slice(0, 2), 10)
       const month = parseInt(digits.slice(2, 4), 10) - 1
-      const year  = parseInt(digits.slice(4, 8), 10)
+      const year = parseInt(digits.slice(4, 8), 10)
       const parsed = new Date(year, month, day)
       if (!isNaN(parsed.getTime()) && parsed.getDate() === day && parsed.getMonth() === month) {
         const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -334,7 +334,7 @@ export default function ScannerPage() {
       toast({ title: isScheduled ? 'Visita Programada' : 'Acceso autorizado', description: `${currentCompany.name} ${isScheduled ? 'agendada.' : 'ha ingresado.'}` })
       logAudit({
         action: isScheduled ? 'visit.scheduled' : 'visit.created',
-        actorUid:  appUser?.uid  ?? user?.uid ?? '',
+        actorUid: appUser?.uid ?? user?.uid ?? '',
         actorName: appUser?.name ?? appUser?.email ?? 'Guardia',
         actorRole: appUser?.role ?? 'guard',
         targetType: 'visit',
@@ -350,12 +350,12 @@ export default function ScannerPage() {
         personnelCount: confirmedPersonnel, vehiclePlates: vehiclePlates.trim().toUpperCase(),
       })
       setMode('ON_SITE')
-      sendNotification({ type: 'entry', companyName: currentCompany.name, areaName: area?.name || '—', personnelCount: confirmedPersonnel, vehiclePlates: vehiclePlates.trim().toUpperCase() })
+      sendNotification({ type: 'entry', companyName: currentCompany.name, areaName: area?.name || '—', personnelCount: confirmedPersonnel, vehiclePlates: vehiclePlates.trim().toUpperCase() }).catch(() => { })
       const authorized = Number(currentCompany.personnelCount) || 0
       if (authorized > 0 && confirmedPersonnel > authorized)
-        sendNotification({ type: 'over_capacity', companyName: currentCompany.name, areaName: area?.name || '—', authorized, actual: confirmedPersonnel })
+        sendNotification({ type: 'over_capacity', companyName: currentCompany.name, areaName: area?.name || '—', authorized, actual: confirmedPersonnel }).catch(() => { })
       if ((area as any)?.restricted)
-        sendNotification({ type: 'restricted_area', companyName: currentCompany.name, areaName: area?.name || '—' })
+        sendNotification({ type: 'restricted_area', companyName: currentCompany.name, areaName: area?.name || '—' }).catch(() => { })
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar entrada' })
     } finally {
@@ -375,7 +375,7 @@ export default function ScannerPage() {
       toast({ title: 'Salida registrada', description: `${currentCompany?.name} ha salido.` })
       logAudit({
         action: 'visit.completed',
-        actorUid:  appUser?.uid  ?? user?.uid ?? '',
+        actorUid: appUser?.uid ?? user?.uid ?? '',
         actorName: appUser?.name ?? appUser?.email ?? 'Guardia',
         actorRole: appUser?.role ?? 'guard',
         targetType: 'visit', targetId: activeVisit.id,
@@ -384,7 +384,7 @@ export default function ScannerPage() {
       })
       setScanHistory(h => [{ companyName: currentCompany?.name ?? '—', action: 'exit' as const, time: new Date() }, ...h].slice(0, 20))
       setLastActivityTime(Date.now())
-      sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—', personnelCount: activeVisit.personnelCount })
+      sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—', personnelCount: activeVisit.personnelCount }).catch(() => { })
       resetScanner()
     } catch {
       toast({ variant: 'destructive', title: 'Error al registrar salida' })
@@ -539,11 +539,10 @@ export default function ScannerPage() {
       <div className="max-w-sm mx-auto space-y-4 pb-6 animate-in slide-in-from-bottom-6 duration-400">
 
         {/* SUA status */}
-        <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold ${
-          isExpired
+        <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold ${isExpired
             ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400'
             : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
-        }`}>
+          }`}>
           {isExpired
             ? <XCircle className="w-4 h-4 shrink-0" />
             : <CheckCircle2 className="w-4 h-4 shrink-0" />}
@@ -585,11 +584,10 @@ export default function ScannerPage() {
                     key={m}
                     type="button"
                     onClick={() => setExitMotivo(prev => prev === m ? null : m)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left ${
-                      exitMotivo === m
+                    className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left ${exitMotivo === m
                         ? 'border-amber-400 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'
                         : 'border-border bg-background text-muted-foreground hover:border-foreground/30'
-                    }`}
+                      }`}
                   >
                     {m}
                   </button>
@@ -703,11 +701,10 @@ export default function ScannerPage() {
                 <button
                   type="button"
                   onClick={() => setPlatesVerified(v => !v)}
-                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                    platesVerified
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${platesVerified
                       ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400'
                       : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400'
-                  }`}
+                    }`}
                 >
                   {platesVerified
                     ? <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -722,16 +719,14 @@ export default function ScannerPage() {
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="icon" className="h-11 w-11 rounded-xl text-lg shrink-0"
                   onClick={() => setConfirmedPersonnel(p => Math.max(1, p - 1))}>−</Button>
-                <div className={`flex-1 h-11 rounded-xl border flex items-center justify-center gap-2 ${
-                  confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
+                <div className={`flex-1 h-11 rounded-xl border flex items-center justify-center gap-2 ${confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
                     ? 'border-orange-400 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/30'
                     : 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30'
-                }`}>
+                  }`}>
                   <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className={`text-xl font-black ${
-                    confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
+                  <span className={`text-xl font-black ${confirmedPersonnel !== (Number(currentCompany?.personnelCount) || 1)
                       ? 'text-orange-700 dark:text-orange-400' : 'text-green-700 dark:text-green-400'
-                  }`}>{confirmedPersonnel}</span>
+                    }`}>{confirmedPersonnel}</span>
                   <span className="text-xs text-muted-foreground">personas</span>
                 </div>
               </div>
@@ -746,16 +741,14 @@ export default function ScannerPage() {
             {/* Equipo de seguridad — toggles */}
             <div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setSafetyShoes(v => !v)}
-                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
-                  safetyShoes ? 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'border-border bg-background text-muted-foreground'
-                }`}>
+                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${safetyShoes ? 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'border-border bg-background text-muted-foreground'
+                  }`}>
                 <HardHat className="w-5 h-5" />
                 Zapatos
               </button>
               <button type="button" onClick={() => setSafetyVest(v => !v)}
-                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
-                  safetyVest ? 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'border-border bg-background text-muted-foreground'
-                }`}>
+                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${safetyVest ? 'border-green-400 dark:border-green-700 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'border-border bg-background text-muted-foreground'
+                  }`}>
                 <ShieldCheck className="w-5 h-5" />
                 Chaleco
               </button>
@@ -843,11 +836,10 @@ export default function ScannerPage() {
               key={m}
               type="button"
               onClick={() => setExitMotivo(prev => prev === m ? null : m)}
-              className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left ${
-                exitMotivo === m
+              className={`py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left ${exitMotivo === m
                   ? 'border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
                   : 'border-border bg-background text-muted-foreground hover:border-foreground/30'
-              }`}
+                }`}
             >
               {m}
             </button>

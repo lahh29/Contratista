@@ -183,21 +183,21 @@ export default function ContractorsPage() {
         "Acceso bloqueado",
         async () => {
           await updateDoc(companyRef, { status: "Active" })
-          sendNotification({ type: 'unblocked_contractor', companyName: selectedCompany.name })
+          sendNotification({ type: 'unblocked_contractor', companyName: selectedCompany.name }).catch(() => { })
           fetchCompanies()
         },
         `${selectedCompany.name} ha sido bloqueada.`,
       )
       logAudit({
         action: 'company.blocked',
-        actorUid:  appUser?.uid   ?? '',
-        actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
-        actorRole: appUser?.role  ?? 'admin',
+        actorUid: appUser?.uid ?? '',
+        actorName: appUser?.name ?? appUser?.email ?? 'Admin',
+        actorRole: appUser?.role ?? 'admin',
         targetType: 'company',
-        targetId:   selectedCompany.id,
+        targetId: selectedCompany.id,
         targetName: selectedCompany.name,
       })
-      sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id })
+      sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id }).catch(() => { })
       fetchCompanies()
     } catch {
       const permissionError = new FirestorePermissionError({
@@ -219,14 +219,14 @@ export default function ContractorsPage() {
       toast({ title: "Empresa eliminada", description: `${selectedCompany.name} ha sido eliminada del sistema.` })
       logAudit({
         action: 'company.deleted',
-        actorUid:  appUser?.uid   ?? '',
-        actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
-        actorRole: appUser?.role  ?? 'admin',
+        actorUid: appUser?.uid ?? '',
+        actorName: appUser?.name ?? appUser?.email ?? 'Admin',
+        actorRole: appUser?.role ?? 'admin',
         targetType: 'company',
-        targetId:   selectedCompany.id,
+        targetId: selectedCompany.id,
         targetName: selectedCompany.name,
       })
-      sendNotification({ type: 'delete_contractor', companyName: selectedCompany.name })
+      sendNotification({ type: 'delete_contractor', companyName: selectedCompany.name }).catch(() => { })
       fetchCompanies()
     } catch {
       const permissionError = new FirestorePermissionError({
@@ -329,11 +329,10 @@ export default function ContractorsPage() {
                         </TableCell>
                         {appUser?.role === 'admin' && (
                           <TableCell>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                              company.type === 'cliente'
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${company.type === 'cliente'
                                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
                                 : 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400'
-                            }`}>
+                              }`}>
                               {company.type === 'cliente' ? 'Cliente' : 'Proveedor'}
                             </span>
                           </TableCell>

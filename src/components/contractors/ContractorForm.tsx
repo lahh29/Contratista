@@ -48,16 +48,16 @@ function formatDisplayDate(value: string): string {
 }
 
 const contractorSchema = z.object({
-  name:               z.string().min(2, "Mínimo 2 caracteres"),
-  company:            z.string().min(2, "Mínimo 2 caracteres"),
-  type:               z.enum(["proveedor", "cliente"]),
-  email:              z.string().email("Email inválido").optional().or(z.literal("")),
-  suaExpiration:      z.string().min(1, "Requerida").regex(/^\d{2}\/\d{2}\/\d{4}$/, "Usa DD/MM/AAAA"),
-  policyNumber:       z.string().min(1, "Requerido"),
-  phone:              z.string().optional(),
-  personnelCount:     z.coerce.number().min(1).optional(),
-  vehicle:            z.string().optional(),
-  defaultAreaId:      z.string().optional(),
+  name: z.string().min(2, "Mínimo 2 caracteres"),
+  company: z.string().min(2, "Mínimo 2 caracteres"),
+  type: z.enum(["proveedor", "cliente"]),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  suaExpiration: z.string().min(1, "Requerida").regex(/^\d{2}\/\d{2}\/\d{4}$/, "Usa DD/MM/AAAA"),
+  policyNumber: z.string().min(1, "Requerido"),
+  phone: z.string().optional(),
+  personnelCount: z.coerce.number().min(1).optional(),
+  vehicle: z.string().optional(),
+  defaultAreaId: z.string().optional(),
   defaultSupervisorId: z.string().optional(),
 })
 
@@ -65,10 +65,10 @@ type FormValues = z.infer<typeof contractorSchema>
 
 // ── Step config ──────────────────────────────────────────────────────────────
 const STEPS = [
-  { label: "Datos",  Icon: UploadCloud },
-  { label: "Empresa",    Icon: Building2   },
+  { label: "Datos", Icon: UploadCloud },
+  { label: "Empresa", Icon: Building2 },
   { label: "SUA", Icon: ShieldCheck },
-  { label: "Planta",     Icon: MapPin      },
+  { label: "Planta", Icon: MapPin },
 ]
 
 const STEP_REQUIRED_FIELDS: (keyof FormValues)[][] = [
@@ -80,28 +80,28 @@ const STEP_REQUIRED_FIELDS: (keyof FormValues)[][] = [
 
 // ── Framer Motion ────────────────────────────────────────────────────────────
 const slideVariants = {
-  enter:  (d: number) => ({ x: d > 0 ?  32 : -32, opacity: 0 }),
-  center:              ({ x: 0,                    opacity: 1 }),
-  exit:   (d: number) => ({ x: d > 0 ? -32 :  32, opacity: 0 }),
+  enter: (d: number) => ({ x: d > 0 ? 32 : -32, opacity: 0 }),
+  center: ({ x: 0, opacity: 1 }),
+  exit: (d: number) => ({ x: d > 0 ? -32 : 32, opacity: 0 }),
 }
 const slideTransition = { duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] as const }
 
 // ── Component ────────────────────────────────────────────────────────────────
 export function ContractorForm() {
-  const [step,      setStep]      = React.useState(0)
+  const [step, setStep] = React.useState(0)
   const [direction, setDirection] = React.useState(1)
   const [isAnalyzing, setIsAnalyzing] = React.useState(false)
   const [analysisResult, setAnalysisResult] = React.useState<any>(null)
   const [submitting, setSubmitting] = React.useState(false)
 
-  const { toast }    = useToast()
-  const db           = useFirestore()
-  const router       = useRouter()
-  const { appUser }  = useAppUser()
+  const { toast } = useToast()
+  const db = useFirestore()
+  const router = useRouter()
+  const { appUser } = useAppUser()
 
-  const areasQuery       = React.useMemo(() => db ? query(collection(db, "areas"),       limit(100)) : null, [db])
+  const areasQuery = React.useMemo(() => db ? query(collection(db, "areas"), limit(100)) : null, [db])
   const supervisorsQuery = React.useMemo(() => db ? query(collection(db, "supervisors"), limit(100)) : null, [db])
-  const { data: areas }       = useCollection(areasQuery)
+  const { data: areas } = useCollection(areasQuery)
   const { data: supervisors } = useCollection(supervisorsQuery)
 
   const forcedType = appUser?.role === 'logistica' ? 'cliente' : appUser?.role === 'seguridad' ? 'proveedor' : undefined
@@ -167,10 +167,10 @@ export function ContractorForm() {
             documentDescription: "Documento de SUA de contratista",
           })
           setAnalysisResult(result)
-          if (result.contractorName)   form.setValue("name",          result.contractorName)
-          if (result.companyName)      form.setValue("company",        result.companyName)
+          if (result.contractorName) form.setValue("name", result.contractorName)
+          if (result.companyName) form.setValue("company", result.companyName)
           if (result.suaExpirationDate) form.setValue("suaExpiration", result.suaExpirationDate)
-          if (result.policyNumber)     form.setValue("policyNumber",   result.policyNumber)
+          if (result.policyNumber) form.setValue("policyNumber", result.policyNumber)
           toast({ title: "Verificación completada", description: "Datos extraídos por Vertx IA." })
         } catch {
           toast({ variant: "destructive", title: "Error", description: "No se pudo leer el documento." })
@@ -189,28 +189,28 @@ export function ContractorForm() {
     if (!db || !appUser) return
     setSubmitting(true)
     const companyData = {
-      name:    values.company,
-      type:    values.type,
+      name: values.company,
+      type: values.type,
       contact: values.name,
-      phone:   values.phone || "",
+      phone: values.phone || "",
       ...(values.email ? { email: values.email.toLowerCase().trim() } : {}),
       status: "Active",
       sua: {
-        number:     values.policyNumber,
+        number: values.policyNumber,
         validUntil: toISODate(values.suaExpiration),
-        status:     "Valid",
+        status: "Valid",
       },
-      ...(values.personnelCount     ? { personnelCount:      values.personnelCount }     : {}),
-      ...(values.vehicle            ? { vehicle:             values.vehicle.toUpperCase().trim() } : {}),
-      ...(values.defaultAreaId      ? { defaultAreaId:       values.defaultAreaId }      : {}),
-      ...(values.defaultSupervisorId? { defaultSupervisorId: values.defaultSupervisorId }: {}),
+      ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
+      ...(values.vehicle ? { vehicle: values.vehicle.toUpperCase().trim() } : {}),
+      ...(values.defaultAreaId ? { defaultAreaId: values.defaultAreaId } : {}),
+      ...(values.defaultSupervisorId ? { defaultSupervisorId: values.defaultSupervisorId } : {}),
       createdAt: serverTimestamp(),
     }
     const companiesRef = collection(db, "companies")
     addDoc(companiesRef, companyData)
       .then(async (docRef) => {
         await updateDoc(docRef, { qrCode: docRef.id })
-        
+
         // Registrar Auditoría
         logAudit({
           action: "company.created",
@@ -227,7 +227,7 @@ export function ContractorForm() {
         })
 
         toast({ title: "Registro Exitoso", description: `${values.company} ha sido registrada.` })
-        sendNotification({ type: "new_contractor", companyName: values.company })
+        sendNotification({ type: "new_contractor", companyName: values.company }).catch(() => { })
         router.push("/contractors")
       })
       .catch(() => {
@@ -490,7 +490,7 @@ export function ContractorForm() {
             {/* ── Progress indicator ─────────────────────────────────────── */}
             <div className="flex items-center">
               {STEPS.map(({ label, Icon }, i) => {
-                const done    = i < step
+                const done = i < step
                 const current = i === step
                 return (
                   <React.Fragment key={label}>
@@ -498,9 +498,8 @@ export function ContractorForm() {
                       <motion.div
                         animate={{ scale: current ? 1.1 : 1 }}
                         transition={{ duration: 0.2 }}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                          done || current ? "bg-primary" : "bg-muted" 
-                        }`}>
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${done || current ? "bg-primary" : "bg-muted"
+                          }`}>
                         {done
                           ? <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
                           : <Icon className={`w-4 h-4 ${current ? "text-primary-foreground" : "text-muted-foreground"}`} />
@@ -511,9 +510,8 @@ export function ContractorForm() {
                       </span>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <div className={`flex-1 h-px mx-1.5 mb-4 transition-colors duration-300 ${
-                        i < step ? "bg-primary" : "bg-border"
-                      }`} />
+                      <div className={`flex-1 h-px mx-1.5 mb-4 transition-colors duration-300 ${i < step ? "bg-primary" : "bg-border"
+                        }`} />
                     )}
                   </React.Fragment>
                 )

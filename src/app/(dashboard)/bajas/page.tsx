@@ -22,27 +22,27 @@ import { cn, splitName } from "@/lib/utils"
 import { sendNotification } from "@/app/actions/notify"
 
 interface Baja {
-  id:         string
+  id: string
   noEmpleado: string
-  nombre:     string
-  fechaBaja:  string
+  nombre: string
+  fechaBaja: string
 }
 
 const EMPTY_FORM = { noEmpleado: '', nombre: '', fechaBaja: '' }
 
 export default function BajasPage() {
-  const db          = useFirestore()
+  const db = useFirestore()
   const { appUser } = useAppUser()
-  const { toast }   = useToast()
-  const isAdmin     = appUser?.role === 'admin' || appUser?.role === 'rys'  // puede crear
-  const canDelete   = appUser?.role === 'admin'                              // solo admin elimina
+  const { toast } = useToast()
+  const isAdmin = appUser?.role === 'admin' || appUser?.role === 'rys'  // puede crear
+  const canDelete = appUser?.role === 'admin'                              // solo admin elimina
 
-  const [bajas,    setBajas]    = useState<Baja[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [search,   setSearch]   = useState('')
-  const [form,     setForm]     = useState(EMPTY_FORM)
-  const [saving,   setSaving]   = useState(false)
-  const [openAdd,  setOpenAdd]  = useState(false)
+  const [bajas, setBajas] = useState<Baja[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [openAdd, setOpenAdd] = useState(false)
   const [toDelete, setToDelete] = useState<Baja | null>(null)
 
   const fetchBajas = useCallback(async () => {
@@ -82,18 +82,18 @@ export default function BajasPage() {
       const newRef = doc(collection(db, 'bajas'))
       await setDoc(newRef, {
         noEmpleado: form.noEmpleado.trim(),
-        nombre:     form.nombre.trim(),
-        fechaBaja:  form.fechaBaja,
-        creadoPor:  appUser?.uid ?? '',
-        createdAt:  serverTimestamp(),
+        nombre: form.nombre.trim(),
+        fechaBaja: form.fechaBaja,
+        creadoPor: appUser?.uid ?? '',
+        createdAt: serverTimestamp(),
       })
       toast({ title: 'Empleado registrado', description: form.nombre.trim() })
       sendNotification({
-        type:       'baja_registered',
-        nombre:     form.nombre.trim(),
+        type: 'baja_registered',
+        nombre: form.nombre.trim(),
         noEmpleado: form.noEmpleado.trim(),
-        fechaBaja:  form.fechaBaja,
-      })
+        fechaBaja: form.fechaBaja,
+      }).catch(() => { })
       setOpenAdd(false)
       setForm(EMPTY_FORM)
       await fetchBajas()
@@ -186,10 +186,12 @@ export default function BajasPage() {
                 {/* Mobile: card layout */}
                 <div className="md:hidden flex items-center justify-between gap-3 px-4 py-3.5">
                   <div className="min-w-0 flex-1">
-                    {(() => { const { apellidos, nombres } = splitName(baja.nombre); return (<>
-                      <p className="text-sm font-semibold leading-tight">{apellidos}</p>
-                      {nombres && <p className="text-xs text-muted-foreground leading-tight">{nombres}</p>}
-                    </>) })()}
+                    {(() => {
+                      const { apellidos, nombres } = splitName(baja.nombre); return (<>
+                        <p className="text-sm font-semibold leading-tight">{apellidos}</p>
+                        {nombres && <p className="text-xs text-muted-foreground leading-tight">{nombres}</p>}
+                      </>)
+                    })()}
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-muted-foreground font-mono tabular-nums">
                         No.&nbsp;{baja.noEmpleado}

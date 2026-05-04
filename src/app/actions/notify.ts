@@ -6,19 +6,37 @@ import { getAdminApp } from '@/lib/firebase-admin'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
 /**
- * Server Action — sends a push notification and persists it to Firestore.
- * Non-blocking: caller does not need to await.
+ * Server Action — dispara notificación push y persiste en Firestore.
+ *
+ * IMPORTANTE: Esta función NUNCA debe lanzar una excepción hacia el cliente.
+ * Cualquier fallo en el envío es secundario a la acción principal del usuario
+ * (registrar salida / regreso). Los errores se loguean en el servidor.
  */
 export async function sendNotification(event: NotifyEvent): Promise<void> {
-  try {
-    const [{ sent }] = await Promise.all([
-      sendFCM(event),
-      persistNotification(event),
-    ])
-    console.log(`[notify] ${event.type} → ${sent} device(s) notified`)
-  } catch (err) {
-    console.error('[notify] Failed to send notification:', err)
-  }
+  // Ejecutar de forma completamente asíncrona y silenciosa.
+  // Usamos void + Promise para que Next.js no espere la resolución
+  // y el Server Action del llamador regrese de inmediato.
+  void (async () => {
+    try {
+      // Verificar credenciales antes de intentar cualquier operación
+      const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
+      const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY
+      if (!clientEmail || !privateKey) {
+        console.warn('[notify] Skipped — FIREBASE_ADMIN_CLIENT_EMAIL / FIREBASE_ADMIN_PRIVATE_KEY not set in environment')
+        return
+      }
+
+      const [{ sent }] = await Promise.all([
+        sendFCM(event),
+        persistNotification(event),
+      ])
+      console.log(`[notify] ${event.type} → ${sent} device(s) notified`)
+    } catch (err: unknown) {
+      // Loguear con contexto pero nunca relanzar
+      const message = err instanceof Error ? err.message : String(err)
+      console.error(`[notify] Failed for event "${event.type}": ${message}`)
+    }
+  })()
 }
 
 function getRolesForEvent(event: NotifyEvent): string[] {
@@ -55,12 +73,12 @@ async function persistNotification(event: NotifyEvent): Promise<void> {
   const { title, body, url } = buildNotification(event)
   const db = getFirestore(getAdminApp())
   await db.collection('notifications').add({
-    type:      event.type,
+    type: event.type,
     title,
     body,
     url,
-    roles:     getRolesForEvent(event),
+    roles: getRolesForEvent(event),
     createdAt: FieldValue.serverTimestamp(),
-    readBy:    [],
+    readBy: [],
   })
 }

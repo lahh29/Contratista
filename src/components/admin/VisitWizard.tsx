@@ -45,12 +45,12 @@ import {
 // Caché a nivel módulo con TTL — áreas y supervisores (30 min, cambian raramente)
 // Empresas se obtienen del CompaniesProvider compartido
 interface _CacheEntry { data: any[]; ts: number }
-const _TTL_LONG  = 30 * 60_000
+const _TTL_LONG = 30 * 60_000
 function _fresh(c: _CacheEntry | null, ttl: number): boolean {
   return c !== null && Date.now() - c.ts < ttl
 }
 
-let _areasCache:       _CacheEntry | null = null
+let _areasCache: _CacheEntry | null = null
 let _supervisorsCache: _CacheEntry | null = null
 
 import { useToast } from '@/hooks/use-toast'
@@ -179,8 +179,8 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
   }
 
   const { companies: allCompanies } = useCompanies()
-  const [areas,        setAreas]        = React.useState<any[]>(_areasCache?.data ?? [])
-  const [supervisors,  setSupervisors]  = React.useState<any[]>(_supervisorsCache?.data ?? [])
+  const [areas, setAreas] = React.useState<any[]>(_areasCache?.data ?? [])
+  const [supervisors, setSupervisors] = React.useState<any[]>(_supervisorsCache?.data ?? [])
 
   React.useEffect(() => {
     if (!db) return
@@ -190,7 +190,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
         getDocs(query(collection(db, 'areas'), limit(100))).then(snap => {
           _areasCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
           setAreas(_areasCache.data)
-        }).catch(() => {})
+        }).catch(() => { })
       )
     }
     if (!_fresh(_supervisorsCache, _TTL_LONG)) {
@@ -198,7 +198,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
         getDocs(query(collection(db, 'supervisors'), limit(100))).then(snap => {
           _supervisorsCache = { data: snap.docs.map(d => ({ id: d.id, ...d.data() })), ts: Date.now() }
           setSupervisors(_supervisorsCache.data)
-        }).catch(() => {})
+        }).catch(() => { })
       )
     }
     Promise.all(fetches)
@@ -340,7 +340,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
             companyName: selectedCompany.name,
             areaName: selectedArea.name,
             personnelCount,
-          })
+          }).catch(() => { })
           toast({
             title: 'Visita Activada',
             description: `${selectedCompany.name} ha ingresado a ${selectedArea.name}.`,
@@ -375,11 +375,10 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
                 <span className="font-semibold text-sm">{c.name}</span>
                 <Badge
                   variant="outline"
-                  className={`text-[10px] rounded-md shrink-0 capitalize ${
-                    c.type === 'cliente'
+                  className={`text-[10px] rounded-md shrink-0 capitalize ${c.type === 'cliente'
                       ? 'border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30'
                       : 'border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/30'
-                  }`}
+                    }`}
                 >
                   {c.type || 'proveedor'}
                 </Badge>
@@ -398,11 +397,10 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
           <div className="flex items-center justify-between">
             <p className="font-semibold text-sm">{selectedCompany.name}</p>
             <Badge
-              className={`text-xs rounded-md ${
-                !suaExpired
+              className={`text-xs rounded-md ${!suaExpired
                   ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40'
                   : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40'
-              }`}
+                }`}
             >
               {!suaExpired ? 'SUA Válido' : 'SUA Vencido'}
             </Badge>
@@ -603,8 +601,8 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
     visit
       ? 'Guardar Cambios'
       : !isToday(visitDate ?? new Date()) || !!visitTime
-      ? 'Programar Visita'
-      : 'Activar Acceso'
+        ? 'Programar Visita'
+        : 'Activar Acceso'
 
   return (
     <div className="flex flex-col gap-4">
@@ -620,35 +618,31 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
                   <motion.div
                     animate={{ scale: current ? 1.1 : 1 }}
                     transition={{ duration: 0.2 }}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                      done || current ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors ${done || current ? 'bg-primary' : 'bg-muted'
+                      }`}
                   >
                     {done ? (
                       <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
                     ) : (
                       <span
-                        className={`text-xs font-bold ${
-                          current ? 'text-primary-foreground' : 'text-muted-foreground'
-                        }`}
+                        className={`text-xs font-bold ${current ? 'text-primary-foreground' : 'text-muted-foreground'
+                          }`}
                       >
                         {i + 1}
                       </span>
                     )}
                   </motion.div>
                   <span
-                    className={`text-xs font-medium hidden sm:block ${
-                      current ? 'text-foreground' : 'text-muted-foreground'
-                    }`}
+                    className={`text-xs font-medium hidden sm:block ${current ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
                   >
                     {s.label}
                   </span>
                 </div>
                 {i < STEPS.length - 1 && (
                   <div
-                    className={`flex-1 h-px mx-2 transition-colors duration-300 ${
-                      i < step ? 'bg-primary' : 'bg-border'
-                    }`}
+                    className={`flex-1 h-px mx-2 transition-colors duration-300 ${i < step ? 'bg-primary' : 'bg-border'
+                      }`}
                   />
                 )}
               </React.Fragment>

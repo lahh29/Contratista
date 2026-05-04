@@ -8,23 +8,33 @@ import { useAppUser } from './use-app-user'
 
 export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default')
-  const [supported, setSupported]   = useState(false)
-  const db          = useFirestore()
-  const { user }    = useUser()
+  const [supported, setSupported] = useState(false)
+  const db = useFirestore()
+  const { user } = useUser()
   const { appUser } = useAppUser()
-  const tokenSaved  = useRef(false)
+  const tokenSaved = useRef(false)
 
+  // Detectar soporte y permiso actual al montar
   useEffect(() => {
     const ok = typeof window !== 'undefined'
       && 'Notification' in window
       && 'serviceWorker' in navigator
     setSupported(ok)
-    if (ok) setPermission(Notification.permission)
+    if (ok) {
+      const current = Notification.permission
+      setPermission(current)
+      console.log('[FCM] Notification permission on mount:', current)
+    }
   }, [])
 
-  // Register FCM token once permission is granted
+  // Registrar token FCM cuando el permiso es 'granted'.
+  // Cubre dos casos:
+  //   1. El usuario acaba de conceder permiso (permission cambia a 'granted')
+  //   2. La PWA ya tiene permiso de sesiones anteriores (permission = 'granted' al montar)
   useEffect(() => {
     if (!db || !user || !appUser || permission !== 'granted' || tokenSaved.current) return
+
+    console.log('[FCM] Permission granted — requesting token for role:', appUser.role)
 
     getFCMToken().then(async (token) => {
       if (!token) {
@@ -35,14 +45,13 @@ export function useNotifications() {
         const ref = doc(db, 'users', user.uid, 'fcmTokens', token)
         await setDoc(ref, {
           token,
-          createdAt:  serverTimestamp(),
-          userAgent:  navigator.userAgent,
-          // Store role + companyId so sendFCM can filter by audience
-          role:       appUser.role,
-          companyId:  appUser.companyId ?? null,
+          createdAt: serverTimestamp(),
+          userAgent: navigator.userAgent,
+          role: appUser.role,
+          companyId: appUser.companyId ?? null,
         }, { merge: true })
         tokenSaved.current = true
-        console.log('[FCM] Token saved for', appUser.role, token.slice(0, 20) + '...')
+        console.log('[FCM] Token saved — role:', appUser.role, '| token:', token.slice(0, 20) + '...')
       } catch (err) {
         console.error('[FCM] Could not save token:', err)
       }
@@ -65,10 +74,10 @@ export function useNotifications() {
       navigator.serviceWorker.ready.then(reg => {
         reg.showNotification(title, {
           body,
-          icon:    '/api/pwa-icon?size=192',
-          badge:   '/api/pwa-icon?size=96',
-          tag:     payload.data?.type ?? 'notification',
-          data:    { url },
+          icon: '/api/pwa-icon?size=192',
+          badge: '/api/pwa-icon?size=96',
+          tag: payload.data?.type ?? 'notification',
+          data: { url },
           vibrate: [200, 100, 200],
         } as NotificationOptions)
       }).catch(err => console.error('[FCM] showNotification failed:', err))

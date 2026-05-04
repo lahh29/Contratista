@@ -44,7 +44,7 @@ import { useAppUser } from "@/hooks/use-app-user"
 function toISODate(val: string): string {
   const [d, m, y] = val.split('/')
   if (!d || !m || !y) return val
-  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
 }
 
 /** "YYYY-MM-DD" → "DD/MM/AAAA" para mostrar en el input */
@@ -63,18 +63,18 @@ function formatDisplayDate(value: string): string {
 }
 
 const schema = z.object({
-  name:          z.string().min(2, "Mínimo 2 caracteres"),
-  type:          z.enum(["proveedor", "cliente"]),
-  contact:       z.string().min(2, "Mínimo 2 caracteres"),
-  phone:         z.string().optional(),
-  email:         z.string().email("Email inválido").optional().or(z.literal("")),
-  rfc:           z.string().optional(),
-  address:       z.string().optional(),
-  notes:         z.string().optional(),
-  suaNumber:     z.string().optional(),
+  name: z.string().min(2, "Mínimo 2 caracteres"),
+  type: z.enum(["proveedor", "cliente"]),
+  contact: z.string().min(2, "Mínimo 2 caracteres"),
+  phone: z.string().optional(),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  rfc: z.string().optional(),
+  address: z.string().optional(),
+  notes: z.string().optional(),
+  suaNumber: z.string().optional(),
   suaValidUntil: z.string().optional(),
   personnelCount: z.coerce.number().min(1).optional(),
-  vehicle:       z.string().optional(),
+  vehicle: z.string().optional(),
 })
 
 interface EditCompanySheetProps {
@@ -133,18 +133,18 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
   React.useEffect(() => {
     if (company) {
       form.reset({
-        name:          company.name          || "",
-        type:          company.type          || "proveedor",
-        contact:       company.contact       || "",
-        phone:         company.phone         || "",
-        email:         company.email         || "",
-        rfc:           company.rfc           || "",
-        address:       company.address       || "",
-        notes:         company.notes         || "",
-        suaNumber:     company.sua?.number   || "",
+        name: company.name || "",
+        type: company.type || "proveedor",
+        contact: company.contact || "",
+        phone: company.phone || "",
+        email: company.email || "",
+        rfc: company.rfc || "",
+        address: company.address || "",
+        notes: company.notes || "",
+        suaNumber: company.sua?.number || "",
         suaValidUntil: company.sua?.validUntil ? toDisplayDate(company.sua.validUntil) : "",
         personnelCount: company.personnelCount || 1,
-        vehicle:       company.vehicle       || "",
+        vehicle: company.vehicle || "",
       })
     }
   }, [company, form])
@@ -154,17 +154,17 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
     setSaving(true)
 
     const updateData = {
-      name:    values.name,
-      type:    values.type,
+      name: values.name,
+      type: values.type,
       contact: values.contact,
-      phone:   values.phone || "",
-      email:   values.email ? values.email.toLowerCase().trim() : null,
-      rfc:     values.rfc?.toUpperCase().trim() || "",
+      phone: values.phone || "",
+      email: values.email ? values.email.toLowerCase().trim() : null,
+      rfc: values.rfc?.toUpperCase().trim() || "",
       address: values.address?.trim() || "",
-      notes:   values.notes?.trim() || "",
+      notes: values.notes?.trim() || "",
       sua: {
         ...company.sua,
-        number:     values.suaNumber     || company.sua?.number     || "",
+        number: values.suaNumber || company.sua?.number || "",
         validUntil: values.suaValidUntil ? toISODate(values.suaValidUntil) : (company.sua?.validUntil || ""),
       },
       ...(values.personnelCount ? { personnelCount: values.personnelCount } : {}),
@@ -179,18 +179,18 @@ export function EditCompanySheet({ company, open, onOpenChange, onUpdated }: Edi
       // Auditoría de actualización
       logAudit({
         action: 'company.updated',
-        actorUid:  appUser.uid,
+        actorUid: appUser.uid,
         actorName: appUser.name || appUser.email || "Usuario",
         actorRole: appUser.role,
         targetType: 'company',
-        targetId:   company.id,
+        targetId: company.id,
         targetName: values.name,
       })
 
-      const oldDate  = company.sua?.validUntil
-      const newDate  = values.suaValidUntil ? toISODate(values.suaValidUntil) : ""
+      const oldDate = company.sua?.validUntil
+      const newDate = values.suaValidUntil ? toISODate(values.suaValidUntil) : ""
       const isRenewed = newDate && newDate !== oldDate && newDate > new Date().toISOString().slice(0, 10)
-      if (isRenewed) sendNotification({ type: "sua_renewed", companyName: values.name })
+      if (isRenewed) sendNotification({ type: "sua_renewed", companyName: values.name }).catch(() => { })
 
       onUpdated?.({ ...company, ...updateData })
       onOpenChange(false)

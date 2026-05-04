@@ -68,24 +68,24 @@ function SuaStatusCard({ company }: { company: Company }) {
   }, [validUntil, company.sua?.status])
 
   const config = {
-    Valid:   { bg: 'bg-green-50 dark:bg-green-950/30',   border: 'border-green-200 dark:border-green-800',  text: 'text-green-800 dark:text-green-300',   muted: 'text-green-600 dark:text-green-400',  label: 'Vigente',   icon: ShieldCheck  },
-    Expired: { bg: 'bg-red-50 dark:bg-red-950/30',       border: 'border-red-200 dark:border-red-800',      text: 'text-red-800 dark:text-red-300',       muted: 'text-red-600 dark:text-red-400',      label: 'Vencido',   icon: ShieldX      },
-    Pending: { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800',text: 'text-orange-800 dark:text-orange-300',  muted: 'text-orange-600 dark:text-orange-400',label: 'Pendiente', icon: ShieldAlert  },
+    Valid: { bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-800 dark:text-green-300', muted: 'text-green-600 dark:text-green-400', label: 'Vigente', icon: ShieldCheck },
+    Expired: { bg: 'bg-red-50 dark:bg-red-950/30', border: 'border-red-200 dark:border-red-800', text: 'text-red-800 dark:text-red-300', muted: 'text-red-600 dark:text-red-400', label: 'Vencido', icon: ShieldX },
+    Pending: { bg: 'bg-orange-50 dark:bg-orange-950/30', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-800 dark:text-orange-300', muted: 'text-orange-600 dark:text-orange-400', label: 'Pendiente', icon: ShieldAlert },
   }[status]
 
   const Icon = config.icon
 
   const daysLeft = useMemo(() => {
     if (!validUntil) return null
-    const today  = new Date(); today.setHours(0, 0, 0, 0)
+    const today = new Date(); today.setHours(0, 0, 0, 0)
     const expiry = new Date(validUntil + 'T00:00:00')
     return Math.round((expiry.getTime() - today.getTime()) / 864e5)
   }, [validUntil])
 
   const daysLabel = daysLeft === null ? null
-    : daysLeft > 0  ? `Vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`
-    : daysLeft === 0 ? 'Vence hoy'
-    : `Venció hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) !== 1 ? 's' : ''}`
+    : daysLeft > 0 ? `Vence en ${daysLeft} día${daysLeft !== 1 ? 's' : ''}`
+      : daysLeft === 0 ? 'Vence hoy'
+        : `Venció hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) !== 1 ? 's' : ''}`
 
   return (
     <Card className={`border ${config.border} ${config.bg} shadow-none`}>
@@ -140,8 +140,8 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
 
 function visitDuration(entry: Date, exit: Date) {
   const ms = exit.getTime() - entry.getTime()
-  const h  = Math.floor(ms / 3600000)
-  const m  = Math.floor((ms % 3600000) / 60000)
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
@@ -149,7 +149,7 @@ function visitDuration(entry: Date, exit: Date) {
 
 export default function PortalPage() {
   const { appUser, loading: authLoading } = useAppUser()
-  const db           = useFirestore()
+  const db = useFirestore()
   const { permission, supported, requestPermission } = useNotifications()
   const [qrOpen, setQrOpen] = useState(false)
   const [renewalSent, setRenewalSent] = useState(() => {
@@ -213,7 +213,7 @@ export default function PortalPage() {
     if (!company || renewalSent || sendingRenewal) return
     setSendingRenewal(true)
     try {
-      await sendNotification({ type: 'sua_renewal_request', companyName: company.name, companyId: company.id })
+      sendNotification({ type: 'sua_renewal_request', companyName: company.name, companyId: company.id }).catch(() => { })
       localStorage.setItem(`sua_renewal_${company.id}`, String(Date.now()))
       setRenewalSent(true)
     } finally {
@@ -397,11 +397,11 @@ export default function PortalPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-0">
-            <InfoRow icon={Building2}  label="Razón Social"       value={company.name} />
-            <InfoRow icon={User}       label="Contacto Principal" value={company.contact} />
-            <InfoRow icon={Phone}      label="Teléfono"           value={company.phone} />
-            <InfoRow icon={FileTextIcon} label="RFC"              value={company.rfc} />
-            <InfoRow icon={MapPinIcon} label="Dirección"          value={company.address} />
+            <InfoRow icon={Building2} label="Razón Social" value={company.name} />
+            <InfoRow icon={User} label="Contacto Principal" value={company.contact} />
+            <InfoRow icon={Phone} label="Teléfono" value={company.phone} />
+            <InfoRow icon={FileTextIcon} label="RFC" value={company.rfc} />
+            <InfoRow icon={MapPinIcon} label="Dirección" value={company.address} />
           </CardContent>
         </Card>
 
@@ -413,8 +413,8 @@ export default function PortalPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-5 pb-5 space-y-0">
-            <InfoRow icon={Hash}     label="N° de Póliza / SUA" value={company.sua?.number} />
-            <InfoRow icon={Calendar} label="Vencimiento SUA"    value={company.sua?.validUntil} />
+            <InfoRow icon={Hash} label="N° de Póliza / SUA" value={company.sua?.number} />
+            <InfoRow icon={Calendar} label="Vencimiento SUA" value={company.sua?.validUntil} />
           </CardContent>
         </Card>
 
@@ -425,7 +425,7 @@ export default function PortalPage() {
               <div className="flex items-center gap-4">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${permission === 'granted' ? 'bg-green-100 dark:bg-green-900/40' : 'bg-muted'}`}>
                   {permission === 'granted'
-                    ? <Bell    className="w-5 h-5 text-green-700 dark:text-green-400" />
+                    ? <Bell className="w-5 h-5 text-green-700 dark:text-green-400" />
                     : <BellOff className="w-5 h-5 text-muted-foreground" />
                   }
                 </div>
@@ -473,8 +473,8 @@ export default function PortalPage() {
                         <p className="text-sm font-black text-blue-900 dark:text-blue-100">
                           {visit.scheduledDate
                             ? new Date(visit.scheduledDate + 'T12:00:00').toLocaleDateString('es-MX', {
-                                weekday: 'long', day: 'numeric', month: 'long',
-                              })
+                              weekday: 'long', day: 'numeric', month: 'long',
+                            })
                             : '—'}
                         </p>
                         {(visit as any).scheduledTime && (
@@ -550,7 +550,7 @@ export default function PortalPage() {
                 ) : visits && visits.length > 0 ? (
                   visits.map((visit) => {
                     const entryDate = visit.entryTime?.toDate()
-                    const exitDate  = visit.exitTime?.toDate()
+                    const exitDate = visit.exitTime?.toDate()
                     return (
                       <TableRow key={visit.id} className="hover:bg-muted/20 transition-colors">
                         <TableCell className="pl-5 py-4 font-medium text-sm">
@@ -572,8 +572,8 @@ export default function PortalPage() {
                           <Badge
                             variant={visit.status === 'Completed' ? 'secondary' : 'default'}
                             className={
-                              visit.status === 'Activa'     ? 'bg-green-100 text-green-700 border-green-200' :
-                              visit.status === 'Programada' ? 'bg-blue-100 text-blue-700 border-blue-200' : ''
+                              visit.status === 'Activa' ? 'bg-green-100 text-green-700 border-green-200' :
+                                visit.status === 'Programada' ? 'bg-blue-100 text-blue-700 border-blue-200' : ''
                             }
                           >
                             {visit.status === 'Activa' ? 'Activa' : visit.status === 'Programada' ? 'Programada' : 'Completada'}

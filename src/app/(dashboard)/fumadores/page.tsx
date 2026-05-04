@@ -293,7 +293,7 @@ export default function FumadoresPage() {
         description: `${employee.Nombre} no puede salir a fumar. Su horario de comida es ${mealSchedule.label}.`,
         variant: "destructive",
       })
-      // Notify admin & seguridad
+      // Notificar — fire-and-forget, nunca bloquea ni propaga error
       sendNotification({
         type: 'smoker_denied_meal',
         employeeName: `${employee.Nombre} ${employee.ApellidoPaterno}`,
@@ -302,7 +302,7 @@ export default function FumadoresPage() {
         area: employee.Área,
         turno: employee.Turno,
         mealSchedule: mealSchedule.label,
-      })
+      }).catch(() => { })
       return
     }
 
@@ -334,7 +334,7 @@ export default function FumadoresPage() {
         department: employee.Departamento,
         turno: employee.Turno,
         mealSchedule: mealSchedule?.label,
-      })
+      }).catch(() => { })
       await loadRecords()
     } catch {
       toast({
@@ -372,7 +372,7 @@ export default function FumadoresPage() {
         turno: activeRecord.turno,
         duration: durationLabel,
         mealSchedule: getMealWindow(activeRecord.employeeId, activeRecord.departamento, activeRecord.turno, undefined, mealConfig)?.label,
-      })
+      }).catch(() => { })
       await loadRecords()
     } catch {
       toast({
