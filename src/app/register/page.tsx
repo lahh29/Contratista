@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth, useFirestore } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
+import { AuthLayout } from "@/components/auth/AuthLayout"
 
 type Step = 'email' | 'password' | 'success'
 
@@ -111,147 +112,150 @@ export default function RegisterPage() {
   }
 
   return (
-    <div
-      className="auth-bg relative min-h-dvh flex items-center justify-center overflow-hidden px-5"
-      style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
-        paddingTop: "env(safe-area-inset-top)",
-      }}
-    >
+    <AuthLayout>
+      <div className="glass-card lg:bg-transparent lg:border-0 lg:shadow-none lg:backdrop-blur-none rounded-3xl overflow-hidden">
+        <div className="px-8 py-10 space-y-7">
 
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative z-10 w-full max-w-[380px]"
-      >
-        <div className="glass-card rounded-3xl overflow-hidden">
-          <div className="px-8 py-10 space-y-7">
+          {/* Brand */}
+          <div className="text-center">
+            <motion.p
+              initial={{ opacity: 0, letterSpacing: '0.3em' }}
+              animate={{ opacity: 1, letterSpacing: '0.05em' }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="font-black text-lg tracking-widest uppercase text-foreground max-lg:text-white leading-none"
+            >
+              ViñoPlastic
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-muted-foreground max-lg:text-white/50 text-[11px] font-medium tracking-wider mt-1"
+            >
+              Portal Contratista · Registro
+            </motion.p>
+          </div>
 
-            {/* Brand */}
-            <div className="text-center">
-              <p className="font-black text-lg tracking-widest uppercase text-foreground leading-none">ViñoPlastic</p>
-              <p className="text-muted-foreground text-[11px] font-medium tracking-wider mt-1">Portal Contratista · Registro</p>
-            </div>
+          <AnimatePresence mode="wait">
 
-            <AnimatePresence mode="wait">
-
-              {/* ── Step 1: Email ── */}
-              {step === 'email' && (
-                <motion.div key="email" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
-                  <div>
-                    <p className="text-sm font-semibold mb-1">Correo electrónico</p>
-                    <p className="text-xs text-muted-foreground">Usa el correo registrado con tu empresa</p>
+            {/* ── Step 1: Email ── */}
+            {step === 'email' && (
+              <motion.div key="email" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold mb-1 max-lg:text-white">Correo electrónico</p>
+                  <p className="text-xs text-muted-foreground max-lg:text-white/50">Usa el correo registrado con tu empresa</p>
+                </div>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                      type="email"
+                      placeholder="correo@empresa.com"
+                      autoComplete="email"
+                      inputMode="email"
+                      className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                      value={email}
+                      onChange={e => { setEmail(e.target.value); setEmailError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleEmailNext()}
+                      disabled={loading}
+                    />
                   </div>
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                      <Input
-                        type="email"
-                        placeholder="correo@empresa.com"
-                        autoComplete="email"
-                        inputMode="email"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
-                        value={email}
-                        onChange={e => { setEmail(e.target.value); setEmailError('') }}
-                        onKeyDown={e => e.key === 'Enter' && handleEmailNext()}
-                        disabled={loading}
-                      />
-                    </div>
-                    {emailError && <p className="text-xs text-destructive pl-1">{emailError}</p>}
+                  {emailError && <p className="text-xs text-destructive pl-1">{emailError}</p>}
+                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                     <Button className="w-full h-11 rounded-2xl font-bold shadow-md shadow-primary/20" onClick={handleEmailNext} disabled={loading || !email.trim()}>
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Continuar'}
                     </Button>
-                  </div>
-                  <p className="text-center text-xs text-muted-foreground">
-                    ¿Ya tienes cuenta?{' '}
-                    <button onClick={() => router.push('/login')} className="text-primary font-semibold hover:underline">Inicia sesión</button>
-                  </p>
-                </motion.div>
-              )}
+                  </motion.div>
+                </div>
+                <p className="text-center text-xs text-muted-foreground max-lg:text-white/50">
+                  ¿Ya tienes cuenta?{' '}
+                  <button onClick={() => router.push('/login')} className="text-primary max-lg:text-white font-semibold hover:underline">Inicia sesión</button>
+                </p>
+              </motion.div>
+            )}
 
-              {/* ── Step 2: Password ── */}
-              {step === 'password' && (
-                <motion.div key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setStep('email')} className="text-muted-foreground hover:text-foreground transition-colors">
-                      <ArrowLeft className="w-4 h-4" />
-                    </button>
-                    <div>
-                      <p className="text-sm font-semibold">Crea tu contraseña</p>
-                      <p className="text-xs text-muted-foreground truncate">{email}</p>
-                    </div>
+            {/* ── Step 2: Password ── */}
+            {step === 'password' && (
+              <motion.div key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setStep('email')} className="text-muted-foreground max-lg:text-white/50 hover:text-foreground max-lg:hover:text-white transition-colors">
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div>
+                    <p className="text-sm font-semibold max-lg:text-white">Crea tu contraseña</p>
+                    <p className="text-xs text-muted-foreground max-lg:text-white/50 truncate">{email}</p>
                   </div>
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                      <Input
-                        type="password"
-                        placeholder="Contraseña (mín. 6 caracteres)"
-                        autoComplete="new-password"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
-                        value={password}
-                        onChange={e => { setPassword(e.target.value); setPassError('') }}
-                        disabled={loading}
-                      />
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                      <Input
-                        type="password"
-                        placeholder="Confirmar contraseña"
-                        autoComplete="new-password"
-                        className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
-                        value={confirm}
-                        onChange={e => { setConfirm(e.target.value); setPassError('') }}
-                        onKeyDown={e => e.key === 'Enter' && handleRegister()}
-                        disabled={loading}
-                      />
-                    </div>
-                    {passError && <p className="text-xs text-destructive pl-1">{passError}</p>}
+                </div>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                      type="password"
+                      placeholder="Contraseña (mín. 6 caracteres)"
+                      autoComplete="new-password"
+                      className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                      value={password}
+                      onChange={e => { setPassword(e.target.value); setPassError('') }}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                    <Input
+                      type="password"
+                      placeholder="Confirmar contraseña"
+                      autoComplete="new-password"
+                      className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                      value={confirm}
+                      onChange={e => { setConfirm(e.target.value); setPassError('') }}
+                      onKeyDown={e => e.key === 'Enter' && handleRegister()}
+                      disabled={loading}
+                    />
+                  </div>
+                  {passError && <p className="text-xs text-destructive pl-1">{passError}</p>}
+                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                     <Button className="w-full h-11 rounded-2xl font-bold shadow-md shadow-primary/20" onClick={handleRegister} disabled={loading || !password || !confirm}>
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Crear cuenta'}
                     </Button>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
 
-              {/* ── Step 3: Success ── */}
-              {step === 'success' && (
-                <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="space-y-4 text-center">
-                  <div className="flex justify-center">
-                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle2 className="w-8 h-8 text-green-600" />
+            {/* ── Step 3: Success ── */}
+            {step === 'success' && (
+              <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="space-y-4 text-center">
+                <div className="flex justify-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center"
+                  >
+                    <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  </motion.div>
+                </div>
+                <div>
+                  <p className="font-bold text-base max-lg:text-white">¡Cuenta creada!</p>
+                  {company ? (
+                    <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground max-lg:text-white/60">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <span>Vinculado a <span className="font-semibold text-foreground max-lg:text-white">{company.name}</span></span>
                     </div>
-                  </div>
-                  <div>
-                    <p className="font-bold text-base">¡Cuenta creada!</p>
-                    {company ? (
-                      <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <Building2 className="w-4 h-4 text-primary" />
-                        <span>Vinculado a <span className="font-semibold text-foreground">{company.name}</span></span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground mt-1">Redirigiendo al portal…</p>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Entrando al portal…
-                  </div>
-                </motion.div>
-              )}
+                  ) : (
+                    <p className="text-sm text-muted-foreground max-lg:text-white/60 mt-1">Redirigiendo al portal…</p>
+                  )}
+                </div>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground max-lg:text-white/50">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Entrando al portal…
+                </div>
+              </motion.div>
+            )}
 
-            </AnimatePresence>
-          </div>
+          </AnimatePresence>
         </div>
-
-        <p className="text-center text-[11px] text-foreground/25 mt-5">
-          <a href="https://vertxk.xyz/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground/50 transition-colors">
-            Vertx System Add-on
-          </a>
-        </p>
-      </motion.div>
-    </div>
+      </div>
+    </AuthLayout>
   )
 }
