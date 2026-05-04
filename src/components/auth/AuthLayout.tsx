@@ -11,7 +11,7 @@ interface Props {
 export function AuthLayout({ children }: Props) {
   return (
     <div
-      className="relative min-h-screen min-h-dvh flex overflow-hidden"
+      className="relative min-h-dvh flex overflow-hidden"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom)',
         paddingTop: 'env(safe-area-inset-top)',
@@ -72,7 +72,8 @@ export function AuthLayout({ children }: Props) {
       </div>
 
       {/* Footer */}
-      <p className="absolute bottom-3 right-0 left-0 lg:left-auto lg:right-0 lg:w-[40%] text-center text-[11px] text-foreground/25 lg:text-foreground/25 max-lg:text-white/30 z-20">
+      <p className="absolute bottom-3 right-0 left-0 lg:left-auto lg:right-0 lg:w-[40%] text-center text-[11px] text-foreground/25 lg:text-foreground/25
+        ">
         <a
           href="https://vinoplasticqro.xyz"
           target="_blank"

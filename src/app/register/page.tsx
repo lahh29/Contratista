@@ -29,7 +29,6 @@ export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
 
-  // ── Step 1: validate email & find company ──────────────────
   const handleEmailNext = async () => {
     const trimmed = email.trim().toLowerCase()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
@@ -39,14 +38,11 @@ export default function RegisterPage() {
     setEmailError('')
     setLoading(true)
 
-    // We attempt to find the company AFTER creating auth, so here we just
-    // validate format and move on. Company lookup happens at account creation.
     setEmail(trimmed)
     setLoading(false)
     setStep('password')
   }
 
-  // ── Step 2: create account ─────────────────────────────────
   const handleRegister = async () => {
     if (password.length < 6) {
       setPassError('Mínimo 6 caracteres')
@@ -56,32 +52,31 @@ export default function RegisterPage() {
       setPassError('Las contraseñas no coinciden')
       return
     }
+
     setPassError('')
     if (!auth || !db) return
     setLoading(true)
 
     try {
-      // 1. Create Firebase Auth account
       const credential = await createUserWithEmailAndPassword(auth, email, password)
       const uid = credential.user.uid
 
-      // 2. Look up company by email (now we're authenticated)
       let companyId: string | undefined
       let companyName: string | undefined
+
       try {
         const q = query(
           collection(db, 'companies'),
           where('email', '==', email),
-          limit(1),
+          limit(1)
         )
         const snap = await getDocs(q)
         if (!snap.empty) {
           companyId = snap.docs[0].id
           companyName = snap.docs[0].data().name as string
         }
-      } catch { /* non-critical */ }
+      } catch { }
 
-      // 3. Create Firestore user document
       await setDoc(doc(db, 'users', uid), {
         email,
         role: 'contractor',
@@ -91,7 +86,6 @@ export default function RegisterPage() {
       if (companyName) setCompany({ id: companyId!, name: companyName })
       setStep('success')
 
-      // Redirect after 2 s
       setTimeout(() => {
         document.cookie = "vp_session=1; path=/; SameSite=Strict"
         router.push('/portal')
@@ -102,9 +96,10 @@ export default function RegisterPage() {
       toast({
         variant: 'destructive',
         title: 'Error al registrarse',
-        description: code === 'auth/email-already-in-use'
-          ? 'Este correo ya tiene una cuenta. Inicia sesión.'
-          : 'Ocurrió un error. Intenta de nuevo.',
+        description:
+          code === 'auth/email-already-in-use'
+            ? 'Este correo ya tiene una cuenta. Inicia sesión.'
+            : 'Ocurrió un error. Intenta de nuevo.',
       })
     } finally {
       setLoading(false)
@@ -113,143 +108,148 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout>
-      <div className="glass-card max-lg:bg-background/85 max-lg:backdrop-blur-2xl lg:bg-transparent lg:border-0 lg:shadow-none lg:backdrop-blur-none rounded-3xl overflow-hidden">
+      <div className="glass-card max-lg:bg-background/85 max-lg:backdrop-blur-2xl overflow-hidden rounded-3xl">
         <div className="px-8 py-10 space-y-7">
 
           {/* Brand */}
           <div className="text-center">
-            <motion.p
-              initial={{ opacity: 0, letterSpacing: '0.3em' }}
-              animate={{ opacity: 1, letterSpacing: '0.05em' }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-              className="font-black text-lg tracking-widest uppercase text-foreground max-lg:text-white leading-none"
-            >
+            <p className="font-black text-lg tracking-widest uppercase text-foreground">
               ViñoPlastic
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-muted-foreground max-lg:text-white/50 text-[11px] font-medium tracking-wider mt-1"
-            >
+            </p>
+            <p className="text-muted-foreground text-xs mt-1">
               Portal Contratista · Registro
-            </motion.p>
+            </p>
           </div>
 
           <AnimatePresence mode="wait">
 
-            {/* ── Step 1: Email ── */}
+            {/* STEP 1 */}
             {step === 'email' && (
-              <motion.div key="email" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
+              <motion.div key="email" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+
                 <div>
-                  <p className="text-sm font-semibold mb-1 max-lg:text-white">Correo electrónico</p>
-                  <p className="text-xs text-muted-foreground max-lg:text-white/50">Usa el correo registrado con tu empresa</p>
+                  <p className="text-sm font-semibold text-foreground mb-1">
+                    Correo electrónico
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Usa el correo registrado con tu empresa
+                  </p>
                 </div>
+
                 <div className="space-y-3">
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="email"
                       placeholder="correo@empresa.com"
-                      autoComplete="email"
-                      inputMode="email"
-                      className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                      className="h-11 rounded-lg pl-10 bg-white/70 dark:bg-white/[0.06] border-black/[0.08] dark:border-white/[0.10] text-foreground placeholder:text-muted-foreground"
                       value={email}
                       onChange={e => { setEmail(e.target.value); setEmailError('') }}
                       onKeyDown={e => e.key === 'Enter' && handleEmailNext()}
-                      disabled={loading}
                     />
                   </div>
-                  {emailError && <p className="text-xs text-destructive pl-1">{emailError}</p>}
-                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
-                    <Button className="w-full h-11 rounded-2xl font-bold shadow-md shadow-primary/20" onClick={handleEmailNext} disabled={loading || !email.trim()}>
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Continuar'}
-                    </Button>
-                  </motion.div>
+
+                  {emailError && (
+                    <p className="text-xs text-destructive">{emailError}</p>
+                  )}
+
+                  <Button className="w-full h-11" onClick={handleEmailNext} disabled={loading}>
+                    {loading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Continuar'}
+                  </Button>
                 </div>
-                <p className="text-center text-xs text-muted-foreground max-lg:text-white/50">
-                  ¿Ya tienes cuenta?{' '}
-                  <button onClick={() => router.push('/login')} className="text-primary max-lg:text-white font-semibold hover:underline">Inicia sesión</button>
+
+                <p className="text-center text-xs text-muted-foreground">
+                  ¿Ya tienes cuenta?{" "}
+                  <button onClick={() => router.push('/login')} className="text-primary hover:underline">
+                    Inicia sesión
+                  </button>
                 </p>
+
               </motion.div>
             )}
 
-            {/* ── Step 2: Password ── */}
+            {/* STEP 2 */}
             {step === 'password' && (
-              <motion.div key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
+              <motion.div key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setStep('email')} className="text-muted-foreground max-lg:text-white/50 hover:text-foreground max-lg:hover:text-white transition-colors">
+                  <button onClick={() => setStep('email')} className="text-muted-foreground hover:text-foreground">
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   <div>
-                    <p className="text-sm font-semibold max-lg:text-white">Crea tu contraseña</p>
-                    <p className="text-xs text-muted-foreground max-lg:text-white/50 truncate">{email}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      Crea tu contraseña
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{email}</p>
                   </div>
                 </div>
+
                 <div className="space-y-3">
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="password"
-                      placeholder="Contraseña (mín. 6 caracteres)"
-                      autoComplete="new-password"
-                      className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                      placeholder="Contraseña"
+                      className="h-11 rounded-lg pl-10 bg-white/70 dark:bg-white/[0.06] border-black/[0.08] dark:border-white/[0.10]"
                       value={password}
                       onChange={e => { setPassword(e.target.value); setPassError('') }}
-                      disabled={loading}
                     />
                   </div>
+
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="password"
                       placeholder="Confirmar contraseña"
-                      autoComplete="new-password"
-                      className="h-11 rounded-2xl pl-10 bg-white/70 dark:bg-white/[0.07] border-white/80 dark:border-white/[0.14] text-foreground placeholder:text-muted-foreground focus-visible:bg-white/90 dark:focus-visible:bg-white/[0.11]"
+                      className="h-11 rounded-lg pl-10 bg-white/70 dark:bg-white/[0.06] border-black/[0.08] dark:border-white/[0.10]"
                       value={confirm}
                       onChange={e => { setConfirm(e.target.value); setPassError('') }}
                       onKeyDown={e => e.key === 'Enter' && handleRegister()}
-                      disabled={loading}
                     />
                   </div>
-                  {passError && <p className="text-xs text-destructive pl-1">{passError}</p>}
-                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
-                    <Button className="w-full h-11 rounded-2xl font-bold shadow-md shadow-primary/20" onClick={handleRegister} disabled={loading || !password || !confirm}>
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Crear cuenta'}
-                    </Button>
-                  </motion.div>
+
+                  {passError && (
+                    <p className="text-xs text-destructive">{passError}</p>
+                  )}
+
+                  <Button className="w-full h-11" onClick={handleRegister} disabled={loading}>
+                    {loading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Crear cuenta'}
+                  </Button>
                 </div>
+
               </motion.div>
             )}
 
-            {/* ── Step 3: Success ── */}
+            {/* STEP 3 */}
             {step === 'success' && (
-              <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="space-y-4 text-center">
+              <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
+
                 <div className="flex justify-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center"
-                  >
+                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
                     <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
-                  </motion.div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-base max-lg:text-white">¡Cuenta creada!</p>
-                  {company ? (
-                    <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground max-lg:text-white/60">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      <span>Vinculado a <span className="font-semibold text-foreground max-lg:text-white">{company.name}</span></span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground max-lg:text-white/60 mt-1">Redirigiendo al portal…</p>
-                  )}
-                </div>
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground max-lg:text-white/50">
+
+                <p className="font-bold text-base text-foreground">
+                  ¡Cuenta creada!
+                </p>
+
+                {company ? (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Building2 className="w-4 h-4 text-primary" />
+                    <span>Vinculado a <span className="text-foreground font-semibold">{company.name}</span></span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Redirigiendo al portal…
+                  </p>
+                )}
+
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Entrando al portal…
                 </div>
+
               </motion.div>
             )}
 
