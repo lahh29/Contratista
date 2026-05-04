@@ -3,24 +3,24 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAdminApp } from './firebase-admin'
 
 export type NotifyEvent =
-  | { type: 'entry';              companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
-  | { type: 'exit';               companyName: string; areaName: string; personnelCount?: number }
-  | { type: 'sua_expiring';       companyName: string; daysLeft: number; companyId?: string }
-  | { type: 'new_contractor';     companyName: string }
-  | { type: 'delete_contractor';  companyName: string }
-  | { type: 'over_capacity';      companyName: string; areaName: string; authorized: number; actual: number }
+  | { type: 'entry'; companyName: string; areaName: string; personnelCount: number; vehiclePlates?: string }
+  | { type: 'exit'; companyName: string; areaName: string; personnelCount?: number }
+  | { type: 'sua_expiring'; companyName: string; daysLeft: number; companyId?: string }
+  | { type: 'new_contractor'; companyName: string }
+  | { type: 'delete_contractor'; companyName: string }
+  | { type: 'over_capacity'; companyName: string; areaName: string; authorized: number; actual: number }
   | { type: 'blocked_contractor'; companyName: string; companyId: string }
-  | { type: 'sua_renewed';        companyName: string }
-  | { type: 'prolonged_visit';    companyName: string; areaName: string; hoursOnSite: number }
-  | { type: 'restricted_area';    companyName: string; areaName: string }
-  | { type: 'baja_registered';       nombre: string; noEmpleado: string; fechaBaja: string }
-  | { type: 'sua_renewal_request';   companyName: string; companyId: string }
+  | { type: 'sua_renewed'; companyName: string }
+  | { type: 'prolonged_visit'; companyName: string; areaName: string; hoursOnSite: number }
+  | { type: 'restricted_area'; companyName: string; areaName: string }
+  | { type: 'baja_registered'; nombre: string; noEmpleado: string; fechaBaja: string }
+  | { type: 'sua_renewal_request'; companyName: string; companyId: string }
   | { type: 'unblocked_contractor'; companyName: string }
-  | { type: 'smoker_exit';   employeeName: string; department: string }
-  | { type: 'smoker_return'; employeeName: string; department: string; duration: string }
-  | { type: 'smoker_denied_meal';          employeeName: string; department: string; area: string; mealSchedule: string }
-  | { type: 'scheduled_visit_reminder';   companyName: string; areaName: string; scheduledTime: string; personnelCount: number; companyId: string }
-  | { type: 'daily_summary';              date: string; entries: number; exits: number; suaAlerts: number; blockedCount: number }
+  | { type: 'smoker_exit'; employeeName: string; employeeId: string; department: string; turno: string; mealSchedule?: string }
+  | { type: 'smoker_return'; employeeName: string; employeeId: string; department: string; turno: string; duration: string; mealSchedule?: string }
+  | { type: 'smoker_denied_meal'; employeeName: string; employeeId: string; department: string; area: string; turno: string; mealSchedule: string }
+  | { type: 'scheduled_visit_reminder'; companyName: string; areaName: string; scheduledTime: string; personnelCount: number; companyId: string }
+  | { type: 'daily_summary'; date: string; entries: number; exits: number; suaAlerts: number; blockedCount: number }
 
 /**
  * Audience control:
@@ -43,14 +43,14 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
     case 'entry':
       return {
         title: `Ingreso: ${event.companyName}`,
-        body:  `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} en ${event.areaName}${event.vehiclePlates ? ` · Placas: ${event.vehiclePlates}` : ''}`,
-        url:   '/dashboard',
+        body: `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} en ${event.areaName}${event.vehiclePlates ? ` · Placas: ${event.vehiclePlates}` : ''}`,
+        url: '/dashboard',
       }
     case 'exit':
       return {
         title: `Salida: ${event.companyName}`,
-        body:  `${event.personnelCount ? `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} · ` : ''}Área: ${event.areaName}`,
-        url:   '/dashboard',
+        body: `${event.personnelCount ? `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} · ` : ''}Área: ${event.areaName}`,
+        url: '/dashboard',
       }
     case 'sua_expiring':
       return {
@@ -60,102 +60,102 @@ export function buildNotification(event: NotifyEvent): { title: string; body: st
         body: event.daysLeft === 0
           ? `El SUA de ${event.companyName} venció hoy. Requiere renovación inmediata.`
           : `Vence en ${event.daysLeft} día${event.daysLeft !== 1 ? 's' : ''}. Renueva antes de que expire.`,
-        url:   '/contractors',
+        url: '/contractors',
       }
     case 'new_contractor':
       return {
         title: `Nueva empresa registrada`,
-        body:  `${event.companyName} fue agregada al sistema.`,
-        url:   '/contractors',
+        body: `${event.companyName} fue agregada al sistema.`,
+        url: '/contractors',
       }
     case 'delete_contractor':
       return {
         title: `Empresa eliminada`,
-        body:  `${event.companyName} fue eliminada del sistema.`,
-        url:   '/contractors',
+        body: `${event.companyName} fue eliminada del sistema.`,
+        url: '/contractors',
       }
     case 'over_capacity':
       return {
         title: `Exceso de personal: ${event.companyName}`,
-        body:  `Ingresaron ${event.actual} personas en ${event.areaName}. Autorizado: ${event.authorized}.`,
-        url:   '/dashboard',
+        body: `Ingresaron ${event.actual} personas en ${event.areaName}. Autorizado: ${event.authorized}.`,
+        url: '/dashboard',
       }
     case 'blocked_contractor':
       return {
         title: `Acceso bloqueado: ${event.companyName}`,
-        body:  `La empresa ${event.companyName} ha sido bloqueada y no puede ingresar a planta.`,
-        url:   '/contractors',
+        body: `La empresa ${event.companyName} ha sido bloqueada y no puede ingresar a planta.`,
+        url: '/contractors',
       }
     case 'sua_renewed':
       return {
         title: `SUA renovado: ${event.companyName}`,
-        body:  `El SUA de ${event.companyName} fue actualizado correctamente.`,
-        url:   '/contractors',
+        body: `El SUA de ${event.companyName} fue actualizado correctamente.`,
+        url: '/contractors',
       }
     case 'prolonged_visit':
       return {
         title: `Visita prolongada: ${event.companyName}`,
-        body:  `Llevan ${event.hoursOnSite} hora${event.hoursOnSite !== 1 ? 's' : ''} en ${event.areaName} sin registrar salida.`,
-        url:   '/dashboard',
+        body: `Llevan ${event.hoursOnSite} hora${event.hoursOnSite !== 1 ? 's' : ''} en ${event.areaName} sin registrar salida.`,
+        url: '/dashboard',
       }
     case 'restricted_area':
       return {
         title: `Acceso a zona restringida: ${event.companyName}`,
-        body:  `${event.companyName} ingresó al área restringida: ${event.areaName}.`,
-        url:   '/dashboard',
+        body: `${event.companyName} ingresó al área restringida: ${event.areaName}.`,
+        url: '/dashboard',
       }
     case 'baja_registered':
       return {
         title: `Personal de Baja: ${event.nombre}`,
-        body:  `No. ${event.noEmpleado} · Fecha de baja: ${event.fechaBaja}`,
-        url:   '/bajas',
+        body: `No. ${event.noEmpleado} · Fecha de baja: ${event.fechaBaja}`,
+        url: '/bajas',
       }
     case 'sua_renewal_request':
       return {
         title: `Solicitud de renovación SUA: ${event.companyName}`,
-        body:  `${event.companyName} informa que su SUA ha sido renovado y requiere actualización.`,
-        url:   `/contractors`,
+        body: `${event.companyName} informa que su SUA ha sido renovado y requiere actualización.`,
+        url: `/contractors`,
       }
     case 'unblocked_contractor':
       return {
         title: `Acceso restaurado: ${event.companyName}`,
-        body:  `La empresa ${event.companyName} fue desbloqueada y puede ingresar nuevamente.`,
-        url:   '/contractors',
+        body: `La empresa ${event.companyName} fue desbloqueada y puede ingresar nuevamente.`,
+        url: '/contractors',
       }
     case 'smoker_exit':
       return {
-        title: `Salida a fumar: ${event.employeeName}`,
-        body:  `${event.department} · Salió ahora`,
-        url:   '/fumadores',
+        title: `Salida a fumar`,
+        body: `#${event.employeeId} · ${event.employeeName} · ${event.department} · T${event.turno}${event.mealSchedule ? ` · Comida: ${event.mealSchedule}` : ''}`,
+        url: '/fumadores',
       }
     case 'smoker_return':
       return {
-        title: `Regresó de fumar: ${event.employeeName}`,
-        body:  `${event.department} · Tiempo fuera: ${event.duration}`,
-        url:   '/fumadores',
+        title: `Regresó de fumar`,
+        body: `#${event.employeeId} · ${event.employeeName} · ${event.department} · T${event.turno} · Tiempo: ${event.duration}`,
+        url: '/fumadores',
       }
     case 'smoker_denied_meal':
       return {
-        title: `⚠ Salida denegada: ${event.employeeName}`,
-        body:  `Intentó salir a fumar fuera de su horario de comida (${event.mealSchedule}). Área: ${event.area}`,
-        url:   '/fumadores',
+        title: `Salida denegada`,
+        body: `#${event.employeeId} · ${event.employeeName} · ${event.department} · T${event.turno} · Comida: ${event.mealSchedule}`,
+        url: '/fumadores',
       }
     case 'scheduled_visit_reminder':
       return {
         title: `Visita programada: ${event.companyName}`,
-        body:  `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} en ${event.areaName} a las ${event.scheduledTime}`,
-        url:   '/dashboard',
+        body: `${event.personnelCount} persona${event.personnelCount !== 1 ? 's' : ''} en ${event.areaName} a las ${event.scheduledTime}`,
+        url: '/dashboard',
       }
     case 'daily_summary': {
       const parts: string[] = []
-      if (event.entries    > 0) parts.push(`${event.entries} ingreso${event.entries     !== 1 ? 's' : ''}`)
-      if (event.exits      > 0) parts.push(`${event.exits} salida${event.exits          !== 1 ? 's' : ''}`)
-      if (event.suaAlerts  > 0) parts.push(`${event.suaAlerts} alerta${event.suaAlerts  !== 1 ? 's' : ''} SUA`)
+      if (event.entries > 0) parts.push(`${event.entries} ingreso${event.entries !== 1 ? 's' : ''}`)
+      if (event.exits > 0) parts.push(`${event.exits} salida${event.exits !== 1 ? 's' : ''}`)
+      if (event.suaAlerts > 0) parts.push(`${event.suaAlerts} alerta${event.suaAlerts !== 1 ? 's' : ''} SUA`)
       if (event.blockedCount > 0) parts.push(`${event.blockedCount} bloqueo${event.blockedCount !== 1 ? 's' : ''}`)
       return {
         title: `Resumen del día — ${event.date}`,
-        body:  parts.length > 0 ? parts.join(' · ') : 'Sin actividad registrada hoy.',
-        url:   '/dashboard',
+        body: parts.length > 0 ? parts.join(' · ') : 'Sin actividad registrada hoy.',
+        url: '/dashboard',
       }
     }
   }
@@ -214,13 +214,13 @@ function tokenMatchesAudience(
  * @param audience  Who should receive it (defaults based on event type)
  */
 export async function sendFCM(
-  event:    NotifyEvent,
+  event: NotifyEvent,
   audience: Audience = defaultAudience(event),
 ): Promise<{ sent: number }> {
   const { title, body, url } = buildNotification(event)
 
-  const app       = getAdminApp()
-  const db        = getFirestore(app)
+  const app = getAdminApp()
+  const db = getFirestore(app)
   const messaging = getMessaging(app)
 
   const tokensSnap = await db.collectionGroup('fcmTokens').get()
@@ -237,13 +237,13 @@ export async function sendFCM(
   console.log(`[sendFCM] ${event.type}: ${tokensSnap.size} token(s) in DB, ${eligible.length} match audience "${JSON.stringify(audience)}"`)
   if (eligible.length === 0) return { sent: 0 }
 
-  const tokens    = eligible.map(e => e.token)
+  const tokens = eligible.map(e => e.token)
   const BATCH_SIZE = 500
   let sent = 0
   const staleRefs: FirebaseFirestore.DocumentReference[] = []
 
   for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
-    const chunk      = eligible.slice(i, i + BATCH_SIZE)
+    const chunk = eligible.slice(i, i + BATCH_SIZE)
     const chunkTokens = chunk.map(e => e.token)
 
     const res = await messaging.sendEachForMulticast({
@@ -253,9 +253,9 @@ export async function sendFCM(
         notification: {
           title,
           body,
-          icon:               '/api/pwa-icon?size=192',
-          badge:              '/api/pwa-icon?size=96',
-          vibrate:            [200, 100, 200],
+          icon: '/api/pwa-icon?size=192',
+          badge: '/api/pwa-icon?size=96',
+          vibrate: [200, 100, 200],
           requireInteraction: event.type === 'sua_expiring',
         },
         fcmOptions: { link: url },

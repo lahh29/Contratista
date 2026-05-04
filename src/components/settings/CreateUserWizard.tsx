@@ -19,10 +19,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Button }  from "@/components/ui/button"
-import { Input }   from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge }   from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import {
   User,
   Lock,
@@ -44,19 +44,19 @@ import { useToast } from "@/hooks/use-toast"
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  open:       boolean
-  onClose:    () => void
-  onCreated:  () => void
-  companies:  DocumentData[] | null | undefined
+  open: boolean
+  onClose: () => void
+  onCreated: () => void
+  companies: DocumentData[] | null | undefined
 }
 
 const ROLES = [
-  { value: "admin",      label: "Admin",           icon: ShieldCheck, color: "text-sky-600 dark:text-sky-400"       },
-  { value: "seguridad",  label: "Seg. e Higiene",  icon: HardHat,     color: "text-yellow-600 dark:text-yellow-400" },
-  { value: "logistica",  label: "Logística",       icon: Package,     color: "text-violet-600 dark:text-violet-400" },
-  { value: "guard",      label: "Guardia",         icon: Shield,      color: "text-emerald-600 dark:text-emerald-400" },
-  { value: "rys",        label: "Reclutamiento",   icon: UserPlus,    color: "text-rose-600 dark:text-rose-400"     },
-  { value: "contractor", label: "Contratista",     icon: Briefcase,   color: "text-amber-600 dark:text-amber-400"   },
+  { value: "admin", label: "Admin", icon: ShieldCheck, color: "text-sky-600 dark:text-sky-400" },
+  { value: "seguridad", label: "Seg. e Higiene", icon: HardHat, color: "text-yellow-600 dark:text-yellow-400" },
+  { value: "logistica", label: "Logística", icon: Package, color: "text-violet-600 dark:text-violet-400" },
+  { value: "guard", label: "Guardia", icon: Shield, color: "text-emerald-600 dark:text-emerald-400" },
+  { value: "rys", label: "Reclutamiento", icon: UserPlus, color: "text-rose-600 dark:text-rose-400" },
+  { value: "contractor", label: "Contratista", icon: Briefcase, color: "text-amber-600 dark:text-amber-400" },
 ]
 
 const TOTAL_STEPS = 3
@@ -68,19 +68,19 @@ function StepIndicator({ current }: { current: number }) {
   return (
     <div className="flex items-center justify-center gap-0 mb-6">
       {labels.map((label, i) => {
-        const step     = i + 1
-        const done     = step < current
-        const active   = step === current
-        const isLast   = i === labels.length - 1
+        const step = i + 1
+        const done = step < current
+        const active = step === current
+        const isLast = i === labels.length - 1
 
         return (
           <React.Fragment key={step}>
             <div className="flex flex-col items-center gap-1">
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                ${done   ? "bg-primary text-primary-foreground"           : ""}
+                ${done ? "bg-primary text-primary-foreground" : ""}
                 ${active ? "bg-primary text-primary-foreground ring-4 ring-primary/20" : ""}
-                ${!done && !active ? "bg-muted text-muted-foreground"     : ""}
+                ${!done && !active ? "bg-muted text-muted-foreground" : ""}
               `}>
                 {done ? <Check className="w-4 h-4" /> : step}
               </div>
@@ -104,19 +104,19 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
   const { toast } = useToast()
 
   // Form fields
-  const [name,       setName]       = React.useState("")
-  const [email,      setEmail]      = React.useState("")
-  const [password,   setPassword]   = React.useState("")
-  const [confirm,    setConfirm]    = React.useState("")
-  const [role,       setRole]       = React.useState("")
-  const [companyId,  setCompanyId]  = React.useState("")
+  const [name, setName] = React.useState("")
+  const [email, setEmail] = React.useState("")
+  const [password, setPassword] = React.useState("")
+  const [confirm, setConfirm] = React.useState("")
+  const [role, setRole] = React.useState("")
+  const [companyId, setCompanyId] = React.useState("")
 
   // UI
-  const [step,        setStep]        = React.useState(1)
-  const [showPwd,     setShowPwd]     = React.useState(false)
+  const [step, setStep] = React.useState(1)
+  const [showPwd, setShowPwd] = React.useState(false)
   const [showConfirm, setShowConfirm] = React.useState(false)
-  const [submitting,  setSubmitting]  = React.useState(false)
-  const [fieldError,  setFieldError]  = React.useState<string | null>(null)
+  const [submitting, setSubmitting] = React.useState(false)
+  const [fieldError, setFieldError] = React.useState<string | null>(null)
 
   // Reset on open/close
   React.useEffect(() => {
@@ -131,20 +131,20 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
   // ── Validación por paso ────────────────────────────────────────────────────
 
   function validateStep1(): string | null {
-    if (!name.trim())             return "El nombre es obligatorio."
-    if (!email.trim())            return "El correo es obligatorio."
+    if (!name.trim()) return "El nombre es obligatorio."
+    if (!email.trim()) return "El correo es obligatorio."
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return "El correo no tiene un formato válido."
     return null
   }
 
   function validateStep2(): string | null {
-    if (password.length < 6)      return "La contraseña debe tener al menos 6 caracteres."
-    if (password !== confirm)      return "Las contraseñas no coinciden."
+    if (password.length < 6) return "La contraseña debe tener al menos 6 caracteres."
+    if (password !== confirm) return "Las contraseñas no coinciden."
     return null
   }
 
   function validateStep3(): string | null {
-    if (!role)                    return "Selecciona un rol."
+    if (!role) return "Selecciona un rol."
     if (role === "contractor" && !companyId) return "Selecciona la empresa del contratista."
     return null
   }
@@ -154,8 +154,8 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
   function handleNext() {
     const err =
       step === 1 ? validateStep1() :
-      step === 2 ? validateStep2() :
-      null
+        step === 2 ? validateStep2() :
+          null
     if (err) { setFieldError(err); return }
     setFieldError(null)
     setStep((s) => s + 1)
@@ -232,7 +232,7 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <Input
                     className="pl-9 h-11"
-                    placeholder="Ej. Juan Pérez"
+                    placeholder="Nombre y Apellido"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoFocus
@@ -248,7 +248,7 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
                 <Input
                   className="h-11"
                   type="email"
-                  placeholder="usuario@empresa.com"
+                  placeholder="Correo electronico real, no inventado"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoCapitalize="none"
@@ -319,18 +319,17 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
               {password.length > 0 && (
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4].map((lvl) => (
-                    <div key={lvl} className={`flex-1 h-1 rounded-full transition-colors ${
-                      password.length >= lvl * 3
-                        ? lvl <= 1 ? "bg-destructive"
+                    <div key={lvl} className={`flex-1 h-1 rounded-full transition-colors ${password.length >= lvl * 3
+                      ? lvl <= 1 ? "bg-destructive"
                         : lvl <= 2 ? "bg-amber-400"
-                        : "bg-emerald-500"
-                        : "bg-muted"
-                    }`} />
+                          : "bg-emerald-500"
+                      : "bg-muted"
+                      }`} />
                   ))}
                   <span className="text-[10px] text-muted-foreground shrink-0">
-                    {password.length < 4  ? "Muy corta" :
-                     password.length < 7  ? "Débil"     :
-                     password.length < 10 ? "Media"     : "Fuerte"}
+                    {password.length < 4 ? "Muy corta" :
+                      password.length < 7 ? "Débil" :
+                        password.length < 10 ? "Media" : "Fuerte"}
                   </span>
                 </div>
               )}

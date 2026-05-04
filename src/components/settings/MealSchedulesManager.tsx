@@ -84,12 +84,12 @@ import { SkeletonList } from "@/components/ui/skeletons"
 // ─── Types locales ────────────────────────────────────────────────────────────
 
 interface ScheduleDoc {
-  id:           string   // doc id = "DEPT|TURNO"
+  id: string   // doc id = "DEPT|TURNO"
   departamento: string
-  turno:        string
-  start:        string
-  end:          string
-  label:        string
+  turno: string
+  start: string
+  end: string
+  label: string
 }
 
 interface GroupDoc extends EmployeeGroup {
@@ -107,43 +107,43 @@ function makeLabel(start: string, end: string) {
 // ─── ScheduleDialog ───────────────────────────────────────────────────────────
 
 interface ScheduleDialogProps {
-  open:     boolean
-  initial:  ScheduleDoc | null   // null = modo agregar
-  onClose:  () => void
-  onSaved:  () => void
+  open: boolean
+  initial: ScheduleDoc | null   // null = modo agregar
+  onClose: () => void
+  onSaved: () => void
 }
 
 function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps) {
   const db = useFirestore()
   const { toast } = useToast()
 
-  const [dept,    setDept]    = React.useState("")
-  const [turno,   setTurno]   = React.useState("")
-  const [start,   setStart]   = React.useState("")
-  const [end,     setEnd]     = React.useState("")
-  const [saving,  setSaving]  = React.useState(false)
+  const [dept, setDept] = React.useState("")
+  const [turno, setTurno] = React.useState("")
+  const [start, setStart] = React.useState("")
+  const [end, setEnd] = React.useState("")
+  const [saving, setSaving] = React.useState(false)
 
   React.useEffect(() => {
     if (!open) return
-    setDept(initial?.departamento  ?? "")
-    setTurno(initial?.turno        ?? "")
-    setStart(initial?.start        ?? "")
-    setEnd(initial?.end            ?? "")
+    setDept(initial?.departamento ?? "")
+    setTurno(initial?.turno ?? "")
+    setStart(initial?.start ?? "")
+    setEnd(initial?.end ?? "")
     setSaving(false)
   }, [open, initial])
 
-  const isEdit  = !!initial
+  const isEdit = !!initial
   const canSave = (isEdit || (dept.trim() && turno)) && start && end
 
   const handleSave = async () => {
     if (!db || !canSave) return
     setSaving(true)
-    const id    = isEdit ? initial!.id : `${dept.trim().toUpperCase()}|${turno.toUpperCase()}`
+    const id = isEdit ? initial!.id : `${dept.trim().toUpperCase()}|${turno.toUpperCase()}`
     const label = makeLabel(start, end)
     try {
       await setDoc(doc(db, "mealSchedules", id), {
         departamento: isEdit ? initial!.departamento : dept.trim().toUpperCase(),
-        turno:        isEdit ? initial!.turno        : turno.toUpperCase(),
+        turno: isEdit ? initial!.turno : turno.toUpperCase(),
         start, end, label,
       }, { merge: isEdit })
       toast({ title: isEdit ? "Horario actualizado" : "Horario guardado" })
@@ -204,7 +204,7 @@ function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps
             <div className="flex items-center gap-2">
               <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-9 text-sm flex-1" autoFocus={isEdit} />
               <span className="text-muted-foreground text-sm shrink-0">–</span>
-              <Input type="time" value={end}   onChange={(e) => setEnd(e.target.value)}   className="h-9 text-sm flex-1" />
+              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="h-9 text-sm flex-1" />
             </div>
           </div>
         </div>
@@ -225,15 +225,23 @@ function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps
 
 // ─── HorariosTab ──────────────────────────────────────────────────────────────
 
-function HorariosTab() {
+interface HorariosTabHandle {
+  openAdd: () => void
+}
+
+const HorariosTab = React.forwardRef<HorariosTabHandle>(function HorariosTab(_props, ref) {
   const db = useFirestore()
   const { toast } = useToast()
   const { confirm, ConfirmDialog } = useConfirm()
 
-  const [items,        setItems]        = React.useState<ScheduleDoc[] | null>(null)
-  const [loading,      setLoading]      = React.useState(true)
-  const [dialogOpen,   setDialogOpen]   = React.useState(false)
+  const [items, setItems] = React.useState<ScheduleDoc[] | null>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [dialogOpen, setDialogOpen] = React.useState(false)
   const [dialogTarget, setDialogTarget] = React.useState<ScheduleDoc | null>(null)
+
+  React.useImperativeHandle(ref, () => ({
+    openAdd: () => { setDialogTarget(null); setDialogOpen(true) },
+  }))
 
   const load = React.useCallback(async () => {
     if (!db) return
@@ -253,21 +261,20 @@ function HorariosTab() {
 
   React.useEffect(() => { load() }, [load])
 
-  const openAdd  = () => { setDialogTarget(null); setDialogOpen(true) }
   const openEdit = (item: ScheduleDoc) => {
-    ;(document.activeElement as HTMLElement | null)?.blur()
+    ; (document.activeElement as HTMLElement | null)?.blur()
     requestAnimationFrame(() => { setDialogTarget(item); setDialogOpen(true) })
   }
 
   const handleDelete = async (item: ScheduleDoc) => {
     if (!db) return
-    ;(document.activeElement as HTMLElement | null)?.blur()
+      ; (document.activeElement as HTMLElement | null)?.blur()
     await new Promise<void>((r) => requestAnimationFrame(() => r()))
     const ok = await confirm({
-      title:        `¿Eliminar "${item.id}"?`,
-      description:  "Si no hay otro horario para este departamento/turno, se usará el valor predeterminado del sistema.",
+      title: `¿Eliminar "${item.id}"?`,
+      description: "Si no hay otro horario para este departamento/turno, se usará el valor predeterminado del sistema.",
       confirmLabel: "Eliminar",
-      variant:      "destructive",
+      variant: "destructive",
     })
     if (!ok) return
     try {
@@ -289,26 +296,25 @@ function HorariosTab() {
         onSaved={load}
       />
 
-      <div className="space-y-4">
-        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openAdd} aria-label="Agregar horario">
-          <Plus className="w-4 h-4 md:hidden" />
-          <span className="hidden md:inline">Agregar horario</span>
-        </Button>
-
-        <div className="space-y-2 min-h-[80px]">
-          {loading ? (
-            <SkeletonList rows={4} />
-          ) : items?.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-              <UtensilsCrossed className="w-8 h-8 opacity-20" />
-              <p className="text-sm">Sin horarios configurados. Agrega el primero o inicializa desde los datos predeterminados.</p>
-            </div>
-          ) : (
-            items?.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg min-w-0">
+      {/* Lista de horarios en grid de 3 columnas */}
+      <div className="min-h-[80px]">
+        {loading ? (
+          <SkeletonList rows={4} />
+        ) : items?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <UtensilsCrossed className="w-8 h-8 opacity-20" />
+            <p className="text-sm">Sin horarios configurados. Agrega el primero o inicializa desde los datos predeterminados.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {items?.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg border border-border/40 hover:bg-muted/60 transition-colors min-w-0"
+              >
                 <div className="flex-1 min-w-0 overflow-hidden">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium truncate">{item.departamento}</span>
+                    <span className="text-sm font-semibold truncate">{item.departamento}</span>
                     <Badge variant="outline" className="text-[10px] shrink-0">T{item.turno}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
@@ -324,53 +330,55 @@ function HorariosTab() {
                       <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:text-destructive"
-                      onClick={() => handleDelete(item)}>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => handleDelete(item)}
+                    >
                       <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   )
-}
+})
 
 // ─── GroupSheet ───────────────────────────────────────────────────────────────
 
 interface GroupSheetProps {
-  open:     boolean
-  initial:  Partial<GroupDoc> | null
-  onClose:  () => void
-  onSaved:  () => void
+  open: boolean
+  initial: Partial<GroupDoc> | null
+  onClose: () => void
+  onSaved: () => void
 }
 
 function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
   const db = useFirestore()
   const { toast } = useToast()
 
-  const [dept,      setDept]      = React.useState("")
-  const [turno,     setTurno]     = React.useState("")
-  const [grupo,     setGrupo]     = React.useState("")
-  const [label,     setLabel]     = React.useState("")
+  const [dept, setDept] = React.useState("")
+  const [turno, setTurno] = React.useState("")
+  const [grupo, setGrupo] = React.useState("")
+  const [label, setLabel] = React.useState("")
   const [employees, setEmployees] = React.useState("")
-  const [start,     setStart]     = React.useState("")
-  const [end,       setEnd]       = React.useState("")
-  const [saving,    setSaving]    = React.useState(false)
+  const [start, setStart] = React.useState("")
+  const [end, setEnd] = React.useState("")
+  const [saving, setSaving] = React.useState(false)
 
   // Populate when editing
   React.useEffect(() => {
     if (!open) return
     setDept(initial?.departamento ?? "")
-    setTurno(initial?.turno        ?? "")
-    setGrupo(initial?.grupo        ?? "")
-    setLabel(initial?.label        ?? "")
+    setTurno(initial?.turno ?? "")
+    setGrupo(initial?.grupo ?? "")
+    setLabel(initial?.label ?? "")
     setEmployees((initial?.employees ?? []).join("\n"))
-    setStart(initial?.meal?.start  ?? "")
-    setEnd(initial?.meal?.end      ?? "")
+    setStart(initial?.meal?.start ?? "")
+    setEnd(initial?.meal?.end ?? "")
   }, [open, initial])
 
   const handleSave = async () => {
@@ -384,11 +392,11 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
 
       const data: Omit<EmployeeGroup, "id"> = {
         departamento: dept.trim().toUpperCase(),
-        turno:        turno.toUpperCase(),
-        grupo:        grupo.trim(),
-        label:        label.trim() || `Grupo ${grupo.trim()} – T${turno} – ${dept.trim().toUpperCase()}`,
-        employees:    ids,
-        meal:         { start, end, label: makeLabel(start, end) },
+        turno: turno.toUpperCase(),
+        grupo: grupo.trim(),
+        label: label.trim() || `Grupo ${grupo.trim()} – T${turno} – ${dept.trim().toUpperCase()}`,
+        employees: ids,
+        meal: { start, end, label: makeLabel(start, end) },
       }
 
       if (initial?.id) {
@@ -477,7 +485,7 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
             <div className="flex items-center gap-2">
               <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-9 text-sm flex-1" />
               <span className="text-muted-foreground text-sm shrink-0">–</span>
-              <Input type="time" value={end}   onChange={(e) => setEnd(e.target.value)}   className="h-9 text-sm flex-1" />
+              <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className="h-9 text-sm flex-1" />
             </div>
           </div>
 
@@ -518,15 +526,23 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
 
 // ─── GruposTab ────────────────────────────────────────────────────────────────
 
-function GruposTab() {
+interface GruposTabHandle {
+  openAdd: () => void
+}
+
+const GruposTab = React.forwardRef<GruposTabHandle>(function GruposTab(_props, ref) {
   const db = useFirestore()
   const { toast } = useToast()
   const { confirm, ConfirmDialog } = useConfirm()
 
-  const [items,   setItems]   = React.useState<GroupDoc[] | null>(null)
+  const [items, setItems] = React.useState<GroupDoc[] | null>(null)
   const [loading, setLoading] = React.useState(true)
-  const [sheetOpen,   setSheetOpen]   = React.useState(false)
+  const [sheetOpen, setSheetOpen] = React.useState(false)
   const [sheetInitial, setSheetInitial] = React.useState<Partial<GroupDoc> | null>(null)
+
+  React.useImperativeHandle(ref, () => ({
+    openAdd: () => { setSheetInitial(null); setSheetOpen(true) },
+  }))
 
   const load = React.useCallback(async () => {
     if (!db) return
@@ -550,21 +566,20 @@ function GruposTab() {
 
   React.useEffect(() => { load() }, [load])
 
-  const openNew  = () => { setSheetInitial(null); setSheetOpen(true) }
   const openEdit = (g: GroupDoc) => {
-    ;(document.activeElement as HTMLElement | null)?.blur()
+    ; (document.activeElement as HTMLElement | null)?.blur()
     requestAnimationFrame(() => { setSheetInitial(g); setSheetOpen(true) })
   }
 
   const handleDelete = async (g: GroupDoc) => {
     if (!db) return
-    ;(document.activeElement as HTMLElement | null)?.blur()
+      ; (document.activeElement as HTMLElement | null)?.blur()
     await new Promise<void>((r) => requestAnimationFrame(() => r()))
     const ok = await confirm({
-      title:        `¿Eliminar "${g.label}"?`,
-      description:  "Se eliminarán los empleados de este grupo. La acción no se puede deshacer.",
+      title: `¿Eliminar "${g.label}"?`,
+      description: "Se eliminarán los empleados de este grupo. La acción no se puede deshacer.",
       confirmLabel: "Eliminar",
-      variant:      "destructive",
+      variant: "destructive",
     })
     if (!ok) return
     try {
@@ -586,26 +601,25 @@ function GruposTab() {
         onSaved={load}
       />
 
-      <div className="space-y-4">
-        <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={openNew} aria-label="Agregar grupo">
-          <Plus className="w-4 h-4 md:hidden" />
-          <span className="hidden md:inline">Agregar grupo</span>
-        </Button>
-
-        <div className="space-y-2 min-h-[80px]">
-          {loading ? (
-            <SkeletonList rows={4} />
-          ) : items?.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-              <Users className="w-8 h-8 opacity-20" />
-              <p className="text-sm">Sin grupos configurados.</p>
-            </div>
-          ) : (
-            items?.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg min-w-0">
+      {/* Lista de grupos en grid de 3 columnas */}
+      <div className="min-h-[80px]">
+        {loading ? (
+          <SkeletonList rows={4} />
+        ) : items?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <Users className="w-8 h-8 opacity-20" />
+            <p className="text-sm">Sin grupos configurados.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {items?.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg border border-border/40 hover:bg-muted/60 transition-colors min-w-0"
+              >
                 <div className="flex-1 min-w-0 overflow-hidden">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-medium truncate">{item.label}</span>
+                    <span className="text-sm font-semibold truncate">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <Badge variant="outline" className="text-[10px]">{item.departamento}</Badge>
@@ -625,36 +639,46 @@ function GruposTab() {
                       <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:text-destructive"
-                      onClick={() => handleDelete(item)}>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => handleDelete(item)}
+                    >
                       <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   )
-}
+})
 
-// ─── MealSchedulesManager ─────────────────────────────────────────────────────
+// ─── MealSchedulesManager ────────────────────────────────────────────────────────────────
 
 export function MealSchedulesManager() {
   const db = useFirestore()
   const { toast } = useToast()
   const { confirm, ConfirmDialog } = useConfirm()
   const [seeding, setSeeding] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState("horarios")
+  const horariosRef = React.useRef<HorariosTabHandle>(null)
+  const gruposRef = React.useRef<GruposTabHandle>(null)
+
+  const handleAdd = () => {
+    if (activeTab === "horarios") horariosRef.current?.openAdd()
+    else gruposRef.current?.openAdd()
+  }
 
   const handleSeedDefaults = async () => {
     if (!db) return
     const ok = await confirm({
-      title:        "¿Inicializar desde datos predeterminados?",
-      description:  "Esto sobreescribirá todos los horarios y grupos actuales con los valores predefinidos del sistema. No se puede deshacer.",
+      title: "¿Inicializar desde datos predeterminados?",
+      description: "Esto sobreescribirá todos los horarios y grupos actuales con los valores predefinidos del sistema. No se puede deshacer.",
       confirmLabel: "Inicializar",
-      variant:      "destructive",
+      variant: "destructive",
     })
     if (!ok) return
 
@@ -674,7 +698,7 @@ export function MealSchedulesManager() {
       // Seed groups (addDoc porque IDs son auto)
       // Primero borra los existentes
       const existingSnap = await getDocs(collection(db, "employeeGroups"))
-      const deleteBatch  = writeBatch(db)
+      const deleteBatch = writeBatch(db)
       existingSnap.docs.forEach((d) => deleteBatch.delete(d.ref))
       await deleteBatch.commit()
 
@@ -683,11 +707,11 @@ export function MealSchedulesManager() {
         const ref = doc(collection(db, "employeeGroups"))
         addBatch.set(ref, {
           departamento: g.departamento,
-          turno:        g.turno,
-          grupo:        g.grupo,
-          label:        g.label,
-          employees:    g.employees,
-          meal:         g.meal,
+          turno: g.turno,
+          grupo: g.grupo,
+          label: g.label,
+          employees: g.employees,
+          meal: g.meal,
         })
         // Firestore batch limit: 500 ops; grupos estáticos son pocos, no hay riesgo
       })
@@ -707,57 +731,47 @@ export function MealSchedulesManager() {
       <Card className="border-none shadow-sm overflow-hidden">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <UtensilsCrossed className="w-4 h-4 text-primary" />
-            </div>
             Horarios de Comida
           </CardTitle>
-          <CardDescription className="text-sm">
-            Configura los horarios por departamento y los grupos de empleados sin tocar el código.
-            Los cambios aplican en tiempo real.
-          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Initialize from defaults */}
-          <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-            <DatabaseZap className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium">Primera vez aquí</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Carga los datos predeterminados del sistema para empezar a editarlos.
-              </p>
-            </div>
-            <Button
-              size="responsiveSm"
-              variant="outline"
-              className="shrink-0"
-              onClick={handleSeedDefaults}
-              disabled={seeding}
-              aria-label="Inicializar datos predeterminados"
-            >
-              {seeding ? <Loader2 className="w-3.5 h-3.5 animate-spin md:hidden" /> : <DatabaseZap className="w-3.5 h-3.5 md:hidden" />}
-              <span className="hidden md:inline">Inicializar</span>
-            </Button>
-          </div>
+          {/* Tabs + botón Agregar en la misma fila */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="flex items-center gap-2">
+              {/* TabsList ocupa el espacio disponible */}
+              <TabsList className="flex-1 grid grid-cols-2 h-9">
+                <TabsTrigger value="horarios" className="gap-1.5 text-xs sm:text-sm">
+                  <UtensilsCrossed className="h-3.5 w-3.5 shrink-0" />
+                  <span>Por departamento</span>
+                </TabsTrigger>
+                <TabsTrigger value="grupos" className="gap-1.5 text-xs sm:text-sm">
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  <span>Grupos</span>
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Tabs: Horarios / Grupos */}
-          <Tabs defaultValue="horarios">
-            <TabsList className="grid h-12 w-full grid-cols-2 md:h-10">
-              <TabsTrigger value="horarios" className="h-10 gap-2 text-sm md:h-auto md:text-xs">
-                <UtensilsCrossed className="h-4 w-4 md:hidden" />
-                <span className="hidden md:inline">Por departamento</span>
-              </TabsTrigger>
-              <TabsTrigger value="grupos" className="h-10 gap-2 text-sm md:h-auto md:text-xs">
-                <Users className="h-4 w-4 md:hidden" />
-                <span className="hidden md:inline">Grupos</span>
-              </TabsTrigger>
-            </TabsList>
+              {/* Botón Agregar alineado con las tabs */}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 gap-1.5 shrink-0 px-3"
+                onClick={handleAdd}
+                aria-label={activeTab === "horarios" ? "Agregar horario" : "Agregar grupo"}
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">
+                  {activeTab === "horarios" ? "Agregar horario" : "Agregar grupo"}
+                </span>
+              </Button>
+            </div>
+
             <TabsContent value="horarios" className="mt-4">
-              <HorariosTab />
+              <HorariosTab ref={horariosRef} />
             </TabsContent>
+
             <TabsContent value="grupos" className="mt-4">
-              <GruposTab />
+              <GruposTab ref={gruposRef} />
             </TabsContent>
           </Tabs>
         </CardContent>

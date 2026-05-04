@@ -14,18 +14,18 @@ import { useToast } from "@/hooks/use-toast"
 type Step = 'email' | 'password' | 'success'
 
 export default function RegisterPage() {
-  const [step, setStep]           = React.useState<Step>('email')
-  const [email, setEmail]         = React.useState('')
+  const [step, setStep] = React.useState<Step>('email')
+  const [email, setEmail] = React.useState('')
   const [emailError, setEmailError] = React.useState('')
-  const [password, setPassword]   = React.useState('')
-  const [confirm, setConfirm]     = React.useState('')
+  const [password, setPassword] = React.useState('')
+  const [confirm, setConfirm] = React.useState('')
   const [passError, setPassError] = React.useState('')
-  const [loading, setLoading]     = React.useState(false)
-  const [company, setCompany]     = React.useState<{ id: string; name: string } | null>(null)
+  const [loading, setLoading] = React.useState(false)
+  const [company, setCompany] = React.useState<{ id: string; name: string } | null>(null)
 
-  const auth      = useAuth()
-  const db        = useFirestore()
-  const router    = useRouter()
+  const auth = useAuth()
+  const db = useFirestore()
+  const router = useRouter()
   const { toast } = useToast()
 
   // ── Step 1: validate email & find company ──────────────────
@@ -75,7 +75,7 @@ export default function RegisterPage() {
         )
         const snap = await getDocs(q)
         if (!snap.empty) {
-          companyId   = snap.docs[0].id
+          companyId = snap.docs[0].id
           companyName = snap.docs[0].data().name as string
         }
       } catch { /* non-critical */ }
@@ -99,8 +99,8 @@ export default function RegisterPage() {
     } catch (err: any) {
       const code = err?.code ?? ''
       toast({
-        variant:     'destructive',
-        title:       'Error al registrarse',
+        variant: 'destructive',
+        title: 'Error al registrarse',
         description: code === 'auth/email-already-in-use'
           ? 'Este correo ya tiene una cuenta. Inicia sesión.'
           : 'Ocurrió un error. Intenta de nuevo.',
@@ -112,16 +112,16 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="auth-bg relative min-h-screen min-h-dvh flex items-center justify-center overflow-hidden px-5"
+      className="auth-bg relative min-h-dvh flex items-center justify-center overflow-hidden px-5"
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
-        paddingTop:    "env(safe-area-inset-top)",
+        paddingTop: "env(safe-area-inset-top)",
       }}
     >
 
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0,  scale: 1 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative z-10 w-full max-w-[380px]"
       >
@@ -138,7 +138,7 @@ export default function RegisterPage() {
 
               {/* ── Step 1: Email ── */}
               {step === 'email' && (
-                <motion.div key="email" initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-20 }} transition={{ duration:0.25 }} className="space-y-4">
+                <motion.div key="email" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
                   <div>
                     <p className="text-sm font-semibold mb-1">Correo electrónico</p>
                     <p className="text-xs text-muted-foreground">Usa el correo registrado con tu empresa</p>
@@ -172,7 +172,7 @@ export default function RegisterPage() {
 
               {/* ── Step 2: Password ── */}
               {step === 'password' && (
-                <motion.div key="password" initial={{ opacity:0, x:20 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-20 }} transition={{ duration:0.25 }} className="space-y-4">
+                <motion.div key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }} className="space-y-4">
                   <div className="flex items-center gap-2">
                     <button onClick={() => setStep('email')} className="text-muted-foreground hover:text-foreground transition-colors">
                       <ArrowLeft className="w-4 h-4" />
@@ -218,7 +218,7 @@ export default function RegisterPage() {
 
               {/* ── Step 3: Success ── */}
               {step === 'success' && (
-                <motion.div key="success" initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} transition={{ duration:0.3 }} className="space-y-4 text-center">
+                <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="space-y-4 text-center">
                   <div className="flex justify-center">
                     <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8 text-green-600" />

@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  UserPlus,
+
   X,
   UtensilsCrossed,
   ShieldAlert,
@@ -54,7 +54,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAppUser } from "@/hooks/use-app-user"
 import { sendNotification } from "@/app/actions/notify"
-import { CreateEmployeeDialog } from "@/components/fumadores/CreateEmployeeDialog"
+
 import { JsonImporterSheet } from "@/components/fumadores/JsonImporterSheet"
 import { useDebounce } from "@/hooks/use-debounce"
 import { format, formatDistanceStrict } from "date-fns"
@@ -297,8 +297,10 @@ export default function FumadoresPage() {
       sendNotification({
         type: 'smoker_denied_meal',
         employeeName: `${employee.Nombre} ${employee.ApellidoPaterno}`,
+        employeeId: employee.employeeId,
         department: employee.Departamento,
         area: employee.Área,
+        turno: employee.Turno,
         mealSchedule: mealSchedule.label,
       })
       return
@@ -328,7 +330,10 @@ export default function FumadoresPage() {
       sendNotification({
         type: 'smoker_exit',
         employeeName: `${employee.Nombre} ${employee.ApellidoPaterno}`,
+        employeeId: employee.employeeId,
         department: employee.Departamento,
+        turno: employee.Turno,
+        mealSchedule: mealSchedule?.label,
       })
       await loadRecords()
     } catch {
@@ -362,8 +367,11 @@ export default function FumadoresPage() {
       sendNotification({
         type: 'smoker_return',
         employeeName: activeRecord.nombre.split(' ').slice(0, 2).join(' '),
+        employeeId: activeRecord.employeeId,
         department: activeRecord.departamento,
+        turno: activeRecord.turno,
         duration: durationLabel,
+        mealSchedule: getMealWindow(activeRecord.employeeId, activeRecord.departamento, activeRecord.turno, undefined, mealConfig)?.label,
       })
       await loadRecords()
     } catch {
@@ -399,179 +407,191 @@ export default function FumadoresPage() {
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
 
   // ── Create employee dialog ────────────────────────────────────────────────
-  const [createOpen, setCreateOpen] = React.useState(false)
-
-  // ── JSON importer ─────────────────────────────────────────────────────────
+  // ── JSON importer ─────────────────────────────────────────────────────────────────
   const [importerOpen, setImporterOpen] = React.useState(false)
 
   // ── Panels (shared between mobile tabs and desktop grid) ─────────────────
 
   const buscadorPanel = (
     <Card className="border-none shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
+      {/* Header — solo título, sin botones */}
+      <CardHeader className="px-4 py-3 md:px-6">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Search className="w-4 h-4 text-primary" aria-hidden="true" />
           </div>
-          <span className="flex-1">Registrar salida / regreso</span>
-          {appUser?.role === "admin" && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={() => setImporterOpen(true)}
-                aria-label="Importar empleados desde JSON"
-                title="Importar JSON"
-              >
-                <FileJson className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={() => setCreateOpen(true)}
-                aria-label="Agregar empleado"
-              >
-                <UserPlus className="w-4 h-4" />
-              </Button>
-            </>
-          )}
-        </CardTitle>
+          <CardTitle className="flex-1 min-w-0 text-sm font-semibold leading-tight">
+            Consultas / Registros
+          </CardTitle>
+        </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Search input */}
-        <div className="relative">
-          {searching ? (
-            <RefreshCw className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" aria-hidden="true" />
-          ) : (
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-          )}
-          <Input
-            placeholder="No. de Empleado"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value.replace(/\D/g, ""))}
-            className="pl-9 pr-9"
-            inputMode="numeric"
-            autoComplete="off"
-            aria-label="Buscar por número de empleado"
-            role="searchbox"
-            maxLength={10}
-          />
-          {inputValue && !searching && (
-            <button
-              onClick={() => setInputValue("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2"
-              aria-label="Limpiar búsqueda"
-              type="button"
-            >
-              <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
-            </button>
+      <CardContent className="space-y-4 px-4 pb-4 pt-0 md:px-6">
+        {/* ── Buscador + botones admin en la misma fila ── */}
+        <div className="flex items-center gap-1.5">
+          <div className="relative flex-1 min-w-0">
+            {searching ? (
+              <RefreshCw className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground animate-spin" aria-hidden="true" />
+            ) : (
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+            )}
+            <Input
+              placeholder="No. de empleado"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value.replace(/\D/g, ""))}
+              className="pl-8 pr-8 h-9 text-sm w-full"
+              inputMode="numeric"
+              autoComplete="off"
+              aria-label="Buscar por número de empleado"
+              role="searchbox"
+              maxLength={10}
+            />
+            {inputValue && !searching && (
+              <button onClick={() => setInputValue("")} className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                aria-label="Limpiar búsqueda" type="button">
+                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+              </button>
+            )}
+          </div>
+          {/* Botón admin — importar JSON */}
+          {appUser?.role === "admin" && (
+            <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => setImporterOpen(true)}
+              aria-label="Importar empleados desde JSON" title="Importar JSON">
+              <FileJson className="w-4 h-4" />
+            </Button>
           )}
         </div>
 
-        {/* Search error */}
+        {/* ── Error de búsqueda ── */}
         {searchError && debouncedId && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-destructive/5 border border-destructive/15">
             <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
-            {searchError}
-          </p>
+            <p className="text-sm text-destructive/90">{searchError}</p>
+          </div>
         )}
 
-        {/* Employee result */}
+        {/* ── Resultado del empleado ── */}
         {employee && (
-          <div className="p-4 bg-muted/40 rounded-xl space-y-3">
-            {/* Name */}
-            <div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="font-semibold text-sm leading-tight">{fullName}</span>
-                <Badge variant="outline" className="text-[11px] font-mono px-1.5 py-0">
-                  #{employee.employeeId}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">{employee.Puesto}</p>
+          <div className="rounded-xl border border-border/50 overflow-hidden">
+
+            {/* ── Identidad: centrada, jerarquía vertical ── */}
+            <div className="flex flex-col items-center gap-1 px-4 pt-5 pb-4 bg-muted/20">
+              {/* Número de empleado */}
+              <span className="text-xs font-mono text-muted-foreground">
+                #{employee.employeeId}
+              </span>
+
+              {/* Nombre */}
+              <p className="text-base font-semibold leading-tight text-center">
+                {employee.Nombre}
+              </p>
+
+              {/* Apellidos */}
+              <p className="text-sm font-medium leading-tight text-center text-foreground/70">
+                {[employee.ApellidoPaterno, employee.ApellidoMaterno].filter(Boolean).join(' ')}
+              </p>
+
+              {/* Puesto */}
+              <p className="text-xs text-muted-foreground text-center mt-0.5">
+                {employee.Puesto}
+              </p>
             </div>
 
-            {/* Dept + turno */}
-            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 shrink-0" />
-                {employee.Departamento}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                Turno {employee.Turno}
-              </span>
-              {/* Badge de turno activo */}
-              {shiftStatus === true && (
-                <Badge className="bg-sky-500/10 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/50 text-[11px] gap-1 font-medium">
-                  <Clock className="w-3 h-3" />
-                  En turno
-                </Badge>
-              )}
-              {shiftStatus === false && (
-                <Badge variant="outline" className="text-[11px] gap-1 text-muted-foreground border-border/60 font-normal">
-                  <Clock className="w-3 h-3" />
-                  Fuera de turno
-                </Badge>
-              )}
+            {/* ── Departamento + Turno ── */}
+            <div className="grid grid-cols-2 border-t border-border/40">
+              <div className="flex flex-col items-center py-3 px-4 gap-0.5 border-r border-border/40">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Departamento</span>
+                <span className="text-xs font-semibold text-center leading-tight">{employee.Departamento}</span>
+              </div>
+              <div className="flex flex-col items-center py-3 px-4 gap-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Turno</span>
+                <span className="text-xs font-semibold text-center leading-tight">{employee.Turno}</span>
+              </div>
             </div>
 
-            {/* Meal badge */}
-            {mealSchedule && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {mealStatus === true ? (
-                  <Badge className="bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] gap-1.5 font-medium">
-                    <UtensilsCrossed className="w-3 h-3" />
-                    En comida
-                  </Badge>
-                ) : (
-                  <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1.5 font-medium">
-                    <ShieldAlert className="w-3 h-3" />
-                    Fuera de horario
-                  </Badge>
-                )}
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {mealSchedule.label}
-                </span>
-              </div>
-            )}
-
-            {/* Actions */}
-            {activeRecord ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  Fuera desde {fmtTime(activeRecord.exitTime)}
-                  {" · "}
-                  <LiveDuration exitTime={activeRecord.exitTime} />
+            {/* ── Horario de comida + estado ── */}
+            <div className="flex flex-col items-center gap-2 px-4 py-3 border-t border-border/40">
+              {/* Horario asignado */}
+              {mealSchedule ? (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
+                  <span>Comida: <span className="font-medium text-foreground">{mealSchedule.label}</span></span>
                 </div>
-                <Button onClick={handleReturn} disabled={actionLoading} size="sm" className="gap-2 w-full">
-                  <CornerDownLeft className="w-4 h-4" />
-                  Registrar regreso
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <Button
-                  onClick={handleExit}
-                  disabled={actionLoading || exitBlocked}
-                  size="sm"
-                  variant={exitBlocked ? "destructive" : "outline"}
-                  className="gap-2 w-full"
-                >
-                  {exitBlocked ? <ShieldAlert className="w-4 h-4" /> : <LogOut className="w-4 h-4" />}
-                  {exitBlocked ? "Salida denegada" : "Registrar salida"}
-                </Button>
-                {exitBlocked && (
-                  <p className="text-[11px] text-destructive/80 leading-tight text-center">
-                    No puede salir fuera de su horario de comida
-                  </p>
+              ) : (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <UtensilsCrossed className="w-3.5 h-3.5 shrink-0" />
+                  <span>Sin horario de comida asignado</span>
+                </div>
+              )}
+
+              {/* Estado: en turno + en comida */}
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                {shiftStatus === true && (
+                  <Badge className="bg-sky-500/10 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/50 text-[11px] gap-1">
+                    <Clock className="w-3 h-3" /> En turno
+                  </Badge>
+                )}
+                {shiftStatus === false && (
+                  <Badge variant="outline" className="text-[11px] gap-1 text-muted-foreground">
+                    <Clock className="w-3 h-3" /> Fuera de turno
+                  </Badge>
+                )}
+                {mealSchedule && (
+                  mealStatus === true ? (
+                    <Badge className="bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 text-[11px] gap-1">
+                      <UtensilsCrossed className="w-3 h-3" /> En horario
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1">
+                      <ShieldAlert className="w-3 h-3" /> Fuera de horario
+                    </Badge>
+                  )
                 )}
               </div>
-            )}
+            </div>
+
+            {/* ── Acción principal ── */}
+            <div className="px-4 pb-4 pt-1 border-t border-border/40">
+              {activeRecord ? (
+                <div className="space-y-2 pt-3">
+                  <div className="flex items-center justify-center gap-2 py-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      Fuera desde {fmtTime(activeRecord.exitTime)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      · <LiveDuration exitTime={activeRecord.exitTime} />
+                    </span>
+                  </div>
+                  <Button onClick={handleReturn} disabled={actionLoading} className="gap-2 w-full">
+                    <CornerDownLeft className="w-4 h-4" />
+                    Registrar regreso
+                  </Button>
+                </div>
+              ) : exitBlocked ? (
+                <div className="space-y-1.5 pt-3">
+                  <Button
+                    disabled
+                    variant="outline"
+                    className="gap-2 w-full border-destructive/30 text-destructive bg-destructive/5 cursor-not-allowed"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    Salida denegada
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Fuera de su horario de comida
+                  </p>
+                </div>
+              ) : (
+                <div className="pt-3">
+                  <Button onClick={handleExit} disabled={actionLoading} variant="outline" className="gap-2 w-full">
+                    <LogOut className="w-4 h-4" />
+                    Registrar salida
+                  </Button>
+                </div>
+              )}
+            </div>
+
           </div>
         )}
       </CardContent>
@@ -580,236 +600,203 @@ export default function FumadoresPage() {
 
   const registrosPanel = (
     <Card className="border-none shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3 flex-wrap">
-          <CardTitle className="text-base flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Cigarette className="w-4 h-4 text-primary" />
-            </div>
-            Registros de hoy
-          </CardTitle>
-          <div className="flex items-center gap-2 ml-auto">
-            {lastRefreshed && (
-              <span className="text-[11px] text-muted-foreground/60 hidden sm:block">
-                Actualizado {format(lastRefreshed, "HH:mm")}
-              </span>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground"
-              onClick={loadRecords}
-              disabled={recordsLoading}
-              title="Actualizar lista"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${recordsLoading ? "animate-spin" : ""}`} />
-            </Button>
-            <Badge variant="secondary" className="font-normal text-xs">
-              {todayRecords.length}
-            </Badge>
+      {/* ── Header compacto ── */}
+      <CardHeader className="px-4 py-3 md:px-6">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Cigarette className="w-4 h-4 text-primary" />
+          </div>
+          <CardTitle className="flex-1 min-w-0 text-sm font-semibold leading-tight">Registros de hoy</CardTitle>
+
+          {/* Stats + acciones */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Fuera */}
             {outCount > 0 && (
-              <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5 font-medium">
+              <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                 {outCount} fuera
               </Badge>
             )}
+            {/* Total */}
+            <Badge variant="secondary" className="font-normal text-xs tabular-nums">
+              {todayRecords.length}
+            </Badge>
+            {/* Actualizado */}
+            {lastRefreshed && (
+              <span className="text-[11px] text-muted-foreground/50 hidden sm:block tabular-nums">
+                {format(lastRefreshed, "HH:mm")}
+              </span>
+            )}
+            {/* Refresh */}
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"
+              onClick={loadRecords} disabled={recordsLoading} title="Actualizar">
+              <RefreshCw className={`w-3.5 h-3.5 ${recordsLoading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-0">
+      <CardContent className="p-0 overflow-hidden">
+        {/* ── Estados vacíos ── */}
         {recordsLoading && todayRecords.length === 0 ? (
-          <div className="py-14 flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
             <RefreshCw className="w-5 h-5 animate-spin opacity-40" />
             <p className="text-sm">Cargando…</p>
           </div>
         ) : todayRecords.length === 0 ? (
-          <div className="py-14 flex flex-col items-center gap-3 text-muted-foreground">
-            <Cigarette className="w-8 h-8 opacity-20" />
-            <p className="text-sm">Sin registros por hoy</p>
+          <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
+            <Cigarette className="w-9 h-9 opacity-15" />
+            <p className="text-sm font-medium">Sin registros por hoy</p>
           </div>
         ) : (
           <>
-            {/* ── Mobile: expandable cards ──────────────────────────────── */}
-            <div className="lg:hidden divide-y divide-border/40">
-              {visibleRecords.map((record) => {
-                const nameParts = record.nombre.trim().split(' ')
-                let displayName = record.nombre
-                if (nameParts.length >= 2) {
-                  const firstName = nameParts[0]
-                  const paternalLastName = nameParts.length === 2 ? nameParts[1] : nameParts[nameParts.length - 2]
-                  displayName = `${paternalLastName} ${firstName}`
-                }
+            {/* ══ Mobile / Tablet: cards en grid ════════════════════════ */}
+            <div className="lg:hidden px-4 pb-4 pt-2 md:px-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {visibleRecords.map((record) => {
+                  const nameParts = record.nombre.trim().split(' ')
+                  const displayName = nameParts.length >= 3
+                    ? `${nameParts[nameParts.length - 2]} ${nameParts[0]}`
+                    : record.nombre
 
-                const inMeal = record.inMealTime !== undefined
-                  ? record.inMealTime
-                  : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
+                  const inMeal = record.inMealTime !== undefined
+                    ? record.inMealTime
+                    : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
 
-                const isExpanded = expandedId === record.id
+                  const isOut = record.status === "out"
 
-                return (
-                  <div key={record.id}>
-                    {/* Main row — tappable */}
-                    <button
-                      type="button"
-                      className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-muted/30 transition-colors active:bg-muted/50"
-                      onClick={() => setExpandedId(isExpanded ? null : record.id)}
+                  return (
+                    <div
+                      key={record.id}
+                      className={`rounded-xl border p-3 space-y-2 transition-colors ${isOut
+                        ? "border-amber-200 dark:border-amber-800/50 bg-amber-500/5"
+                        : "border-border/50 bg-muted/20"
+                        }`}
                     >
-                      {/* Name + time */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm leading-tight truncate">{displayName}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                          {fmtTime(record.exitTime)}
-                          <span className="mx-0.5">→</span>
-                          {record.status === "out"
-                            ? <LiveDuration exitTime={record.exitTime} />
-                            : fmtTime(record.returnTime)
-                          }
-                        </p>
-                      </div>
-
-                      {/* Comida badge */}
-                      {inMeal === null ? (
-                        <span className="text-[11px] text-muted-foreground/40">—</span>
-                      ) : inMeal ? (
-                        <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50 shrink-0">
-                          <UtensilsCrossed className="w-3 h-3" />
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1 font-medium shrink-0">
-                          <ShieldAlert className="w-3 h-3" />
-                        </Badge>
-                      )}
-
-                      {/* Estado badge */}
-                      {record.status === "out" ? (
-                        <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1 font-medium shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                          Fuera
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 shrink-0">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Regresó
-                        </Badge>
-                      )}
-
-                      <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground/50 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
-                    </button>
-
-                    {/* Expanded detail */}
-                    {isExpanded && (
-                      <div className="px-4 pb-3 pt-1 bg-muted/20 space-y-1.5 text-xs text-muted-foreground border-t border-border/30">
-                        <p className="font-medium text-foreground">{record.puesto}</p>
-                        <div className="flex flex-wrap gap-3">
-                          <span className="flex items-center gap-1">
-                            <Building2 className="w-3.5 h-3.5 shrink-0" />
-                            {record.departamento}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                            Turno {record.turno}
-                          </span>
+                      {/* Fila superior: nombre + estado */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm leading-tight truncate">{displayName}</p>
+                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">{record.departamento} · T{record.turno}</p>
                         </div>
-                        {inMeal !== null && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 shrink-0" />
-                            {getMealWindow(record.employeeId, record.departamento ?? "", record.turno ?? "", undefined, mealConfig)?.label ?? "—"}
-                          </span>
+                        {isOut ? (
+                          <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[10px] gap-1 font-medium shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Fuera
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60 shrink-0">
+                            <CheckCircle2 className="w-3 h-3" /> Regresó
+                          </Badge>
                         )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
+
+                      {/* Fila inferior: horarios + comida */}
+                      <div className="flex items-center gap-2 pt-1 border-t border-border/30">
+                        {/* Salida → Regreso / duración */}
+                        <div className="flex items-center gap-1 text-xs font-mono tabular-nums text-muted-foreground flex-1 min-w-0">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{fmtTime(record.exitTime)}</span>
+                          <span className="text-border">→</span>
+                          {isOut
+                            ? <LiveDuration exitTime={record.exitTime} />
+                            : <span>{fmtTime(record.returnTime)}</span>
+                          }
+                        </div>
+                        {/* Comida */}
+                        {inMeal !== null && (
+                          inMeal ? (
+                            <Badge variant="outline" className="text-[10px] gap-0.5 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50 shrink-0 px-1.5">
+                              <UtensilsCrossed className="w-3 h-3" />
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-destructive/8 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[10px] gap-0.5 shrink-0 px-1.5">
+                              <ShieldAlert className="w-3 h-3" />
+                            </Badge>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
-            {/* ── Desktop: full table ───────────────────────────────────── */}
+            {/* ══ Desktop: tabla completa ════════════════════════════════ */}
             <div className="hidden lg:block overflow-x-auto">
-              <div className="min-w-[580px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead>Empleado</TableHead>
-                      <TableHead>Departamento</TableHead>
-                      <TableHead>Turno</TableHead>
-                      <TableHead>Salida</TableHead>
-                      <TableHead>Regreso</TableHead>
-                      <TableHead>Duración</TableHead>
-                      <TableHead>Comida</TableHead>
-                      <TableHead>Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {visibleRecords.map((record) => {
-                      const duration = fmtDuration(record.exitTime, record.returnTime)
-                      const inMeal = record.inMealTime !== undefined
-                        ? record.inMealTime
-                        : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
-                      return (
-                        <TableRow key={record.id}>
-                          <TableCell>
-                            <p className="font-medium text-sm leading-tight">{record.nombre}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{record.puesto}</p>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{record.departamento}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{record.turno}</TableCell>
-                          <TableCell className="text-sm font-mono tabular-nums">{fmtTime(record.exitTime)}</TableCell>
-                          <TableCell className="text-sm font-mono tabular-nums">{fmtTime(record.returnTime)}</TableCell>
-                          <TableCell className="text-sm tabular-nums">
-                            {record.status === "out"
-                              ? <LiveDuration exitTime={record.exitTime} />
-                              : <span className="text-muted-foreground">{duration ?? "—"}</span>
-                            }
-                          </TableCell>
-                          <TableCell>
-                            {inMeal === null ? (
-                              <span className="text-[11px] text-muted-foreground/50">—</span>
-                            ) : inMeal ? (
-                              <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50">
-                                <UtensilsCrossed className="w-3 h-3" />
-                                En horario
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1 font-medium">
-                                <ShieldAlert className="w-3 h-3" />
-                                Fuera
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {record.status === "out" ? (
-                              <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5 font-medium">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                Fuera
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
-                                <CheckCircle2 className="w-3 h-3" />
-                                Regresó
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-6">Empleado</TableHead>
+                    <TableHead>Departamento</TableHead>
+                    <TableHead>Turno</TableHead>
+                    <TableHead className="tabular-nums">Salida</TableHead>
+                    <TableHead className="tabular-nums">Regreso / Duración</TableHead>
+                    <TableHead>Comida</TableHead>
+                    <TableHead>Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleRecords.map((record) => {
+                    const duration = fmtDuration(record.exitTime, record.returnTime)
+                    const inMeal = record.inMealTime !== undefined
+                      ? record.inMealTime
+                      : wasInMealTime(record.employeeId, record.departamento ?? "", record.turno ?? "", record.exitTime, mealConfig)
+                    const isOut = record.status === "out"
+                    return (
+                      <TableRow key={record.id} className={isOut ? "bg-amber-500/3 hover:bg-amber-500/6" : ""}>
+                        <TableCell className="pl-6">
+                          <p className="font-medium text-sm leading-tight">{record.nombre}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{record.puesto}</p>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{record.departamento}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{record.turno}</TableCell>
+                        <TableCell className="text-sm font-mono tabular-nums">{fmtTime(record.exitTime)}</TableCell>
+                        <TableCell className="text-sm font-mono tabular-nums">
+                          {isOut
+                            ? <LiveDuration exitTime={record.exitTime} />
+                            : <span className="text-muted-foreground">{fmtTime(record.returnTime)}{duration ? ` · ${duration}` : ""}</span>
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {inMeal === null ? (
+                            <span className="text-[11px] text-muted-foreground/40">—</span>
+                          ) : inMeal ? (
+                            <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50">
+                              <UtensilsCrossed className="w-3 h-3" /> En horario
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-destructive/10 dark:bg-destructive/15 text-destructive border border-destructive/20 text-[11px] gap-1">
+                              <ShieldAlert className="w-3 h-3" /> Fuera
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isOut ? (
+                            <Badge className="bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 text-[11px] gap-1.5 font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Fuera
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[11px] gap-1 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                              <CheckCircle2 className="w-3 h-3" /> Regresó
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
             </div>
           </>
         )}
 
+        {/* ── Ver más ── */}
         {hasMore && (
-          <div className="flex justify-center py-4 border-t border-border/50">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-foreground"
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Ver más ({todayRecords.length - visibleCount} restantes)
+          <div className="flex justify-center py-3 border-t border-border/40">
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground text-xs"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+              <ChevronDown className="w-3.5 h-3.5" />
+              Ver {Math.min(PAGE_SIZE, todayRecords.length - visibleCount)} más
             </Button>
           </div>
         )}
@@ -862,13 +849,6 @@ export default function FumadoresPage() {
         {registrosPanel}
       </div>
 
-      <CreateEmployeeDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onCreated={(emp: Employee) => {
-          employeeCache.current.set(emp.employeeId, emp)
-        }}
-      />
       <JsonImporterSheet open={importerOpen} onOpenChange={setImporterOpen} />
     </div>
   )

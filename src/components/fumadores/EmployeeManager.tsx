@@ -99,7 +99,7 @@ export function EmployeeManager() {
             })
           }
         })
-        .catch(() => {})
+        .catch(() => { })
     }
   }
 

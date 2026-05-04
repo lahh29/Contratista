@@ -21,22 +21,22 @@ interface UserManagerProps {
 }
 
 const ROLE_CONFIG: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  admin:      { label: "Admin",          icon: ShieldCheck, className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400"       },
-  guard:      { label: "Guardia",        icon: Shield,      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
-  contractor: { label: "Contratista",    icon: Briefcase,   className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
-  seguridad:  { label: "Seg. e Higiene", icon: HardHat,     className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"   },
-  logistica:  { label: "Logística",      icon: Package,     className: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400"   },
-  rys:        { label: "Reclutamiento",  icon: UserPlus,    className: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400"           },
+  admin: { label: "Admin", icon: ShieldCheck, className: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400" },
+  guard: { label: "Guardia", icon: Shield, className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
+  contractor: { label: "Contratista", icon: Briefcase, className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
+  seguridad: { label: "Seg. e Higiene", icon: HardHat, className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400" },
+  logistica: { label: "Logística", icon: Package, className: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400" },
+  rys: { label: "Reclutamiento", icon: UserPlus, className: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400" },
 }
 
 export function UserManager({ db, companies }: UserManagerProps) {
-  const [users,       setUsers]       = React.useState<DocumentData[]>([])
-  const [loading,     setLoading]     = React.useState(true)
-  const [editUid,     setEditUid]     = React.useState<string | null>(null)
-  const [editUser,    setEditUser]    = React.useState<DocumentData | null>(null)
-  const [editRole,    setEditRole]    = React.useState("contractor")
+  const [users, setUsers] = React.useState<DocumentData[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [editUid, setEditUid] = React.useState<string | null>(null)
+  const [editUser, setEditUser] = React.useState<DocumentData | null>(null)
+  const [editRole, setEditRole] = React.useState("contractor")
   const [editCompany, setEditCompany] = React.useState("")
-  const [wizardOpen,  setWizardOpen]  = React.useState(false)
+  const [wizardOpen, setWizardOpen] = React.useState(false)
   const { toast } = useToast()
   const { appUser } = useAppUser()
   const { confirm: confirmDialog, ConfirmDialog: DeleteConfirmDialog } = useConfirm()
@@ -70,16 +70,16 @@ export function UserManager({ db, companies }: UserManagerProps) {
     if (!db) return
     try {
       await setDoc(doc(db, "users", uid), {
-        role:      editRole,
+        role: editRole,
         companyId: editRole === "contractor" ? editCompany || null : null,
       }, { merge: true })
       logAudit({
         action: 'user.roleChanged',
-        actorUid:  appUser?.uid   ?? '',
-        actorName: appUser?.name  ?? appUser?.email ?? 'Admin',
-        actorRole: appUser?.role  ?? 'admin',
+        actorUid: appUser?.uid ?? '',
+        actorName: appUser?.name ?? appUser?.email ?? 'Admin',
+        actorRole: appUser?.role ?? 'admin',
         targetType: 'user',
-        targetId:   uid,
+        targetId: uid,
         targetName: editUser?.name ?? editUser?.email ?? uid,
         details: { nuevoRol: editRole },
       })
@@ -93,14 +93,14 @@ export function UserManager({ db, companies }: UserManagerProps) {
   }
 
   const handleDeleteUser = async (u: DocumentData) => {
-    ;(document.activeElement as HTMLElement | null)?.blur()
+    ; (document.activeElement as HTMLElement | null)?.blur()
     await new Promise<void>((r) => requestAnimationFrame(() => r()))
 
     const ok = await confirmDialog({
-      title:        `¿Eliminar a "${u.name ?? u.email}"?`,
-      description:  "Se eliminará su acceso a la plataforma y su registro de usuario. Esta acción no se puede deshacer.",
+      title: `¿Eliminar a "${u.name ?? u.email}"?`,
+      description: "Se eliminará su acceso a la plataforma y su registro de usuario. Esta acción no se puede deshacer.",
       confirmLabel: "Eliminar",
-      variant:      "destructive",
+      variant: "destructive",
     })
     if (!ok) return
 
@@ -128,9 +128,6 @@ export function UserManager({ db, companies }: UserManagerProps) {
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Users className="w-4 h-4 text-primary" />
-              </div>
               Usuarios del sistema
             </CardTitle>
             <Button size="responsiveSm" className="shrink-0" onClick={() => setWizardOpen(true)} aria-label="Nuevo usuario">
@@ -148,9 +145,9 @@ export function UserManager({ db, companies }: UserManagerProps) {
           ) : users.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">Sin usuarios registrados aún.</p>
           ) : (
-            <div className="space-y-2 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {users.map((u) => (
-                <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0">
+                <div key={u.uid} className="flex items-center gap-2 p-3 bg-muted/40 rounded-lg group min-w-0 border border-border/40 hover:bg-muted/60 transition-colors">
                   {(() => {
                     const rc = ROLE_CONFIG[u.role]
                     const RoleIcon = rc?.icon ?? User
@@ -180,7 +177,7 @@ export function UserManager({ db, companies }: UserManagerProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36">
                       <DropdownMenuItem onClick={() => {
-                        ;(document.activeElement as HTMLElement | null)?.blur()
+                        ; (document.activeElement as HTMLElement | null)?.blur()
                         requestAnimationFrame(() => startEdit(u))
                       }}>
                         <Pencil className="w-3.5 h-3.5 mr-2" /> Editar rol

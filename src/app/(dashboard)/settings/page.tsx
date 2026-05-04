@@ -14,67 +14,94 @@ import { CollectionManager } from "@/components/settings/CollectionManager"
 import { AreaManager } from "@/components/settings/AreaManager"
 import { UserManager } from "@/components/settings/UserManager"
 
-// ── Mobile tab definitions ──────────────────────────────────────────────────
+// ── Definición de tabs para vista móvil ──────────────────────────────────────
 
 const MOBILE_TABS: PillTab[] = [
-  { value: "users",       label: "Usuarios",   icon: <Users className="h-4 w-4" /> },
-  { value: "employees",   label: "Empleados",  icon: <Briefcase className="h-4 w-4" /> },
-  { value: "areas",       label: "Áreas",      icon: <MapPin className="h-4 w-4" /> },
+  { value: "users", label: "Usuarios", icon: <Users className="h-4 w-4" /> },
+  { value: "employees", label: "Empleados", icon: <Briefcase className="h-4 w-4" /> },
+  { value: "areas", label: "Áreas", icon: <MapPin className="h-4 w-4" /> },
   { value: "supervisors", label: "Encargados", icon: <UserCog className="h-4 w-4" /> },
-  { value: "horarios",    label: "Horarios",   icon: <Clock className="h-4 w-4" /> },
+  { value: "horarios", label: "Horarios", icon: <Clock className="h-4 w-4" /> },
 ]
 
-// ── SettingsPage ────────────────────────────────────────────────────────────
+// ── Componente principal de configuración ───────────────────────────────────
 
 export default function SettingsPage() {
+  // Instancia de Firestore
   const db = useFirestore()
+
+  // Usuario actual de la app
   const { appUser: currentUser } = useAppUser()
 
-  const [refreshKey,         setRefreshKey]         = React.useState(0)
-  const [areas,              setAreas]              = React.useState<DocumentData[] | null>(null)
-  const [supervisors,        setSupervisors]        = React.useState<DocumentData[] | null>(null)
-  const [areasLoading,       setAreasLoading]       = React.useState(true)
+  // Estados locales
+  const [refreshKey, setRefreshKey] = React.useState(0)       // Fuerza recarga de datos
+  const [areas, setAreas] = React.useState<DocumentData[] | null>(null)
+  const [supervisors, setSupervisors] = React.useState<DocumentData[] | null>(null)
+  const [areasLoading, setAreasLoading] = React.useState(true)
   const [supervisorsLoading, setSupervisorsLoading] = React.useState(true)
-  const [activeTab,          setActiveTab]          = React.useState("users")
+  const [activeTab, setActiveTab] = React.useState("users") // Tab activo en móvil
 
+  // ── Carga de áreas desde Firestore ────────────────────────────────────────
   React.useEffect(() => {
     if (!db) return
     setAreasLoading(true)
+
     getDocs(query(collection(db, "areas"), limit(100)))
-      .then(snap => setAreas(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .then(snap =>
+        setAreas(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      )
       .catch(() => setAreas([]))
       .finally(() => setAreasLoading(false))
   }, [db, refreshKey])
 
+  // ── Carga de encargados (supervisors) desde Firestore ─────────────────────
   React.useEffect(() => {
     if (!db) return
     setSupervisorsLoading(true)
+
     getDocs(query(collection(db, "supervisors"), limit(100)))
-      .then(snap => setSupervisors(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .then(snap =>
+        setSupervisors(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      )
       .catch(() => setSupervisors([]))
       .finally(() => setSupervisorsLoading(false))
   }, [db, refreshKey])
 
+  // Lista de empresas
   const { companies } = useCompanies()
 
-  const handleRefresh = React.useCallback(() => setRefreshKey(k => k + 1), [])
+  // Función para forzar actualización de datos
+  const handleRefresh = React.useCallback(
+    () => setRefreshKey(k => k + 1),
+    []
+  )
 
-  // Gate: admin only (after all hooks)
+  // ── Control de acceso: solo administradores ───────────────────────────────
   if (currentUser && currentUser.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
         <ShieldAlert className="w-10 h-10 opacity-30" />
-        <p className="text-sm font-medium">Acceso restringido a administradores.</p>
+        <p className="text-sm font-medium">
+          Acceso restringido a administradores.
+        </p>
       </div>
     )
   }
 
-  // ── Card instances ──────────────────────────────────────────────────────────
+  // ── Instancias de componentes (cards) ─────────────────────────────────────
 
-  const usersCard       = <UserManager db={db} companies={companies} />
-  const employeesCard   = <EmployeeManager />
-  const areasCard       = <AreaManager db={db} areas={areas} supervisors={supervisors} loading={areasLoading} onRefresh={handleRefresh} />
-  const mealSchedules   = <MealSchedulesManager />
+  const usersCard = <UserManager db={db} companies={companies} />
+  const employeesCard = <EmployeeManager />
+  const areasCard = (
+    <AreaManager
+      db={db}
+      areas={areas}
+      supervisors={supervisors}
+      loading={areasLoading}
+      onRefresh={handleRefresh}
+    />
+  )
+  const mealSchedules = <MealSchedulesManager />
 
   const supervisorsCard = (
     <CollectionManager
@@ -90,23 +117,26 @@ export default function SettingsPage() {
     />
   )
 
+  // Mapeo de contenido por tab
   const tabContent: Record<string, React.ReactNode> = {
-    users:       usersCard,
-    employees:   employeesCard,
-    areas:       areasCard,
+    users: usersCard,
+    employees: employeesCard,
+    areas: areasCard,
     supervisors: supervisorsCard,
-    horarios:    mealSchedules,
+    horarios: mealSchedules,
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // ── Renderizado ───────────────────────────────────────────────────────────
 
   return (
-    <div className="
-      animate-in fade-in duration-500 w-full
-      pb-8
-      supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]
-    ">
-      {/* ── Mobile: pill tabs ── */}
+    <div
+      className="
+        animate-in fade-in duration-500 w-full
+        pb-8
+        supports-[padding:env(safe-area-inset-bottom)]:pb-[max(2rem,env(safe-area-inset-bottom))]
+      "
+    >
+      {/* ── Vista móvil: tabs tipo pill ── */}
       <div className="md:hidden">
         <PillTabsBar
           tabs={MOBILE_TABS}
@@ -120,16 +150,18 @@ export default function SettingsPage() {
         </PillTabsContent>
       </div>
 
-      {/* ── Desktop: grid ── */}
+      {/* ── Vista escritorio: layout en grid ── */}
       <div className="hidden md:block space-y-6 md:space-y-8">
         <div className="grid gap-5 md:gap-6 md:grid-cols-2">
           {usersCard}
           {employeesCard}
         </div>
+
         <div className="grid gap-5 md:gap-6 md:grid-cols-2">
           {areasCard}
           {supervisorsCard}
         </div>
+
         <div>
           {mealSchedules}
         </div>
