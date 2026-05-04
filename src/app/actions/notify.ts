@@ -11,32 +11,29 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
  * IMPORTANTE: Esta función NUNCA debe lanzar una excepción hacia el cliente.
  * Cualquier fallo en el envío es secundario a la acción principal del usuario
  * (registrar salida / regreso). Los errores se loguean en el servidor.
+ *
+ * El trabajo se ejecuta con await para que el runtime serverless (Vercel)
+ * NO congele/mate el Lambda antes de que termine el envío FCM.
+ * Los callers ya usan `.catch(() => {})` sin await, así que la UI no se bloquea.
  */
 export async function sendNotification(event: NotifyEvent): Promise<void> {
-  // Ejecutar de forma completamente asíncrona y silenciosa.
-  // Usamos void + Promise para que Next.js no espere la resolución
-  // y el Server Action del llamador regrese de inmediato.
-  void (async () => {
-    try {
-      // Verificar credenciales antes de intentar cualquier operación
-      const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
-      const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY
-      if (!clientEmail || !privateKey) {
-        console.warn('[notify] Skipped — FIREBASE_ADMIN_CLIENT_EMAIL / FIREBASE_ADMIN_PRIVATE_KEY not set in environment')
-        return
-      }
-
-      const [{ sent }] = await Promise.all([
-        sendFCM(event),
-        persistNotification(event),
-      ])
-      console.log(`[notify] ${event.type} → ${sent} device(s) notified`)
-    } catch (err: unknown) {
-      // Loguear con contexto pero nunca relanzar
-      const message = err instanceof Error ? err.message : String(err)
-      console.error(`[notify] Failed for event "${event.type}": ${message}`)
+  try {
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
+    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY
+    if (!clientEmail || !privateKey) {
+      console.warn('[notify] Skipped — FIREBASE_ADMIN_CLIENT_EMAIL / FIREBASE_ADMIN_PRIVATE_KEY not set in environment')
+      return
     }
-  })()
+
+    const [{ sent }] = await Promise.all([
+      sendFCM(event),
+      persistNotification(event),
+    ])
+    console.log(`[notify] ${event.type} → ${sent} device(s) notified`)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`[notify] Failed for event "${event.type}": ${message}`)
+  }
 }
 
 function getRolesForEvent(event: NotifyEvent): string[] {
