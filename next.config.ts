@@ -29,8 +29,8 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig: NextConfig = {
-  typescript:  { ignoreBuildErrors: true },
-  eslint:      { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   experimental: {
     serverActions: {
       allowedOrigins: [
@@ -40,19 +40,34 @@ const nextConfig: NextConfig = {
       ],
     },
   },
-  webpack(config) {
+  webpack(config, { isServer }) {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@opentelemetry/exporter-jaeger': false,
-      '@genkit-ai/firebase':            false,
+      '@genkit-ai/firebase': false,
     }
+
+    // Silencia el warning "Critical dependency: the request of a dependency
+    // is an expression" que genera @opentelemetry/instrumentation al ser
+    // incluido en el bundle de cliente a través de genkit/Server Actions.
+    // Estos módulos solo se usan en Node.js (servidor), nunca en el browser.
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@opentelemetry/sdk-node': false,
+        '@opentelemetry/instrumentation': false,
+        '@genkit-ai/core': false,
+        'genkit': false,
+      }
+    }
+
     return config
   },
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'placehold.co',        pathname: '/**' },
+      { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
-      { protocol: 'https', hostname: 'picsum.photos',       pathname: '/**' },
+      { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },
     ],
   },
 }
