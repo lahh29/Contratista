@@ -8,14 +8,8 @@ import {
   FileText,
   LogOut,
   Settings,
-  ShieldCheck,
-  Shield,
-  Briefcase,
   ClipboardList,
-  HardHat,
-  Package,
   UserX,
-  UserPlus,
   Cigarette,
 } from "lucide-react"
 import Link from "next/link"
@@ -40,16 +34,9 @@ import {
 import { AnimatePresence } from "framer-motion"
 import type { AppUser } from "@/types"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
+import { RoleIcon, getRoleTheme, getRoleLabel } from "@/components/ui/RoleIcon"
 
-// ── Role config ───────────────────────────────────────────────
-const ROLE_CONFIG: Record<string, { Icon: React.ElementType; ring: string; glow: string; label: string }> = {
-  admin:      { Icon: ShieldCheck, ring: 'ring-sidebar-foreground/20', glow: '', label: 'Administrador'        },
-  guard:      { Icon: Shield,      ring: 'ring-sidebar-foreground/20', glow: '', label: 'Guardia de Seguridad' },
-  contractor: { Icon: Briefcase,   ring: 'ring-sidebar-foreground/20', glow: '', label: 'Contratista'          },
-  seguridad:  { Icon: HardHat,     ring: 'ring-sidebar-foreground/20', glow: '', label: 'Seguridad e Higiene'  },
-  logistica:  { Icon: Package,     ring: 'ring-sidebar-foreground/20', glow: '', label: 'Logística'            },
-  rys:        { Icon: UserPlus,    ring: 'ring-sidebar-foreground/20', glow: '', label: 'Reclutamiento'        },
-}
+
 
 // ── UserCard ──────────────────────────────────────────────────
 function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: () => void }) {
@@ -78,11 +65,9 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
   }
 
   const role   = appUser?.role ?? 'admin'
-  const config = ROLE_CONFIG[role] ?? ROLE_CONFIG['admin']
-  const { Icon } = config
 
   const displayName = appUser?.name || appUser?.email?.split('@')[0] || '—'
-  const displayRole = appUser?.position || config.label
+  const displayRole = appUser?.position || getRoleLabel(role)
 
   return (
     <motion.div
@@ -100,13 +85,7 @@ function UserCard({ appUser, onLogout }: { appUser: AppUser | null; onLogout: ()
       />
 
       {/* Role avatar */}
-      <motion.div
-        whileHover={{ scale: 1.08 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        className={`relative w-8 h-8 rounded-full bg-sidebar-foreground/10 flex items-center justify-center shrink-0 text-sidebar-foreground ring-2 ${config.ring} shadow-lg ${config.glow}`}
-      >
-        <Icon className="w-4 h-4" />
-      </motion.div>
+      <RoleIcon role={role} size={16} className="shadow-lg" />
 
       {/* Name + role */}
       <div className="min-w-0 flex-1">

@@ -26,19 +26,14 @@ import { Badge } from "@/components/ui/badge"
 import {
   User,
   Lock,
-  ShieldCheck,
   ChevronRight,
   ChevronLeft,
   Loader2,
   Check,
   Eye,
   EyeOff,
-  Briefcase,
-  HardHat,
-  Shield,
-  Package,
-  UserPlus,
 } from "lucide-react"
+import { RoleIcon, getRoleLabel, ROLE_THEMES, type RoleName } from "@/components/ui/RoleIcon"
 import { useToast } from "@/hooks/use-toast"
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -50,13 +45,13 @@ interface Props {
   companies: DocumentData[] | null | undefined
 }
 
-const ROLES = [
-  { value: "admin", label: "Admin", icon: ShieldCheck, color: "text-sky-600 dark:text-sky-400" },
-  { value: "seguridad", label: "Seg. e Higiene", icon: HardHat, color: "text-yellow-600 dark:text-yellow-400" },
-  { value: "logistica", label: "Logística", icon: Package, color: "text-violet-600 dark:text-violet-400" },
-  { value: "guard", label: "Guardia", icon: Shield, color: "text-emerald-600 dark:text-emerald-400" },
-  { value: "rys", label: "Reclutamiento", icon: UserPlus, color: "text-rose-600 dark:text-rose-400" },
-  { value: "contractor", label: "Contratista", icon: Briefcase, color: "text-amber-600 dark:text-amber-400" },
+const ROLES: { value: RoleName; label: string }[] = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'seguridad', label: 'Seg. e Higiene' },
+  { value: 'logistica', label: 'Logística' },
+  { value: 'guard', label: 'Guardia' },
+  { value: 'rys', label: 'Reclutamiento' },
+  { value: 'contractor', label: 'Contratista' },
 ]
 
 const TOTAL_STEPS = 3
@@ -201,7 +196,7 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const selectedRole = ROLES.find((r) => r.value === role)
+  const selectedRole = role ? ROLES.find((r) => r.value === role) : null
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -345,7 +340,6 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {ROLES.map((r) => {
-                    const Icon = r.icon
                     const active = role === r.value
                     return (
                       <button
@@ -360,7 +354,7 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
                           }
                         `}
                       >
-                        <Icon className={`w-4 h-4 shrink-0 ${active ? r.color : ""}`} />
+                        <RoleIcon role={r.value} size={14} showBg={false} />
                         {r.label}
                         {active && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
                       </button>
@@ -397,7 +391,7 @@ export function CreateUserWizard({ open, onClose, onCreated, companies }: Props)
                     <span className="text-muted-foreground">Rol:</span>
                     {selectedRole && (
                       <Badge variant="outline" className="text-[10px] gap-1 py-0">
-                        <selectedRole.icon className={`w-3 h-3 ${selectedRole.color}`} />
+                        <RoleIcon role={selectedRole.value} size={12} showBg={false} />
                         {selectedRole.label}
                       </Badge>
                     )}
