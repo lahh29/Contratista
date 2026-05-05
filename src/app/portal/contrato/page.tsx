@@ -230,17 +230,17 @@ const PAGINAS = [
 
         {/* Clasificación */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1">
-            <p className="text-xs font-bold text-foreground uppercase tracking-wide">a) Residuos No Peligrosos</p>
-            <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
-              {["Papel","Cartón","PET","Inorgánicos","Plástico","Maderas","Latas de aluminio"].map(r => (
+          <div className="rounded-lg border border-neutral-700 bg-neutral-800/50 p-3 space-y-1">
+            <p className="text-xs font-bold text-neutral-100 uppercase tracking-wide">a) Residuos No Peligrosos</p>
+            <ul className="text-xs text-neutral-300 space-y-0.5 list-disc list-inside">
+              {["Papel", "Cartón", "PET", "Inorgánicos", "Plástico", "Maderas", "Latas de aluminio"].map(r => (
                 <li key={r}>{r}</li>
               ))}
             </ul>
           </div>
-          <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-3 space-y-1">
-            <p className="text-xs font-bold text-red-700 dark:text-red-400 uppercase tracking-wide">b) Residuos Peligrosos</p>
-            <p className="text-xs text-red-600/80 dark:text-red-400/70">Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
+          <div className="rounded-lg border border-red-800 bg-red-950/50 p-3 space-y-1">
+            <p className="text-xs font-bold text-red-400 uppercase tracking-wide">b) Residuos Peligrosos</p>
+            <p className="text-xs text-red-300/80">Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
           </div>
         </div>
 
@@ -274,21 +274,21 @@ const PAGINAS = [
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function ContratoPage() {
-  const db               = useFirestore()
-  const { appUser }      = useAppUser()
-  const sigRef           = useRef<SignatureCanvasType>(null)
-  const canvasWrapRef    = useRef<HTMLDivElement>(null)
+  const db = useFirestore()
+  const { appUser } = useAppUser()
+  const sigRef = useRef<SignatureCanvasType>(null)
+  const canvasWrapRef = useRef<HTMLDivElement>(null)
 
-  const [status, setStatus]             = useState<'loading' | 'pendiente' | 'firmado' | 'error'>('loading')
-  const [fechaFirma, setFechaFirma]     = useState<Date | null>(null)
-  const [pagina, setPagina]             = useState(0)
-  const [firmando, setFirmando]         = useState(false)
-  const [companyName, setCompanyName]     = useState('')
-  const [contactName, setContactName]     = useState('')
+  const [status, setStatus] = useState<'loading' | 'pendiente' | 'firmado' | 'error'>('loading')
+  const [fechaFirma, setFechaFirma] = useState<Date | null>(null)
+  const [pagina, setPagina] = useState(0)
+  const [firmando, setFirmando] = useState(false)
+  const [companyName, setCompanyName] = useState('')
+  const [contactName, setContactName] = useState('')
   const [signatureImg, setSignatureImg] = useState<string | null>(null)
-  const [canvasKey, setCanvasKey]       = useState(0)
+  const [canvasKey, setCanvasKey] = useState(0)
 
-  const companyId    = appUser?.companyId
+  const companyId = appUser?.companyId
   const totalPaginas = PAGINAS.length + 1 // +1 = página de firma
   const enUltimaPagina = pagina === totalPaginas - 1
   const today = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -304,7 +304,7 @@ export default function ContratoPage() {
           setContactName(s.data().contact ?? '')
         }
       })
-      .catch(() => {})
+      .catch(() => { })
     // Estado del contrato + firma guardada
     getDoc(doc(db, 'contratos', companyId))
       .then(async snap => {
@@ -335,20 +335,20 @@ export default function ContratoPage() {
     setFirmando(true)
     try {
       const dataURL = sigRef.current!.getCanvas().toDataURL('image/png')
-      const now     = serverTimestamp()
+      const now = serverTimestamp()
 
       // Actualizar / crear documento principal del contrato
       await setDoc(doc(db, 'contratos', companyId), {
-        status:         'firmado',
-        fechaFirma:     now,
-        firmadoPor:     appUser.uid,
+        status: 'firmado',
+        fechaFirma: now,
+        firmadoPor: appUser.uid,
         nombreFirmante: appUser.name ?? appUser.email ?? '',
       }, { merge: true })
 
       // Añadir firma a la subcollección
       await addDoc(collection(db, 'contratos', companyId, 'firmas'), {
         canvasData: dataURL,
-        fecha:      now,
+        fecha: now,
         firmadoPor: appUser.uid,
       })
 
@@ -423,8 +423,8 @@ export default function ContratoPage() {
               label="Fecha de firma"
               value={fechaFirma
                 ? fechaFirma.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })
-                  + ' · '
-                  + fechaFirma.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                + ' · '
+                + fechaFirma.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
                 : '—'
               }
             />
@@ -448,8 +448,10 @@ export default function ContratoPage() {
       <div className="flex items-center gap-3">
         <BackButton />
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold tracking-tight truncate">REGLAMENTO PARA CONTRATISTAS, SUBCONTRATISTAS, PROVEEDORES Y CLIENTES</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-lg font-bold tracking-tight truncate text-neutral-900">
+            REGLAMENTO PARA CONTRATISTAS, SUBCONTRATISTAS, PROVEEDORES Y CLIENTES
+          </h1>
+          <p className="text-xs text-neutral-500">
             Página {pagina + 1} de {totalPaginas}
           </p>
         </div>
@@ -529,7 +531,7 @@ export default function ContratoPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground gap-1.5 text-xs"
+                className="text-neutral-50 gap-1.5 text-xs"
                 onClick={() => setCanvasKey(k => k + 1)}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -610,23 +612,21 @@ function CanvasWrapper({ sigRef }: { sigRef: React.RefObject<SignatureCanvasType
       const canvas = el.querySelector('canvas')
       if (!canvas) return
       const { width, height } = el.getBoundingClientRect()
-      canvas.width  = Math.round(width)
+      canvas.width = Math.round(width)
       canvas.height = Math.round(height)
     }, 80)
     return () => clearTimeout(t)
   }, [mounted])
 
   return (
-    <div ref={wrapRef} className="relative rounded-xl border-2 border-dashed border-border bg-background overflow-hidden touch-none" style={{ height: 160 }}>
-      {mounted && (
-        <SignatureCanvas
-          ref={sigRef}
-          canvasProps={{ style: { width: '100%', height: '100%', display: 'block' } }}
-          backgroundColor="transparent"
-          penColor="hsl(var(--foreground))"
-        />
-      )}
-      <p className="absolute inset-x-0 bottom-2 text-center text-[11px] text-muted-foreground/40 pointer-events-none select-none">
+    <div ref={wrapRef} className="relative rounded-xl border-2 border-dashed border-neutral-300 bg-white overflow-hidden touch-none" style={{ height: 160 }}>
+      <SignatureCanvas
+        ref={sigRef}
+        canvasProps={{ style: { width: '100%', height: '100%', display: 'block' } }}
+        backgroundColor="white"
+        penColor="#1a1a1a"
+      />
+      <p className="absolute inset-x-0 bottom-2 text-center text-[15px] text-muted-foreground/100 pointer-events-none select-none">
         Dibuja tu firma aquí
       </p>
     </div>
@@ -653,12 +653,10 @@ function BackButton() {
       className="
         inline-flex items-center justify-center
         w-10 h-10 shrink-0 rounded-2xl
-        bg-white/20 dark:bg-white/10
-        backdrop-blur-xl
-        border border-white/40 dark:border-white/20
-        shadow-card
-        text-foreground/70 hover:text-foreground
-        hover:bg-white/35 dark:hover:bg-white/20
+        bg-neutral-50
+        border border-neutral-200
+        text-neutral-950 hover:text-neutral-950
+        hover:bg-neutral-50
         transition-all duration-200 active:scale-95
       "
     >

@@ -13,7 +13,7 @@ import Image from "next/image"
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const { appUser, loading } = useAppUser()
   const router = useRouter()
-  const auth   = useAuth()
+  const auth = useAuth()
 
   useEffect(() => {
     if (loading) return
@@ -34,19 +34,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <NotificationBanner />
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 backdrop-blur-md px-4 print:hidden">
+      <div className="min-h-screen bg-white">
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border/60 bg-white px-4 print:hidden">
 
           {/* Brand */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <Image
-              src="/logo-vino-plastic.png"
-              alt="ViñoPlastic"
-              width={26}
-              height={26}
-              className="object-contain"
-            />
-            <span className="text-sm font-bold tracking-tight text-foreground">VIÑOPLASTIC</span>
+            <span className="text-xs text-muted-foreground font-medium">VIÑOPLASTIC</span>
             <div className="w-px h-4 bg-border/80 shrink-0" />
             <span className="text-xs text-muted-foreground font-medium">PLANTA QUERÉTARO</span>
           </div>
