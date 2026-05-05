@@ -71,7 +71,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </header>
 
-        <main className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto">
+        <main className="flex-1 overflow-hidden">
           {children}
         </main>
       </div>
