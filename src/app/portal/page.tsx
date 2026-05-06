@@ -107,23 +107,23 @@ function visitDuration(entry: Date, exit: Date) {
 
 const SUA_CONFIG = {
   Valid: {
-    accent: "#16a34a",
-    accentLight: "rgba(22,163,74,0.06)",
-    accentBorder: "rgba(22,163,74,0.15)",
+    accent: "var(--pm-success)",
+    accentLight: "color-mix(in srgb, var(--pm-success) 8%, var(--pm-canvas))",
+    accentBorder: "color-mix(in srgb, var(--pm-success) 18%, transparent)",
     label: "Vigente",
     icon: ShieldCheck,
   },
   Expired: {
-    accent: "#dc2626",
-    accentLight: "rgba(220,38,38,0.06)",
-    accentBorder: "rgba(220,38,38,0.15)",
+    accent: "var(--pm-critical)",
+    accentLight: "color-mix(in srgb, var(--pm-critical) 8%, var(--pm-canvas))",
+    accentBorder: "color-mix(in srgb, var(--pm-critical) 18%, transparent)",
     label: "Vencido",
     icon: ShieldX,
   },
   Pending: {
-    accent: "#d97706",
-    accentLight: "rgba(217,119,6,0.06)",
-    accentBorder: "rgba(217,119,6,0.15)",
+    accent: "var(--pm-attention)",
+    accentLight: "color-mix(in srgb, var(--pm-attention) 8%, var(--pm-canvas))",
+    accentBorder: "color-mix(in srgb, var(--pm-attention) 18%, transparent)",
     label: "Pendiente",
     icon: ShieldAlert,
   },
@@ -262,29 +262,23 @@ export default function PortalPage() {
           className="pm-sidebar"
         >
           <div className="space-y-6">
-
             {/* Company identity */}
             <motion.div variants={fadeUp}>
-              <div className="flex items-start gap-3">
-                <div
-                  className="w-11 h-11 flex items-center justify-center shrink-0"
-                  style={{
-                    background: 'var(--pm-ink-deep)',
-                    borderRadius: 'var(--pm-rounded-xl)',
-                  }}
+              <div className="min-w-0">
+                <h1
+                  className="pm-subtitle-lg font-semibold truncate"
+                  style={{ fontSize: 'clamp(15px, 2.5vw, 19px)', letterSpacing: '-0.01em', lineHeight: 1.25 }}
                 >
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <div className="min-w-0 pt-0.5">
-                  <h1 className="pm-subtitle-lg" style={{ fontSize: '17px' }}>
-                    {company.name}
-                  </h1>
-                  {company.type && (
-                    <p className="pm-caption capitalize" style={{ marginTop: '2px' }}>
-                      {company.type}
-                    </p>
-                  )}
-                </div>
+                  {company.name}
+                </h1>
+                {company.type && (
+                  <p
+                    className="pm-caption capitalize truncate"
+                    style={{ marginTop: '3px', opacity: 0.65 }}
+                  >
+                    {company.type}
+                  </p>
+                )}
               </div>
             </motion.div>
 
@@ -330,7 +324,7 @@ export default function PortalPage() {
                     height: '4px',
                     width: '100%',
                     borderRadius: 'var(--pm-rounded-full)',
-                    background: 'rgba(255,255,255,0.7)',
+                    background: 'var(--pm-surface-soft)',
                     overflow: 'hidden',
                     marginBottom: '12px',
                   }}
@@ -359,7 +353,14 @@ export default function PortalPage() {
                 )}
 
                 {renewalSent ? (
-                  <div className="flex items-center gap-1.5 pm-caption" style={{ color: 'var(--pm-success)', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.4)' }}>
+                  <div
+                    className="flex items-center gap-1.5 pm-caption"
+                    style={{
+                      color: 'var(--pm-success)',
+                      paddingTop: '12px',
+                      borderTop: '1px solid var(--pm-hairline)',
+                    }}
+                  >
                     <CheckCheck className="w-3.5 h-3.5" />
                     Solicitud enviada
                   </div>
@@ -371,12 +372,12 @@ export default function PortalPage() {
                     style={{
                       color: sua.accent,
                       paddingTop: '12px',
-                      borderTop: '1px solid rgba(255,255,255,0.4)',
+                      borderTop: '1px solid var(--pm-hairline)',
                       background: 'none',
                       border: 'none',
                       borderTopStyle: 'solid',
                       borderTopWidth: '1px',
-                      borderTopColor: 'rgba(255,255,255,0.4)',
+                      borderTopColor: 'var(--pm-hairline)',
                       cursor: 'pointer',
                     }}
                   >
@@ -394,8 +395,8 @@ export default function PortalPage() {
                   className="pm-card flex items-start gap-3"
                   style={{
                     marginTop: '12px',
-                    background: 'rgba(220,38,38,0.05)',
-                    borderColor: 'rgba(220,38,38,0.15)',
+                    background: 'color-mix(in srgb, var(--pm-critical) 6%, var(--pm-canvas))',
+                    borderColor: 'color-mix(in srgb, var(--pm-critical) 18%, transparent)',
                     padding: 'var(--pm-base)',
                   }}
                 >

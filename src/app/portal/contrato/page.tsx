@@ -224,22 +224,46 @@ const PAGINAS = [
     titulo: "Generación y Separación de Residuos",
     contenido: (
       <div className="space-y-5 text-sm text-foreground/80 leading-relaxed">
-
         <p>Los residuos que sean generados durante las actividades deberán ser separados de acuerdo con la siguiente clasificación general:</p>
 
         {/* Clasificación */}
         <div className="grid grid-cols-2 gap-3">
-          <div style={{ background: 'var(--pm-ink-deep)', borderRadius: 'var(--pm-rounded-xl)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <p style={{ fontSize: '11px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>a) Residuos No Peligrosos</p>
-            <ul style={{ fontSize: '12px', color: '#ffffff', listStyle: 'disc', paddingLeft: '16px' }}>
+          {/* No Peligrosos */}
+          <div style={{
+            borderRadius: 'var(--pm-rounded-xl)',
+            padding: '12px',
+            border: '1px solid var(--pm-hairline)',
+            background: 'var(--pm-surface-soft)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--pm-ink-deep)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              a) Residuos No Peligrosos
+            </p>
+            <ul style={{ fontSize: '12px', color: 'var(--pm-slate)', listStyle: 'disc', paddingLeft: '16px', lineHeight: 1.7 }}>
               {["Papel", "Cartón", "PET", "Inorgánicos", "Plástico", "Maderas", "Latas de aluminio"].map(r => (
                 <li key={r}>{r}</li>
               ))}
             </ul>
           </div>
-          <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 'var(--pm-rounded-xl)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--pm-critical)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>b) Residuos Peligrosos</p>
-            <p style={{ fontSize: '12px', color: 'var(--pm-slate)' }}>Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
+
+          {/* Peligrosos */}
+          <div style={{
+            borderRadius: 'var(--pm-rounded-xl)',
+            padding: '12px',
+            border: '1px solid color-mix(in srgb, var(--pm-critical) 20%, transparent)',
+            background: 'color-mix(in srgb, var(--pm-critical) 6%, var(--pm-canvas))',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--pm-critical)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              b) Residuos Peligrosos
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--pm-slate)', lineHeight: 1.6 }}>
+              Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.
+            </p>
           </div>
         </div>
 
@@ -501,7 +525,7 @@ export default function ContratoPage() {
 
               {/* Representante + canvas */}
               <div className="space-y-2">
-                <p className="pm-divider-label">Nombre y firma del representante legal</p>
+                <p className="pm-divider-label">Nombre y firma del representante</p>
                 <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)', marginBottom: '8px' }}>
                   {contactName || appUser?.email || '—'}
                 </p>
