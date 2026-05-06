@@ -6,9 +6,8 @@ import { Loader2, LogOut } from "lucide-react"
 import { useAppUser } from "@/hooks/use-app-user"
 import { useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
-import { Button } from "@/components/ui/button"
 import { NotificationBanner } from "@/components/PWASetup"
-import Image from "next/image"
+import "./portal-meta.css"
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const { appUser, loading } = useAppUser()
@@ -23,8 +22,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 animate-spin text-[#0064e0]" />
       </div>
     )
   }
@@ -34,25 +33,27 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <NotificationBanner />
-      <div className="min-h-screen bg-white">
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border/60 bg-white px-4 print:hidden">
-
-          {/* Brand */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <span className="text-xs text-muted-foreground font-medium">VIÑOPLASTIC</span>
-            <div className="w-px h-4 bg-border/80 shrink-0" />
-            <span className="text-xs text-muted-foreground font-medium">PLANTA QUERÉTARO</span>
+      <div className="portal-meta min-h-screen">
+        {/* Header — Meta style: clean white, hairline border, 64px height */}
+        <header className="pm-header print:hidden">
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="pm-caption-bold" style={{ color: 'var(--pm-slate)', letterSpacing: '0.08em' }}>
+              VIÑOPLASTIC
+            </span>
+            <div className="w-px h-4 shrink-0" style={{ background: 'var(--pm-hairline-soft)' }} />
+            <span className="pm-caption-bold" style={{ color: 'var(--pm-slate)', letterSpacing: '0.08em' }}>
+              PLANTA QUERÉTARO
+            </span>
           </div>
 
           <div className="flex-1" />
 
-          {/* Email + logout */}
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground hidden sm:block mr-2">{appUser.email}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors rounded-lg"
+          <div className="flex items-center gap-3">
+            <span className="pm-caption hidden sm:block" style={{ color: 'var(--pm-steel)' }}>
+              {appUser.email}
+            </span>
+            <button
+              className="pm-btn-icon"
               title="Cerrar sesión"
               onClick={() => {
                 document.cookie = "vp_session=; path=/; max-age=0"
@@ -60,7 +61,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               }}
             >
               <LogOut className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </header>
 

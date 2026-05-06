@@ -4,10 +4,8 @@ import * as React from "react"
 import QRCode from "react-qr-code"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import { Button } from "@/components/ui/button"
 import { Download, Share2, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
 
 interface ContractorQRDialogProps {
   company: any
@@ -30,26 +28,22 @@ function getEffectiveSuaStatus(sua?: { status?: string; validUntil?: string }): 
 const SUA_CONFIG: Record<SuaStatus, {
   label: string
   icon: React.ElementType
-  badgeClass: string
-  headerClass: string
+  headerBg: string
 }> = {
   valid: {
     label: "Válido",
     icon: CheckCircle2,
-    badgeClass: "bg-white/20 text-primary-foreground",
-    headerClass: "from-primary to-primary/80",
+    headerBg: "linear-gradient(135deg, #0064e0 0%, #0143b5 100%)",
   },
   expired: {
     label: "Vencido",
     icon: XCircle,
-    badgeClass: "bg-white/20 text-destructive-foreground",
-    headerClass: "from-destructive to-destructive/80",
+    headerBg: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
   },
   pending: {
     label: "Pendiente",
     icon: Clock,
-    badgeClass: "bg-white/20 text-primary-foreground",
-    headerClass: "from-muted-foreground to-muted-foreground/70",
+    headerBg: "linear-gradient(135deg, #5f6368 0%, #3c4043 100%)",
   },
 }
 
@@ -226,40 +220,36 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
           </DialogDescription>
         </VisuallyHidden>
 
-        {/* Encabezado tipo credencial */}
-        <div className={cn("bg-gradient-to-br text-primary-foreground px-5 pt-6 pb-5", config.headerClass)}>
+        {/* Encabezado tipo credencial — Meta design */}
+        <div style={{ background: config.headerBg, padding: '24px 20px 20px' }}>
           <div className="flex items-center gap-3">
-            {/* Avatar con inicial */}
-            <div className="size-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <span className="text-xl font-bold text-primary-foreground">{initial}</span>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{initial}</span>
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-base text-primary-foreground truncate leading-tight">
+              <p style={{ fontWeight: 700, fontSize: 16, color: '#fff', lineHeight: 1.2 }} className="truncate">
                 {company?.name}
               </p>
-              <p className="text-xs text-primary-foreground/70 mt-0.5">
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
                 ViñoPlastic — Control de Acceso
               </p>
             </div>
           </div>
 
-          {/* Badge de estado SUA */}
-          <div className={cn(
-            "inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full text-xs font-semibold",
-            config.badgeClass
-          )}>
-            <StatusIcon className="size-3.5 shrink-0" />
+          {/* Badge de estado SUA — pill shape */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 16, padding: '6px 12px', borderRadius: 100, background: 'rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 700, color: '#fff' }}>
+            <StatusIcon style={{ width: 14, height: 14 }} />
             SUA {config.label}
             {company?.sua?.validUntil && (
-              <span className="opacity-75">· {company.sua.validUntil}</span>
+              <span style={{ opacity: 0.75 }}>· {company.sua.validUntil}</span>
             )}
           </div>
         </div>
 
-        {/* Cuerpo: QR + acciones */}
-        <div className="bg-white dark:bg-neutral-900 flex flex-col items-center px-5 pt-5 pb-4 gap-4">
+        {/* Cuerpo: QR + acciones — Meta design */}
+        <div style={{ background: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px', gap: '16px' }}>
           {/* Código QR */}
-          <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm w-full flex justify-center">
+          <div style={{ borderRadius: 16, border: '1px solid #e8e8ec', background: '#ffffff', padding: 16, width: '100%', display: 'flex', justifyContent: 'center' }}>
             <QRCode
               id="contractor-qr-svg"
               value={qrValue}
@@ -270,37 +260,34 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
             />
           </div>
 
-          {/* Botones de acción */}
-          <div className="grid grid-cols-3 gap-2 w-full">
-            <Button
-              variant="outline"
-              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+          {/* Botones de acción — pill style */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, width: '100%' }}>
+            <button
               onClick={downloadQR}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, height: 56, background: '#ffffff', border: '1px solid #e8e8ec', borderRadius: 16, fontSize: 12, fontWeight: 700, color: '#0a1317', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif' }}
             >
-              <Download className="size-4" />
+              <Download style={{ width: 16, height: 16 }} />
               Descargar
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+            </button>
+            <button
               onClick={shareWhatsApp}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, height: 56, background: '#ffffff', border: '1px solid #e8e8ec', borderRadius: 16, fontSize: 12, fontWeight: 700, color: '#0a1317', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif' }}
             >
-              <Share2 className="size-4" />
+              <Share2 style={{ width: 16, height: 16 }} />
               WhatsApp
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+            </button>
+            <button
               onClick={shareQR}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, height: 56, background: '#ffffff', border: '1px solid #e8e8ec', borderRadius: 16, fontSize: 12, fontWeight: 700, color: '#0a1317', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif' }}
             >
-              <Share2 className="size-4" />
+              <Share2 style={{ width: 16, height: 16 }} />
               Compartir
-            </Button>
+            </button>
           </div>
 
-          <p className="text-xs text-center text-neutral-500 dark:text-neutral-400 pb-1">
+          <p style={{ fontSize: 12, textAlign: 'center', color: '#80868b', paddingBottom: 4 }}>
             El guardia escanea este QR en la página{" "}
-            <strong className="text-neutral-900 dark:text-neutral-100">Escáner de QR</strong>{" "}
+            <strong style={{ color: '#0a1317' }}>Escáner de QR</strong>{" "}
             para verificar el ingreso.
           </p>
         </div>

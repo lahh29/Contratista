@@ -1,0 +1,768 @@
+/* ============================================================
+   PORTAL META DESIGN SYSTEM
+   ============================================================
+   Exclusive CSS for /portal and /portal/contrato pages.
+   Inspired by Meta's commerce design language:
+   - Montserrat as Optimistic VF proxy (ss01/ss02 not available)
+   - Cobalt primary for commerce CTAs
+   - Pill-shaped buttons (rounded-full)
+   - Clean white canvas with photography-first spacing
+   - Flat elevation model with subtle hairline borders
+   ============================================================ */
+
+/* ── Font Import ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+/* ── Design Tokens (CSS Custom Properties) ─────────────── */
+.portal-meta {
+  /* ── Brand & Accent ─────────────────────────── */
+  --pm-primary: #0064e0;
+  --pm-primary-deep: #0143b5;
+  --pm-primary-soft: rgba(0, 100, 224, 0.08);
+  --pm-fb-blue: #1877f2;
+
+  /* ── Surface ────────────────────────────────── */
+  --pm-canvas: #ffffff;
+  --pm-surface-soft: #f5f5f7;
+  --pm-hairline: #d4d4d8;
+  --pm-hairline-soft: #e8e8ec;
+
+  /* ── Text ───────────────────────────────────── */
+  --pm-ink-deep: #0a1317;
+  --pm-ink: #1c2b33;
+  --pm-charcoal: #3c4043;
+  --pm-slate: #5f6368;
+  --pm-steel: #80868b;
+  --pm-stone: #9aa0a6;
+
+  /* ── Button ─────────────────────────────────── */
+  --pm-ink-button: #0a1317;
+  --pm-on-ink-button: #ffffff;
+  --pm-on-primary: #ffffff;
+
+  /* ── Semantic ────────────────────────────────── */
+  --pm-success: #16a34a;
+  --pm-attention: #d97706;
+  --pm-warning: #eab308;
+  --pm-critical: #dc2626;
+  --pm-critical-strong: #b91c1c;
+
+  /* ── Spacing ────────────────────────────────── */
+  --pm-xxs: 4px;
+  --pm-xs: 8px;
+  --pm-sm: 10px;
+  --pm-md: 12px;
+  --pm-base: 16px;
+  --pm-lg: 20px;
+  --pm-xl: 24px;
+  --pm-xxl: 32px;
+  --pm-xxxl: 40px;
+  --pm-section-sm: 48px;
+  --pm-section: 64px;
+  --pm-section-lg: 80px;
+
+  /* ── Border Radius ──────────────────────────── */
+  --pm-rounded-xs: 2px;
+  --pm-rounded-sm: 4px;
+  --pm-rounded-md: 6px;
+  --pm-rounded-lg: 8px;
+  --pm-rounded-xl: 16px;
+  --pm-rounded-xxl: 24px;
+  --pm-rounded-xxxl: 32px;
+  --pm-rounded-feature: 40px;
+  --pm-rounded-full: 100px;
+
+  /* ── Typography Base ────────────────────────── */
+  --pm-font: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, 'Noto Sans', sans-serif;
+  --pm-font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+
+  /* Apply base */
+  font-family: var(--pm-font);
+  color: var(--pm-ink);
+  background: var(--pm-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography Classes ──────────────────────────────────── */
+.portal-meta .pm-hero-display {
+  font-size: 64px;
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: 0;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-display-lg {
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1.17;
+  letter-spacing: 0;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-heading-lg {
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 1.28;
+  letter-spacing: 0;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-heading-md {
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1.21;
+  letter-spacing: 0;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-heading-sm {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-subtitle-lg {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.44;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-subtitle-md {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.44;
+  color: var(--pm-ink);
+}
+
+.portal-meta .pm-body-md {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.50;
+  letter-spacing: -0.16px;
+  color: var(--pm-ink);
+}
+
+.portal-meta .pm-body-md-bold {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.50;
+  letter-spacing: -0.16px;
+  color: var(--pm-ink);
+}
+
+.portal-meta .pm-body-sm {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: -0.14px;
+  color: var(--pm-charcoal);
+}
+
+.portal-meta .pm-body-sm-bold {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.43;
+  letter-spacing: -0.14px;
+  color: var(--pm-ink);
+}
+
+.portal-meta .pm-caption-bold {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.33;
+  color: var(--pm-charcoal);
+}
+
+.portal-meta .pm-caption {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.33;
+  color: var(--pm-steel);
+}
+
+.portal-meta .pm-button-md {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.43;
+  letter-spacing: -0.14px;
+}
+
+/* ── Button Components ───────────────────────────────────── */
+.portal-meta .pm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 30px;
+  background: var(--pm-ink-button);
+  color: var(--pm-on-ink-button);
+  font-family: var(--pm-font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.14px;
+  line-height: 1.43;
+  border: none;
+  border-radius: var(--pm-rounded-full);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+}
+.portal-meta .pm-btn-primary:active {
+  background: var(--pm-charcoal);
+  transform: scale(0.97);
+}
+
+.portal-meta .pm-btn-buy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 30px;
+  background: var(--pm-primary);
+  color: var(--pm-on-primary);
+  font-family: var(--pm-font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.14px;
+  line-height: 1.43;
+  border: none;
+  border-radius: var(--pm-rounded-full);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+}
+.portal-meta .pm-btn-buy:active {
+  background: var(--pm-primary-deep);
+  transform: scale(0.97);
+}
+
+.portal-meta .pm-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: transparent;
+  color: var(--pm-ink-deep);
+  font-family: var(--pm-font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.14px;
+  line-height: 1.43;
+  border: 2px solid var(--pm-ink-deep);
+  border-radius: var(--pm-rounded-full);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+}
+.portal-meta .pm-btn-secondary:active {
+  background: rgba(10, 19, 23, 0.04);
+  transform: scale(0.97);
+}
+
+.portal-meta .pm-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: transparent;
+  color: var(--pm-ink-deep);
+  font-family: var(--pm-font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.14px;
+  line-height: 1.43;
+  border: 2px solid rgba(10, 19, 23, 0.12);
+  border-radius: var(--pm-rounded-full);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+}
+.portal-meta .pm-btn-ghost:active {
+  background: rgba(10, 19, 23, 0.04);
+  transform: scale(0.97);
+}
+
+.portal-meta .pm-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--pm-ink);
+  transition: background 0.15s, border-color 0.15s;
+}
+.portal-meta .pm-btn-icon:active {
+  background: var(--pm-surface-soft);
+}
+
+/* ── Pill Tab ────────────────────────────────────────────── */
+.portal-meta .pm-pill-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--pm-canvas);
+  color: var(--pm-ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.14px;
+  border: 1px solid var(--pm-hairline);
+  border-radius: var(--pm-rounded-full);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.portal-meta .pm-pill-tab.active,
+.portal-meta .pm-pill-tab[data-active="true"] {
+  background: var(--pm-ink-deep);
+  color: var(--pm-canvas);
+  border-color: var(--pm-ink-deep);
+}
+
+/* ── Card Components ─────────────────────────────────────── */
+.portal-meta .pm-card {
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xl);
+  padding: var(--pm-xxl);
+}
+
+.portal-meta .pm-card-feature {
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xxxl);
+  padding: var(--pm-xxl);
+}
+
+.portal-meta .pm-card-promo {
+  background: var(--pm-ink-deep);
+  color: var(--pm-canvas);
+  border-radius: var(--pm-rounded-xxxl);
+  padding: var(--pm-section);
+}
+
+.portal-meta .pm-card-icon-feature {
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xl);
+  padding: var(--pm-xl);
+}
+
+/* ── Badge Components ────────────────────────────────────── */
+.portal-meta .pm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.33;
+  padding: 4px 10px;
+  border-radius: var(--pm-rounded-full);
+}
+.portal-meta .pm-badge-success {
+  background: var(--pm-success);
+  color: var(--pm-canvas);
+}
+.portal-meta .pm-badge-warning {
+  background: var(--pm-warning);
+  color: var(--pm-ink-deep);
+}
+.portal-meta .pm-badge-critical {
+  background: var(--pm-critical);
+  color: var(--pm-canvas);
+}
+.portal-meta .pm-badge-attention {
+  background: var(--pm-attention);
+  color: var(--pm-canvas);
+}
+.portal-meta .pm-badge-neutral {
+  background: var(--pm-surface-soft);
+  color: var(--pm-slate);
+}
+
+/* ── Input Components ────────────────────────────────────── */
+.portal-meta .pm-input {
+  width: 100%;
+  height: 44px;
+  padding: var(--pm-md) var(--pm-base);
+  background: var(--pm-canvas);
+  color: var(--pm-ink);
+  font-family: var(--pm-font);
+  font-size: 16px;
+  border: 1px solid var(--pm-hairline);
+  border-radius: var(--pm-rounded-lg);
+  transition: border-color 0.15s;
+  outline: none;
+}
+.portal-meta .pm-input:focus {
+  border-color: var(--pm-fb-blue);
+  border-width: 2px;
+  padding: calc(var(--pm-md) - 1px) calc(var(--pm-base) - 1px);
+}
+
+/* ── Layout Utilities ────────────────────────────────────── */
+.portal-meta .pm-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--pm-xxl);
+}
+
+.portal-meta .pm-section-gap {
+  margin-top: var(--pm-section-lg);
+}
+
+/* ── Portal-Specific Layout ──────────────────────────────── */
+.portal-meta .pm-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 var(--pm-xl);
+  background: var(--pm-canvas);
+  border-bottom: 1px solid var(--pm-hairline-soft);
+}
+
+.portal-meta .pm-sidebar {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--pm-canvas);
+  border-right: 1px solid var(--pm-hairline-soft);
+  overflow-y: auto;
+  padding: var(--pm-xxl);
+}
+
+.portal-meta .pm-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--pm-xxxl) var(--pm-section-sm);
+  background: var(--pm-surface-soft);
+}
+
+/* ── Divider Label ───────────────────────────────────────── */
+.portal-meta .pm-divider-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pm-stone);
+}
+
+/* ── Section Separator ───────────────────────────────────── */
+.portal-meta .pm-separator {
+  border: none;
+  border-top: 1px solid var(--pm-hairline-soft);
+  margin: var(--pm-xl) 0;
+}
+
+/* ── Status Dot ──────────────────────────────────────────── */
+.portal-meta .pm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.portal-meta .pm-dot-success {
+  background: var(--pm-success);
+}
+.portal-meta .pm-dot-critical {
+  background: var(--pm-critical);
+}
+.portal-meta .pm-dot-attention {
+  background: var(--pm-attention);
+}
+
+/* ── Action Row ──────────────────────────────────────────── */
+.portal-meta .pm-action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xl);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.portal-meta .pm-action-row:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Table ───────────────────────────────────────────────── */
+.portal-meta .pm-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.portal-meta .pm-table th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pm-stone);
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--pm-hairline-soft);
+}
+.portal-meta .pm-table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--pm-ink);
+  border-bottom: 1px solid var(--pm-hairline-soft);
+}
+.portal-meta .pm-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── SUA Card ────────────────────────────────────────────── */
+.portal-meta .pm-sua-card {
+  border-radius: var(--pm-rounded-xl);
+  padding: var(--pm-xl);
+  position: relative;
+  overflow: hidden;
+}
+.portal-meta .pm-sua-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid currentColor;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+/* ── Visit Card (mobile) ─────────────────────────────────── */
+.portal-meta .pm-visit-card {
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xl);
+  padding: var(--pm-base) var(--pm-lg);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+/* ── Floating Pill (active visit) ────────────────────────── */
+.portal-meta .pm-floating-pill {
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xxl);
+  padding: 14px 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Contrato page specifics ─────────────────────────────── */
+.portal-meta .pm-reglamento-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: var(--pm-base) 0;
+}
+
+.portal-meta .pm-reglamento-page {
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xxxl);
+  padding: var(--pm-xxl) var(--pm-xxxl);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ── QR Dialog overrides ─────────────────────────────────── */
+.portal-meta .pm-qr-body {
+  background: var(--pm-canvas);
+  padding: var(--pm-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--pm-base);
+}
+
+.portal-meta .pm-qr-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--pm-xs);
+  width: 100%;
+}
+
+.portal-meta .pm-qr-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 56px;
+  background: var(--pm-canvas);
+  border: 1px solid var(--pm-hairline-soft);
+  border-radius: var(--pm-rounded-xl);
+  font-family: var(--pm-font);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pm-ink);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.portal-meta .pm-qr-action-btn:active {
+  background: var(--pm-surface-soft);
+}
+
+/* ── Contrato Content Styling ─────────────────────────────── */
+.portal-meta .pm-content p,
+.portal-meta .pm-content li {
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: -0.14px;
+  color: var(--pm-charcoal);
+}
+
+.portal-meta .pm-content strong {
+  font-weight: 700;
+  color: var(--pm-ink-deep);
+}
+
+.portal-meta .pm-content h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pm-ink-deep);
+  margin-bottom: 12px;
+}
+
+.portal-meta .pm-content .pm-note {
+  border-radius: var(--pm-rounded-xl);
+  padding: var(--pm-base);
+  background: rgba(217, 119, 6, 0.06);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+.portal-meta .pm-content .pm-note-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pm-attention);
+  margin-bottom: 4px;
+}
+
+.portal-meta .pm-content .pm-note-text {
+  font-size: 12px;
+  color: var(--pm-slate);
+}
+
+.portal-meta .pm-content .pm-note-text a {
+  font-weight: 700;
+  color: var(--pm-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Progress bar */
+.portal-meta .pm-progress-bar {
+  height: 4px;
+  width: 100%;
+  border-radius: var(--pm-rounded-full);
+  background: var(--pm-hairline-soft);
+  overflow: hidden;
+}
+.portal-meta .pm-progress-bar-fill {
+  height: 100%;
+  border-radius: var(--pm-rounded-full);
+  background: var(--pm-primary);
+  transition: width 0.3s ease;
+}
+
+/* Pagination dots */
+.portal-meta .pm-dot-nav {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pm-hairline);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.portal-meta .pm-dot-nav.active {
+  width: 20px;
+  border-radius: var(--pm-rounded-full);
+  background: var(--pm-primary);
+}
+
+/* Signature success card */
+.portal-meta .pm-success-card {
+  border-radius: var(--pm-rounded-xl);
+  padding: var(--pm-base);
+  background: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .portal-meta .pm-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--pm-hairline-soft);
+    padding: var(--pm-xl);
+  }
+  .portal-meta .pm-main {
+    padding: var(--pm-xl);
+  }
+}
+
+@media (max-width: 767px) {
+  .portal-meta .pm-hero-display {
+    font-size: 36px;
+  }
+  .portal-meta .pm-display-lg {
+    font-size: 28px;
+  }
+  .portal-meta .pm-heading-lg {
+    font-size: 24px;
+  }
+  .portal-meta .pm-heading-md {
+    font-size: 22px;
+  }
+  .portal-meta .pm-heading-sm {
+    font-size: 20px;
+  }
+  .portal-meta .pm-card-feature {
+    border-radius: var(--pm-rounded-xxl);
+    padding: var(--pm-xl);
+  }
+  .portal-meta .pm-reglamento-page {
+    border-radius: var(--pm-rounded-xxl);
+    padding: var(--pm-xl) var(--pm-lg);
+  }
+  .portal-meta .pm-header {
+    height: 56px;
+    padding: 0 var(--pm-base);
+  }
+}
+
+@media (max-width: 479px) {
+  .portal-meta .pm-hero-display {
+    font-size: 24px;
+  }
+  .portal-meta .pm-heading-lg {
+    font-size: 20px;
+  }
+}

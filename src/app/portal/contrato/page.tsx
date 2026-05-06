@@ -10,7 +10,6 @@ import {
 } from "firebase/firestore"
 import { useFirestore } from "@/firebase"
 import { useAppUser } from "@/hooks/use-app-user"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import SignatureCanvas from "react-signature-canvas"
 import type SignatureCanvasType from "react-signature-canvas"
@@ -60,9 +59,9 @@ const PAGINAS = [
             <p>El Contratista que no cumpla con estos requisitos documentales, podrá establecer un plazo de cumplimiento para regularizarse. Después de vencido este plazo y reincidir en el incumplimiento documental, no podrá realizar trabajos para Viñoplastic Inyección.</p>
           </li>
         </ol>
-        <div className="mt-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
-          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide mb-1">Nota importante</p>
-          <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
+        <div className="pm-note">
+          <p className="pm-note-title">Nota importante</p>
+          <p className="pm-note-text">
             Antes de que los contratistas inicien labores en las instalaciones de Viñoplastic Inyección, los documentos anteriormente mencionados deben ser enviados con copia al correo de su contacto en Viñoplastic Inyección a:{' '}
             <a href="mailto:segehigqro@vinoplastic.com.mx" className="font-semibold underline underline-offset-2">
               segehigqro@vinoplastic.com.mx
@@ -230,17 +229,17 @@ const PAGINAS = [
 
         {/* Clasificación */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg border border-neutral-700 dark:border-neutral-300 bg-black dark:bg-white p-3 space-y-1">
-            <p className="text-xs font-bold text-white dark:text-black uppercase tracking-wide">a) Residuos No Peligrosos</p>
-            <ul className="text-xs text-white dark:text-black space-y-0.5 list-disc list-inside">
+          <div style={{ background: 'var(--pm-ink-deep)', borderRadius: 'var(--pm-rounded-xl)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>a) Residuos No Peligrosos</p>
+            <ul style={{ fontSize: '12px', color: '#ffffff', listStyle: 'disc', paddingLeft: '16px' }}>
               {["Papel", "Cartón", "PET", "Inorgánicos", "Plástico", "Maderas", "Latas de aluminio"].map(r => (
                 <li key={r}>{r}</li>
               ))}
             </ul>
           </div>
-          <div className="rounded-lg border border-neutral-700 dark:border-neutral-300 bg-black dark:bg-white p-3 space-y-1">
-            <p className="text-xs font-bold text-red-400 dark:text-red-600 uppercase tracking-wide">b) Residuos Peligrosos</p>
-            <p className="text-xs text-white dark:text-black">Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
+          <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 'var(--pm-rounded-xl)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--pm-critical)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>b) Residuos Peligrosos</p>
+            <p style={{ fontSize: '12px', color: 'var(--pm-slate)' }}>Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
           </div>
         </div>
 
@@ -365,7 +364,7 @@ export default function ContratoPage() {
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--pm-primary)' }} />
       </div>
     )
   }
@@ -373,31 +372,31 @@ export default function ContratoPage() {
   // ── Ya firmado ──────────────────────────────────────────────────────────────
   if (status === 'firmado') {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4" style={{ padding: 'var(--pm-xl)' }}>
         {/* Controles — se ocultan al imprimir */}
         <div className="flex items-center gap-3 print:hidden">
           <BackButton />
           <div className="flex-1" />
-          <Button size="sm" onClick={() => window.print()} className="gap-2">
+          <button className="pm-btn-primary" style={{ padding: '10px 20px', fontSize: '13px' }} onClick={() => window.print()}>
             <CheckCircle2 className="w-4 h-4" />
             Imprimir / Guardar PDF
-          </Button>
+          </button>
         </div>
 
         {/* Documento imprimible */}
-        <div id="contrato-print" className="rounded-2xl border border-border bg-card shadow-sm p-8 space-y-6 print:shadow-none print:border-none print:rounded-none print:p-6">
+        <div id="contrato-print" className="pm-card-feature space-y-6 print:shadow-none print:border-none print:rounded-none" style={{ padding: 'var(--pm-xxl)' }}>
 
           {/* Encabezado */}
-          <div className="text-center space-y-1 border-b border-border pb-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">ViñoPlastic Inyección</p>
-            <h1 className="text-base font-black uppercase tracking-wide">Reglamento para Contratistas, Subcontratistas, Proveedores y Clientes</h1>
-            <p className="text-xs text-muted-foreground">Acuse de recibo y aceptación</p>
+          <div className="text-center space-y-1" style={{ borderBottom: '1px solid var(--pm-hairline-soft)', paddingBottom: '20px' }}>
+            <p className="pm-divider-label">ViñoPlastic Inyección</p>
+            <h1 className="pm-body-md-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>Reglamento para Contratistas, Subcontratistas, Proveedores y Clientes</h1>
+            <p className="pm-caption">Acuse de recibo y aceptación</p>
           </div>
 
           {/* Confirmación */}
-          <div className="flex items-start gap-3 rounded-xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-4">
-            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-green-700 dark:text-green-400 leading-relaxed">
+          <div className="pm-success-card">
+            <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--pm-success)' }} />
+            <p className="pm-body-sm" style={{ color: 'var(--pm-success)' }}>
               Acepto y me comprometo a cumplir con lo estipulado en el presente reglamento.
             </p>
           </div>
@@ -409,14 +408,14 @@ export default function ContratoPage() {
 
             {/* Firma */}
             <div className="space-y-1">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Firma del representante legal</p>
-              <div className="rounded-xl border border-border bg-muted/20 flex items-center justify-center" style={{ height: 120 }}>
+              <p className="pm-divider-label">Firma del representante legal</p>
+              <div className="flex items-center justify-center" style={{ height: 120, borderRadius: 'var(--pm-rounded-xl)', border: '1px solid var(--pm-hairline-soft)', background: 'var(--pm-surface-soft)' }}>
                 {signatureImg
                   ? <img src={signatureImg} alt="Firma" className="max-h-full max-w-full object-contain" />
-                  : <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  : <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--pm-stone)' }} />
                 }
               </div>
-              <div className="h-px bg-border/60" />
+              <div style={{ height: '1px', background: 'var(--pm-hairline-soft)' }} />
             </div>
 
             <Row
@@ -431,7 +430,7 @@ export default function ContratoPage() {
           </div>
 
           {/* Pie */}
-          <p className="text-[11px] text-muted-foreground text-center border-t border-border/60 pt-4">
+          <p className="pm-caption text-center" style={{ borderTop: '1px solid var(--pm-hairline-soft)', paddingTop: '16px' }}>
             Este documento es un comprobante digital generado por ViñoPlastic Inyección.
           </p>
         </div>
@@ -443,37 +442,37 @@ export default function ContratoPage() {
   const paginaActual = PAGINAS[pagina]
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
+    <div className="max-w-3xl mx-auto space-y-5" style={{ padding: 'var(--pm-xl)' }}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <BackButton />
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold tracking-tight truncate text-neutral-900">
+          <h1 className="pm-body-md-bold" style={{ color: 'var(--pm-ink-deep)' }}>
             REGLAMENTO PARA CONTRATISTAS, SUBCONTRATISTAS, PROVEEDORES Y CLIENTES
           </h1>
-          <p className="text-xs text-neutral-500">
+          <p className="pm-caption" style={{ marginTop: '2px' }}>
             Página {pagina + 1} de {totalPaginas}
           </p>
         </div>
-        <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
+        <FileText className="w-5 h-5 shrink-0" style={{ color: 'var(--pm-stone)' }} />
       </div>
 
       {/* Barra de progreso */}
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+      <div className="pm-progress-bar">
         <div
-          className="h-full rounded-full bg-primary transition-all duration-300"
+          className="pm-progress-bar-fill"
           style={{ width: `${((pagina + 1) / totalPaginas) * 100}%` }}
         />
       </div>
 
       {/* Contenido */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="pm-card-feature pm-content" style={{ overflow: 'hidden', padding: 0 }}>
 
         {/* Páginas del reglamento */}
         {!enUltimaPagina && paginaActual && (
-          <div className="p-6 md:p-8 space-y-4 min-h-[420px]">
-            <h2 className="text-base font-bold text-foreground">{paginaActual.titulo}</h2>
-            <div className="border-t border-border/60 pt-4">
+          <div style={{ padding: 'var(--pm-xxl) var(--pm-xxxl)', minHeight: '420px' }} className="space-y-4">
+            <h2 className="pm-subtitle-lg" style={{ fontSize: '16px' }}>{paginaActual.titulo}</h2>
+            <div style={{ borderTop: '1px solid var(--pm-hairline-soft)', paddingTop: 'var(--pm-base)' }}>
               {paginaActual.contenido}
             </div>
           </div>
@@ -481,65 +480,57 @@ export default function ContratoPage() {
 
         {/* Última página: aceptación y firma */}
         {enUltimaPagina && (
-          <div className="p-6 md:p-8 space-y-6 min-h-[420px]">
+          <div style={{ padding: 'var(--pm-xxl) var(--pm-xxxl)', minHeight: '420px' }} className="space-y-6">
             <div className="space-y-1">
-              <h2 className="text-base font-bold">Aceptación y Firma</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h2 className="pm-subtitle-lg" style={{ fontSize: '16px' }}>Aceptación y Firma</h2>
+              <p className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
                 Acepto y me comprometo a cumplir con lo estipulado en el presente reglamento.
               </p>
             </div>
 
             {/* Campos formales */}
-            <div className="space-y-4 border border-border/60 rounded-xl p-4 bg-muted/20">
+            <div className="space-y-4" style={{ border: '1px solid var(--pm-hairline-soft)', borderRadius: 'var(--pm-rounded-xl)', padding: 'var(--pm-base)', background: 'var(--pm-surface-soft)' }}>
               {/* Empresa */}
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Nombre de la compañía
-                </p>
-                <p className="text-sm font-semibold text-foreground">
+                <p className="pm-divider-label">Nombre de la compañía</p>
+                <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
                   {companyName || '—'}
                 </p>
-                <div className="h-px bg-border/60" />
+                <div style={{ height: '1px', background: 'var(--pm-hairline-soft)' }} />
               </div>
 
               {/* Representante + canvas */}
               <div className="space-y-2">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Nombre y firma del representante legal
-                </p>
-                <p className="text-sm font-medium text-foreground mb-2">
+                <p className="pm-divider-label">Nombre y firma del representante legal</p>
+                <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)', marginBottom: '8px' }}>
                   {contactName || appUser?.email || '—'}
                 </p>
 
-                {/* Canvas — tamaño real fijado en píxeles para móvil/HiDPI */}
                 <CanvasWrapper key={canvasKey} sigRef={sigRef} />
-                <div className="h-px bg-border/60" />
+                <div style={{ height: '1px', background: 'var(--pm-hairline-soft)' }} />
               </div>
 
               {/* Fecha */}
               <div className="space-y-1">
-                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Fecha de firma del reglamento
-                </p>
-                <p className="text-sm font-medium text-foreground capitalize">{today}</p>
-                <div className="h-px bg-border/60" />
+                <p className="pm-divider-label">Fecha de firma del reglamento</p>
+                <p className="pm-body-sm-bold capitalize" style={{ color: 'var(--pm-ink-deep)' }}>{today}</p>
+                <div style={{ height: '1px', background: 'var(--pm-hairline-soft)' }} />
               </div>
             </div>
 
             {/* Acciones */}
             <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-neutral-50 gap-1.5 text-xs"
+              <button
+                className="pm-btn-ghost"
+                style={{ padding: '8px 16px', fontSize: '12px' }}
                 onClick={() => setCanvasKey(k => k + 1)}
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Limpiar firma
-              </Button>
-              <Button
-                size="sm"
-                className="gap-1.5"
+              </button>
+              <button
+                className="pm-btn-buy"
+                style={{ padding: '10px 24px', fontSize: '13px' }}
                 disabled={firmando}
                 onClick={guardarFirma}
               >
@@ -547,7 +538,7 @@ export default function ContratoPage() {
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Guardando…</>
                   : 'Firmar y aceptar'
                 }
-              </Button>
+              </button>
             </div>
           </div>
         )}
@@ -555,16 +546,15 @@ export default function ContratoPage() {
 
       {/* Navegación */}
       <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
+        <button
+          className="pm-btn-ghost"
+          style={{ padding: '8px 20px', fontSize: '13px', opacity: pagina === 0 ? 0.4 : 1 }}
           disabled={pagina === 0}
           onClick={() => setPagina(p => p - 1)}
-          className="gap-1.5"
         >
           <ChevronLeft className="w-4 h-4" />
           Anterior
-        </Button>
+        </button>
 
         {/* Dots */}
         <div className="flex gap-1.5">
@@ -572,24 +562,20 @@ export default function ContratoPage() {
             <button
               key={i}
               onClick={() => setPagina(i)}
-              className={cn(
-                'h-2 rounded-full transition-all duration-200',
-                i === pagina ? 'w-5 bg-primary' : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50',
-              )}
+              className={cn('pm-dot-nav', i === pagina && 'active')}
             />
           ))}
         </div>
 
-        <Button
-          variant={enUltimaPagina ? 'ghost' : 'outline'}
-          size="sm"
+        <button
+          className={enUltimaPagina ? 'pm-btn-ghost' : 'pm-btn-secondary'}
+          style={{ padding: '8px 20px', fontSize: '13px', opacity: enUltimaPagina ? 0.4 : 1 }}
           disabled={enUltimaPagina}
           onClick={() => setPagina(p => p + 1)}
-          className="gap-1.5"
         >
           Siguiente
           <ChevronRight className="w-4 h-4" />
-        </Button>
+        </button>
       </div>
     </div>
   )
@@ -619,14 +605,14 @@ function CanvasWrapper({ sigRef }: { sigRef: React.RefObject<SignatureCanvasType
   }, [mounted])
 
   return (
-    <div ref={wrapRef} className="relative rounded-xl border-2 border-dashed border-neutral-300 bg-white overflow-hidden touch-none" style={{ height: 160 }}>
+    <div ref={wrapRef} className="relative overflow-hidden touch-none" style={{ height: 160, borderRadius: 'var(--pm-rounded-xl)', border: '2px dashed var(--pm-hairline)', background: '#fff' }}>
       <SignatureCanvas
         ref={sigRef}
         canvasProps={{ style: { width: '100%', height: '100%', display: 'block' } }}
         backgroundColor="white"
-        penColor="#1a1a1a"
+        penColor="#0a1317"
       />
-      <p className="absolute inset-x-0 bottom-2 text-center text-[15px] text-muted-foreground/100 pointer-events-none select-none">
+      <p className="absolute inset-x-0 bottom-2 text-center pointer-events-none select-none" style={{ fontSize: '14px', color: 'var(--pm-stone)' }}>
         Dibuja tu firma aquí
       </p>
     </div>
@@ -637,9 +623,9 @@ function CanvasWrapper({ sigRef }: { sigRef: React.RefObject<SignatureCanvasType
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
-      <p className="text-sm font-semibold text-foreground capitalize">{value}</p>
-      <div className="h-px bg-border/60" />
+      <p className="pm-divider-label">{label}</p>
+      <p className="pm-body-sm-bold capitalize" style={{ color: 'var(--pm-ink-deep)' }}>{value}</p>
+      <div style={{ height: '1px', background: 'var(--pm-hairline-soft)' }} />
     </div>
   )
 }
@@ -650,15 +636,8 @@ function BackButton() {
     <Link
       href="/portal"
       aria-label="Volver al portal"
-      className="
-        inline-flex items-center justify-center
-        w-10 h-10 shrink-0 rounded-2xl
-        bg-neutral-50
-        border border-neutral-200
-        text-neutral-950 hover:text-neutral-950
-        hover:bg-neutral-50
-        transition-all duration-200 active:scale-95
-      "
+      className="pm-btn-icon shrink-0"
+      style={{ width: '40px', height: '40px' }}
     >
       <ArrowLeft className="w-4 h-4" />
     </Link>
