@@ -231,7 +231,7 @@ const PAGINAS = [
         <div className="grid grid-cols-2 gap-3">
           <div style={{ background: 'var(--pm-ink-deep)', borderRadius: 'var(--pm-rounded-xl)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <p style={{ fontSize: '11px', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>a) Residuos No Peligrosos</p>
-            <ul style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', listStyle: 'disc', paddingLeft: '16px' }}>
+            <ul style={{ fontSize: '12px', color: '#ffffff', listStyle: 'disc', paddingLeft: '16px' }}>
               {["Papel", "Cartón", "PET", "Inorgánicos", "Plástico", "Maderas", "Latas de aluminio"].map(r => (
                 <li key={r}>{r}</li>
               ))}
