@@ -85,61 +85,66 @@
 }
 
 /* ── Dark Mode Token Overrides ───────────────────────────── */
+/* Meta dark mode palette (Facebook/Instagram dark surfaces) */
 .dark .portal-meta,
 :root.dark .portal-meta {
-  /* ── Surface (dark) ─────────────────────────── */
-  --pm-canvas: #0a1317;
-  --pm-surface-soft: #141e23;
-  --pm-hairline: #2a3640;
-  --pm-hairline-soft: #1e2a32;
+  /* ── Surface (dark) — Meta dark mode canvas ─── */
+  --pm-canvas: #18191a;
+  --pm-surface-soft: #242526;
+  --pm-hairline: #3e4042;
+  --pm-hairline-soft: #3a3b3c;
 
-  /* ── Text (dark) ────────────────────────────── */
-  --pm-ink-deep: #f0f2f5;
-  --pm-ink: #e4e6ea;
-  --pm-charcoal: #c4c7cc;
-  --pm-slate: #a0a4ab;
-  --pm-steel: #8a8d93;
-  --pm-stone: #6a6e75;
+  /* ── Text (dark) — Meta dark mode hierarchy ─── */
+  --pm-ink-deep: #e4e6eb;
+  --pm-ink: #e4e6eb;
+  --pm-charcoal: #b0b3b8;
+  --pm-slate: #b0b3b8;
+  --pm-steel: #8a8d91;
+  --pm-stone: #606770;
 
   /* ── Button (dark) ──────────────────────────── */
-  --pm-ink-button: #f0f2f5;
-  --pm-on-ink-button: #0a1317;
+  --pm-ink-button: #e4e6eb;
+  --pm-on-ink-button: #18191a;
 
   /* ── Brand (dark) ────────────────────────────── */
-  --pm-primary-soft: rgba(0, 100, 224, 0.15);
+  --pm-primary: #2d88ff;
+  --pm-primary-deep: #1a73e8;
+  --pm-primary-soft: rgba(45, 136, 255, 0.15);
+  --pm-fb-blue: #2d88ff;
   --pm-on-primary: #ffffff;
 
-  /* ── Semantic (dark) — slightly brighter ────── */
-  --pm-success: #22c55e;
-  --pm-attention: #f59e0b;
-  --pm-warning: #facc15;
-  --pm-critical: #ef4444;
-  --pm-critical-strong: #f87171;
+  /* ── Semantic (dark) — brighter for dark bg ─── */
+  --pm-success: #31a24c;
+  --pm-attention: #f7b928;
+  --pm-warning: #f7b928;
+  --pm-critical: #f02849;
+  --pm-critical-strong: #ff6b7a;
 }
 
 /* ── Dark Mode Component Adjustments ─────────────────────── */
+.dark .portal-meta .pm-btn-secondary {
+  border-color: var(--pm-hairline);
+}
 .dark .portal-meta .pm-btn-ghost {
-  border-color: rgba(240, 242, 245, 0.12);
+  border-color: rgba(228, 230, 235, 0.15);
 }
-.dark .portal-meta .pm-btn-ghost:active {
-  background: rgba(240, 242, 245, 0.06);
-}
+.dark .portal-meta .pm-btn-ghost:active,
 .dark .portal-meta .pm-btn-secondary:active {
-  background: rgba(240, 242, 245, 0.06);
+  background: rgba(228, 230, 235, 0.08);
 }
 .dark .portal-meta .pm-action-row:active {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 .dark .portal-meta .pm-floating-pill {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 .dark .portal-meta .pm-content .pm-note {
-  background: rgba(217, 119, 6, 0.1);
-  border-color: rgba(217, 119, 6, 0.25);
+  background: rgba(247, 185, 40, 0.08);
+  border-color: rgba(247, 185, 40, 0.2);
 }
 .dark .portal-meta .pm-success-card {
-  background: rgba(22, 163, 74, 0.1);
-  border-color: rgba(22, 163, 74, 0.25);
+  background: rgba(49, 162, 76, 0.08);
+  border-color: rgba(49, 162, 76, 0.2);
 }
 
 /* ── Typography Classes ──────────────────────────────────── */
