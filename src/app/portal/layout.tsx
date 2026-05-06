@@ -41,7 +41,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="portal-meta min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-[#0064e0]" />
       </div>
     )
@@ -97,7 +97,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   flexShrink: 0,
                 }}
               >
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{userInitial}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pm-on-ink-button)' }}>{userInitial}</span>
               </div>
               <span className="pm-body-sm hidden sm:block" style={{ color: 'var(--pm-ink)', maxWidth: 160 }} >
                 {appUser.email}
@@ -144,7 +144,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         flexShrink: 0,
                       }}
                     >
-                      <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{userInitial}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--pm-on-ink-button)' }}>{userInitial}</span>
                     </div>
                     <div className="min-w-0">
                       {appUser.name && (
