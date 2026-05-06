@@ -257,9 +257,9 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
         </div>
 
         {/* Cuerpo: QR + acciones */}
-        <div className="bg-card flex flex-col items-center px-5 pt-5 pb-4 gap-4">
+        <div className="bg-white dark:bg-neutral-900 flex flex-col items-center px-5 pt-5 pb-4 gap-4">
           {/* Código QR */}
-          <div className="rounded-xl border border-border bg-card p-4 shadow-sm w-full flex justify-center">
+          <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm w-full flex justify-center">
             <QRCode
               id="contractor-qr-svg"
               value={qrValue}
@@ -274,7 +274,7 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
           <div className="grid grid-cols-3 gap-2 w-full">
             <Button
               variant="outline"
-              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold"
+              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
               onClick={downloadQR}
             >
               <Download className="size-4" />
@@ -282,7 +282,7 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
             </Button>
             <Button
               variant="outline"
-              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold"
+              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
               onClick={shareWhatsApp}
             >
               <Share2 className="size-4" />
@@ -290,7 +290,7 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
             </Button>
             <Button
               variant="outline"
-              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold"
+              className="flex-col h-14 gap-1 rounded-xl text-xs font-semibold border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
               onClick={shareQR}
             >
               <Share2 className="size-4" />
@@ -298,9 +298,9 @@ export function ContractorQRDialog({ company, open, onOpenChange }: ContractorQR
             </Button>
           </div>
 
-          <p className="text-xs text-center text-muted-foreground pb-1">
+          <p className="text-xs text-center text-neutral-500 dark:text-neutral-400 pb-1">
             El guardia escanea este QR en la página{" "}
-            <strong className="text-foreground">Escáner de QR</strong>{" "}
+            <strong className="text-neutral-900 dark:text-neutral-100">Escáner de QR</strong>{" "}
             para verificar el ingreso.
           </p>
         </div>
