@@ -7,8 +7,6 @@ import { useDoc } from "@/firebase/firestore/use-doc"
 import { useCollection } from "@/firebase/firestore/use-collection"
 import { useAppUser } from "@/hooks/use-app-user"
 import { useNotifications } from "@/hooks/use-notifications"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { generateVoucherPDF } from "@/lib/generate-voucher"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import Link from "next/link"
@@ -36,6 +34,7 @@ import {
   Building2,
   ArrowRight,
   Activity,
+  ChevronRight,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { formatDistanceToNow } from "date-fns"
@@ -71,19 +70,19 @@ const fadeIn = {
 // ─────────────────────────────────────────────────────────────
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-800 ${className}`} />
+  return <div className={`animate-pulse rounded-2xl ${className}`} style={{ background: 'var(--pm-surface-soft, #f5f5f7)' }} />
 }
 
 function PortalSkeleton() {
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-3.5rem)]">
-      <div className="lg:w-[340px] p-8 space-y-6 border-r border-neutral-100 dark:border-neutral-800">
+    <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 64px)' }}>
+      <div className="pm-sidebar space-y-6">
         <Skeleton className="h-12 w-40" />
         <Skeleton className="h-36 w-full" />
         <Skeleton className="h-28 w-full" />
         <Skeleton className="h-20 w-full" />
       </div>
-      <div className="flex-1 p-8 space-y-6">
+      <div className="pm-main space-y-6">
         <Skeleton className="h-8 w-52" />
         <Skeleton className="h-72 w-full" />
       </div>
@@ -109,27 +108,24 @@ function visitDuration(entry: Date, exit: Date) {
 const SUA_CONFIG = {
   Valid: {
     accent: "#16a34a",
-    accentLight: "rgba(22,163,74,0.08)",
-    accentBorder: "rgba(22,163,74,0.18)",
+    accentLight: "rgba(22,163,74,0.06)",
+    accentBorder: "rgba(22,163,74,0.15)",
     label: "Vigente",
     icon: ShieldCheck,
-    dot: "bg-emerald-500",
   },
   Expired: {
     accent: "#dc2626",
-    accentLight: "rgba(220,38,38,0.07)",
-    accentBorder: "rgba(220,38,38,0.18)",
+    accentLight: "rgba(220,38,38,0.06)",
+    accentBorder: "rgba(220,38,38,0.15)",
     label: "Vencido",
     icon: ShieldX,
-    dot: "bg-red-500",
   },
   Pending: {
     accent: "#d97706",
-    accentLight: "rgba(217,119,6,0.07)",
-    accentBorder: "rgba(217,119,6,0.18)",
+    accentLight: "rgba(217,119,6,0.06)",
+    accentBorder: "rgba(217,119,6,0.15)",
     label: "Pendiente",
     icon: ShieldAlert,
-    dot: "bg-amber-500",
   },
 } as const
 
@@ -254,112 +250,74 @@ export default function PortalPage() {
 
   return (
     <>
-      <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
-
-          .portal-root {
-            font-family: 'DM Sans', sans-serif;
-          }
-          .portal-mono {
-            font-family: 'DM Mono', monospace;
-          }
-          .sua-glow {
-            box-shadow: 0 0 0 1px var(--sua-color-border), 0 4px 24px var(--sua-color-shadow);
-          }
-          .action-btn {
-            transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
-          }
-          .action-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
-          }
-          .action-btn:active {
-            transform: translateY(0);
-          }
-          .visit-row:hover td {
-            background: rgba(0,0,0,0.018);
-          }
-          .divider-label {
-            letter-spacing: 0.1em;
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #9ca3af;
-          }
-          .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            display: inline-block;
-          }
-          .sidebar-section {
-            padding: 0 0 1.5rem 0;
-            border-bottom: 1px solid #f1f1f1;
-          }
-          .sidebar-section:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-          }
-        `}</style>
-
-      <div className="portal-root flex flex-col lg:flex-row h-[calc(100vh-3.5rem)] bg-[#fafafa]">
+      <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 64px)' }}>
 
         {/* ══════════════════════════════════════════
-              SIDEBAR — refined executive panel
+              SIDEBAR — Meta design: clean, minimal
               ══════════════════════════════════════════ */}
         <motion.aside
           variants={stagger}
           initial="hidden"
           animate="visible"
-          className="lg:w-[320px] xl:w-[340px] shrink-0 bg-white border-r border-neutral-100 overflow-y-auto"
-          style={{ boxShadow: "2px 0 16px rgba(0,0,0,0.03)" }}
+          className="pm-sidebar"
         >
-          <div className="p-7 space-y-7">
+          <div className="space-y-6">
 
             {/* Company identity */}
-            <motion.div variants={fadeUp} className="sidebar-section pb-6">
-              <div className="flex items-start gap-3.5">
+            <motion.div variants={fadeUp}>
+              <div className="flex items-start gap-3">
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" }}
+                  className="w-11 h-11 flex items-center justify-center shrink-0"
+                  style={{
+                    background: 'var(--pm-ink-deep)',
+                    borderRadius: 'var(--pm-rounded-xl)',
+                  }}
                 >
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0 pt-0.5">
-                  <h1 className="text-[17px] font-semibold tracking-tight text-neutral-900 leading-tight truncate">
+                  <h1 className="pm-subtitle-lg" style={{ fontSize: '17px' }}>
                     {company.name}
                   </h1>
                   {company.type && (
-                    <p className="text-[12px] text-neutral-400 mt-0.5 capitalize font-normal">{company.type}</p>
+                    <p className="pm-caption capitalize" style={{ marginTop: '2px' }}>
+                      {company.type}
+                    </p>
                   )}
                 </div>
               </div>
             </motion.div>
 
-            {/* SUA Status — executive card */}
-            <motion.div variants={fadeUp} className="sidebar-section pb-6">
-              <p className="divider-label mb-3">Estado SUA</p>
+            <hr className="pm-separator" />
+
+            {/* SUA Status */}
+            <motion.div variants={fadeUp}>
+              <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Estado SUA</p>
 
               <div
-                className="rounded-xl p-4 sua-glow"
+                className="pm-sua-card"
                 style={{
-                  ["--sua-color-border" as any]: sua.accentBorder,
-                  ["--sua-color-shadow" as any]: sua.accentLight,
                   background: sua.accentLight,
+                  color: sua.accent,
                   border: `1px solid ${sua.accentBorder}`,
                 }}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
+                <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
+                  <div className="flex items-center gap-2">
                     <SuaIcon className="w-4 h-4" style={{ color: sua.accent }} />
-                    <span className="text-[13px] font-semibold" style={{ color: sua.accent }}>
+                    <span className="pm-body-sm-bold" style={{ color: sua.accent }}>
                       {sua.label}
                     </span>
                   </div>
                   {validUntil && (
                     <span
-                      className="portal-mono text-[10px] font-medium px-2 py-0.5 rounded-md"
-                      style={{ background: sua.accentBorder, color: sua.accent }}
+                      className="pm-caption-bold"
+                      style={{
+                        background: sua.accentBorder,
+                        color: sua.accent,
+                        padding: '2px 8px',
+                        borderRadius: 'var(--pm-rounded-full)',
+                      }}
                     >
                       {validUntil}
                     </span>
@@ -367,18 +325,30 @@ export default function PortalPage() {
                 </div>
 
                 {/* Progress track */}
-                <div className="h-1 w-full rounded-full bg-white/60 overflow-hidden mb-3">
+                <div
+                  style={{
+                    height: '4px',
+                    width: '100%',
+                    borderRadius: 'var(--pm-rounded-full)',
+                    background: 'rgba(255,255,255,0.7)',
+                    overflow: 'hidden',
+                    marginBottom: '12px',
+                  }}
+                >
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
                     transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-                    className="h-full rounded-full"
-                    style={{ background: sua.accent }}
+                    style={{
+                      height: '100%',
+                      borderRadius: 'var(--pm-rounded-full)',
+                      background: sua.accent,
+                    }}
                   />
                 </div>
 
                 {daysLeft !== null && (
-                  <p className="text-[11px] text-neutral-500 flex items-center gap-1.5 mb-3">
+                  <p className="pm-caption flex items-center gap-1.5" style={{ color: 'var(--pm-slate)', marginBottom: '12px' }}>
                     <Clock className="w-3 h-3" />
                     {daysLeft > 0
                       ? `Vence en ${daysLeft} día${daysLeft !== 1 ? "s" : ""}`
@@ -389,16 +359,26 @@ export default function PortalPage() {
                 )}
 
                 {renewalSent ? (
-                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 pt-3 border-t border-white/40">
-                    <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <div className="flex items-center gap-1.5 pm-caption" style={{ color: 'var(--pm-success)', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.4)' }}>
+                    <CheckCheck className="w-3.5 h-3.5" />
                     Solicitud enviada
                   </div>
                 ) : (
                   <button
                     onClick={handleRenewalRequest}
                     disabled={sendingRenewal}
-                    className="action-btn w-full mt-3 pt-3 border-t border-white/40 flex items-center justify-center gap-1.5 text-[11px] font-medium rounded-lg py-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ color: sua.accent }}
+                    className="w-full flex items-center justify-center gap-1.5 pm-caption-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      color: sua.accent,
+                      paddingTop: '12px',
+                      borderTop: '1px solid rgba(255,255,255,0.4)',
+                      background: 'none',
+                      border: 'none',
+                      borderTopStyle: 'solid',
+                      borderTopWidth: '1px',
+                      borderTopColor: 'rgba(255,255,255,0.4)',
+                      cursor: 'pointer',
+                    }}
                   >
                     <RefreshCw className={`w-3 h-3 ${sendingRenewal ? "animate-spin" : ""}`} />
                     Solicitar renovación
@@ -411,20 +391,28 @@ export default function PortalPage() {
               {company.status === "Blocked" && (
                 <motion.div
                   variants={fadeUp}
-                  className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3.5 flex items-start gap-2.5"
+                  className="pm-card flex items-start gap-3"
+                  style={{
+                    marginTop: '12px',
+                    background: 'rgba(220,38,38,0.05)',
+                    borderColor: 'rgba(220,38,38,0.15)',
+                    padding: 'var(--pm-base)',
+                  }}
                 >
-                  <Ban className="w-3.5 h-3.5 text-red-500 shrink-0 mt-0.5" />
+                  <Ban className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--pm-critical)' }} />
                   <div>
-                    <p className="text-[12px] font-semibold text-red-600">Acceso bloqueado</p>
-                    <p className="text-[11px] text-red-400 mt-0.5">Contacta al administrador.</p>
+                    <p className="pm-body-sm-bold" style={{ color: 'var(--pm-critical)' }}>Acceso bloqueado</p>
+                    <p className="pm-caption" style={{ color: 'var(--pm-critical)', marginTop: '2px' }}>Contacta al administrador.</p>
                   </div>
                 </motion.div>
               )}
             </motion.div>
 
+            <hr className="pm-separator" />
+
             {/* Contact */}
-            <motion.div variants={fadeUp} className="sidebar-section pb-6">
-              <p className="divider-label mb-3">Contacto</p>
+            <motion.div variants={fadeUp}>
+              <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Contacto</p>
               <div className="space-y-0">
                 <SidebarInfoRow icon={User} label="Representante" value={company.contact} />
                 <SidebarInfoRow icon={Phone} label="Teléfono" value={company.phone} />
@@ -432,9 +420,11 @@ export default function PortalPage() {
               </div>
             </motion.div>
 
+            <hr className="pm-separator" />
+
             {/* Actions */}
-            <motion.div variants={fadeUp} className="sidebar-section">
-              <p className="divider-label mb-3">Acciones</p>
+            <motion.div variants={fadeUp}>
+              <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Acciones</p>
               <div className="space-y-2">
                 <ActionButton icon={QrCode} label="Mi código QR" onClick={() => setQrOpen(true)} />
                 <Link href="/portal/contrato" className="block">
@@ -450,7 +440,6 @@ export default function PortalPage() {
                 )}
               </div>
             </motion.div>
-
           </div>
         </motion.aside>
 
@@ -461,24 +450,25 @@ export default function PortalPage() {
           variants={stagger}
           initial="hidden"
           animate="visible"
-          className="flex-1 overflow-y-auto"
+          className="pm-main"
         >
-          <div className="p-7 lg:p-10 max-w-5xl space-y-8">
+          <div className="max-w-5xl space-y-8">
 
             {/* Page header */}
             <motion.div variants={fadeUp} className="flex items-end justify-between">
               <div>
-                <h2 className="text-[30px] font-bold text-neutral-900 tracking-tight">
-                  Portal
-                </h2>
-                <p className="text-[15px] text-neutral-400 mt-0.5">
+                <h2 className="pm-heading-sm">Portal</h2>
+                <p className="pm-body-sm" style={{ color: 'var(--pm-steel)', marginTop: '4px' }}>
                   Historial de registros y accesos
                 </p>
               </div>
               {activeVisit && (
-                <div className="hidden sm:flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-2">
-                  <span className="status-dot bg-emerald-500 animate-pulse" />
-                  <span className="text-[12px] font-medium text-emerald-700">En planta ahora</span>
+                <div
+                  className="hidden sm:flex items-center gap-2 pm-badge-success"
+                  style={{ borderRadius: 'var(--pm-rounded-full)' }}
+                >
+                  <span className="pm-dot pm-dot-success animate-pulse" />
+                  <span className="pm-caption-bold" style={{ color: 'inherit' }}>En planta ahora</span>
                 </div>
               )}
             </motion.div>
@@ -487,16 +477,17 @@ export default function PortalPage() {
             {upcomingVisits && upcomingVisits.length > 0 && (
               <motion.section variants={fadeUp}>
                 <SectionHeader icon={CalendarClock} title="Próximas visitas" count={upcomingVisits.length} />
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-4">
                   {upcomingVisits.slice(0, 6).map((visit, i) => (
                     <motion.div
                       key={visit.id}
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 + 0.2, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                      className="bg-white rounded-xl border border-neutral-100 p-4 hover:border-neutral-200 hover:shadow-sm transition-all duration-200"
+                      className="pm-card"
+                      style={{ padding: 'var(--pm-base) var(--pm-lg)' }}
                     >
-                      <p className="text-[13px] font-semibold text-neutral-800">
+                      <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
                         {visit.scheduledDate
                           ? new Date(visit.scheduledDate + "T12:00:00").toLocaleDateString("es-MX", {
                             weekday: "long",
@@ -506,11 +497,11 @@ export default function PortalPage() {
                           : "—"}
                       </p>
                       {(visit as any).scheduledTime && (
-                        <p className="portal-mono text-[11px] text-neutral-400 mt-1">
+                        <p className="pm-caption" style={{ marginTop: '4px', fontFamily: 'var(--pm-font-mono)' }}>
                           {(visit as any).scheduledTime}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 mt-2.5 text-[11px] text-neutral-400">
+                      <div className="flex items-center gap-3 mt-2 pm-caption" style={{ color: 'var(--pm-steel)' }}>
                         {visit.areaName && (
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
@@ -539,76 +530,60 @@ export default function PortalPage() {
                 hideCount={!visits?.length}
               />
 
-              <div className="mt-3">
+              <div className="mt-4">
                 {visitsLoading ? (
-                  <div className="bg-white rounded-xl border border-neutral-100 py-16 flex justify-center">
-                    <Loader2 className="w-5 h-5 animate-spin text-neutral-300" />
+                  <div className="pm-card flex justify-center" style={{ padding: '64px 0' }}>
+                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--pm-stone)' }} />
                   </div>
                 ) : visits && visits.length > 0 ? (
                   <>
                     {/* Desktop table */}
-                    <div className="hidden md:block bg-white rounded-xl border border-neutral-100 overflow-hidden">
-                      <table className="w-full">
+                    <div className="hidden md:block pm-card" style={{ padding: 0, overflow: 'hidden' }}>
+                      <table className="pm-table">
                         <thead>
-                          <tr className="border-b border-neutral-50">
-                            <th className="text-left px-5 py-3.5">
-                              <span className="divider-label">Fecha</span>
-                            </th>
-                            <th className="text-left px-4 py-3.5">
-                              <span className="divider-label">Área</span>
-                            </th>
-                            <th className="text-left px-4 py-3.5">
-                              <span className="divider-label">Entrada</span>
-                            </th>
-                            <th className="text-left px-4 py-3.5">
-                              <span className="divider-label">Salida</span>
-                            </th>
-                            <th className="text-left px-4 py-3.5">
-                              <span className="divider-label">Duración</span>
-                            </th>
-                            <th className="text-left px-4 py-3.5">
-                              <span className="divider-label">Estado</span>
-                            </th>
-                            <th className="text-right px-5 py-3.5">
-                              <span className="divider-label">PDF</span>
-                            </th>
+                          <tr>
+                            <th>Fecha</th>
+                            <th>Área</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Duración</th>
+                            <th>Estado</th>
+                            <th style={{ textAlign: 'right' }}>PDF</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {visits.map((visit, i) => {
+                          {visits.map((visit) => {
                             const entryDate = visit.entryTime?.toDate()
                             const exitDate = visit.exitTime?.toDate()
                             return (
-                              <tr
-                                key={visit.id}
-                                className="visit-row border-b border-neutral-50 last:border-0 transition-colors"
-                              >
-                                <td className="px-5 py-3.5 text-[13px] font-medium text-neutral-800">
+                              <tr key={visit.id}>
+                                <td className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
                                   {entryDate?.toLocaleDateString("es-MX", {
                                     day: "2-digit",
                                     month: "short",
                                     year: "numeric",
                                   }) ?? "—"}
                                 </td>
-                                <td className="px-4 py-3.5 text-[12px] text-neutral-500">
+                                <td className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
                                   {visit.areaName ?? "—"}
                                 </td>
-                                <td className="px-4 py-3.5 portal-mono text-[11px] text-neutral-500">
+                                <td style={{ fontFamily: 'var(--pm-font-mono)', fontSize: '12px', color: 'var(--pm-slate)' }}>
                                   {entryDate?.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) ?? "—"}
                                 </td>
-                                <td className="px-4 py-3.5 portal-mono text-[11px] text-neutral-500">
+                                <td style={{ fontFamily: 'var(--pm-font-mono)', fontSize: '12px', color: 'var(--pm-slate)' }}>
                                   {exitDate?.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) ?? "—"}
                                 </td>
-                                <td className="px-4 py-3.5 text-[12px] text-neutral-500">
+                                <td className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
                                   {entryDate && exitDate ? visitDuration(entryDate, exitDate) : "—"}
                                 </td>
-                                <td className="px-4 py-3.5">
+                                <td>
                                   <VisitStatusBadge status={visit.status} />
                                 </td>
-                                <td className="px-5 py-3.5 text-right">
+                                <td style={{ textAlign: 'right' }}>
                                   <button
                                     onClick={() => generateVoucherPDF(visit, company)}
-                                    className="action-btn w-7 h-7 rounded-lg flex items-center justify-center ml-auto text-neutral-300 hover:text-neutral-600 hover:bg-neutral-50 transition-colors"
+                                    className="pm-btn-icon"
+                                    style={{ width: '32px', height: '32px', marginLeft: 'auto' }}
                                   >
                                     <Download className="w-3.5 h-3.5" />
                                   </button>
@@ -626,18 +601,15 @@ export default function PortalPage() {
                         const entryDate = visit.entryTime?.toDate()
                         const exitDate = visit.exitTime?.toDate()
                         return (
-                          <div
-                            key={visit.id}
-                            className="bg-white rounded-xl border border-neutral-100 p-4 flex items-center gap-3"
-                          >
+                          <div key={visit.id} className="pm-visit-card">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="text-[13px] font-semibold text-neutral-800">
+                                <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
                                   {entryDate?.toLocaleDateString("es-MX", { day: "2-digit", month: "short" }) ?? "—"}
                                 </p>
                                 <VisitStatusBadge status={visit.status} />
                               </div>
-                              <div className="flex items-center gap-3 mt-1 text-[11px] text-neutral-400">
+                              <div className="flex items-center gap-3 mt-1 pm-caption" style={{ color: 'var(--pm-steel)' }}>
                                 {visit.areaName && (
                                   <span className="flex items-center gap-1">
                                     <MapPin className="w-3 h-3" />
@@ -654,7 +626,8 @@ export default function PortalPage() {
                             </div>
                             <button
                               onClick={() => generateVoucherPDF(visit, company)}
-                              className="action-btn w-8 h-8 rounded-lg flex items-center justify-center text-neutral-300 hover:text-neutral-600 hover:bg-neutral-50 transition-colors shrink-0"
+                              className="pm-btn-icon shrink-0"
+                              style={{ width: '36px', height: '36px' }}
                             >
                               <Download className="w-4 h-4" />
                             </button>
@@ -664,12 +637,23 @@ export default function PortalPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="bg-white rounded-xl border border-neutral-100 py-20 text-center">
-                    <div className="w-12 h-12 rounded-2xl bg-neutral-50 flex items-center justify-center mx-auto mb-3">
-                      <CalendarClock className="w-5 h-5 text-neutral-300" />
+                  <div className="pm-card text-center" style={{ padding: '80px var(--pm-xxl)' }}>
+                    <div
+                      className="flex items-center justify-center mx-auto"
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: 'var(--pm-rounded-xxl)',
+                        background: 'var(--pm-surface-soft)',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      <CalendarClock className="w-5 h-5" style={{ color: 'var(--pm-stone)' }} />
                     </div>
-                    <p className="text-[13px] text-neutral-400">No hay visitas registradas aún.</p>
-                    <p className="text-[11px] text-neutral-300 mt-1">
+                    <p className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
+                      No hay visitas registradas aún.
+                    </p>
+                    <p className="pm-caption" style={{ marginTop: '4px' }}>
                       Las visitas aparecerán aquí una vez registradas.
                     </p>
                   </div>
@@ -678,50 +662,46 @@ export default function PortalPage() {
             </motion.section>
 
           </div>
-        </motion.div >
-      </div >
+        </motion.div>
+      </div>
 
       {/* ── Active visit floating pill ── */}
       <AnimatePresence>
-        {
-          activeVisit && (
-            <motion.div
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 80, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-auto md:max-w-sm z-50"
-            >
-              <div className="bg-white rounded-2xl border border-neutral-100 shadow-xl shadow-neutral-900/10 px-5 py-3.5 flex items-center gap-3.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-neutral-900">Visita activa</p>
-                  <div className="flex items-center gap-2 text-[11px] text-neutral-400 mt-0.5">
-                    {activeVisit.areaName && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {activeVisit.areaName}
-                      </span>
-                    )}
-                    {activeVisit.entryTime && (
-                      <span>
-                        · {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}
-                      </span>
-                    )}
-                  </div>
+        {activeVisit && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-auto md:max-w-sm z-50"
+          >
+            <div className="pm-floating-pill">
+              <span className="pm-dot pm-dot-success animate-pulse" />
+              <div className="flex-1 min-w-0">
+                <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>Visita activa</p>
+                <div className="flex items-center gap-2 pm-caption" style={{ color: 'var(--pm-steel)', marginTop: '2px' }}>
+                  {activeVisit.areaName && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {activeVisit.areaName}
+                    </span>
+                  )}
+                  {activeVisit.entryTime && (
+                    <span>
+                      · {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}
+                    </span>
+                  )}
                 </div>
               </div>
-            </motion.div>
-          )
-        }
-      </AnimatePresence >
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* QR Dialog */}
-      {
-        company && (
-          <ContractorQRDialog company={company} open={qrOpen} onOpenChange={setQrOpen} />
-        )
-      }
+      {company && (
+        <ContractorQRDialog company={company} open={qrOpen} onOpenChange={setQrOpen} />
+      )}
     </>
   )
 }
@@ -743,11 +723,25 @@ function SidebarInfoRow({
 }) {
   if (!value) return null
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-neutral-50 last:border-0">
-      <Icon className="w-3.5 h-3.5 text-neutral-300 shrink-0 mt-0.5" />
+    <div
+      className="flex items-start gap-3"
+      style={{
+        padding: '10px 0',
+        borderBottom: '1px solid var(--pm-hairline-soft)',
+      }}
+    >
+      <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--pm-stone)' }} />
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] text-neutral-400 uppercase tracking-wider font-medium">{label}</p>
-        <p className={`text-[13px] font-medium text-neutral-800 truncate mt-0.5 ${mono ? "portal-mono text-[12px]" : ""}`}>
+        <p className="pm-divider-label">{label}</p>
+        <p
+          className="pm-body-sm-bold truncate"
+          style={{
+            color: 'var(--pm-ink-deep)',
+            marginTop: '2px',
+            fontFamily: mono ? 'var(--pm-font-mono)' : undefined,
+            fontSize: mono ? '12px' : undefined,
+          }}
+        >
           {value}
         </p>
       </div>
@@ -769,14 +763,17 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className={`action-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border text-left transition-all ${active
-        ? "border-emerald-100 bg-emerald-50 text-emerald-700"
-        : "border-neutral-100 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-200"
-        }`}
+      className="pm-action-row w-full"
+      style={{
+        background: active ? 'rgba(22,163,74,0.05)' : 'var(--pm-canvas)',
+        borderColor: active ? 'rgba(22,163,74,0.15)' : undefined,
+      }}
     >
-      <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? "text-emerald-500" : "text-neutral-400"}`} />
-      <span className="text-[12px] font-medium">{label}</span>
-      {!active && <ArrowRight className="w-3 h-3 ml-auto text-neutral-200" />}
+      <Icon className="w-4 h-4 shrink-0" style={{ color: active ? 'var(--pm-success)' : 'var(--pm-steel)' }} />
+      <span className="pm-body-sm-bold flex-1 text-left" style={{ color: active ? 'var(--pm-success)' : 'var(--pm-ink)' }}>
+        {label}
+      </span>
+      {!active && <ChevronRight className="w-4 h-4" style={{ color: 'var(--pm-stone)' }} />}
     </button>
   )
 }
@@ -795,11 +792,20 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-neutral-400" />
-        <h2 className="text-[14px] font-semibold text-neutral-800">{title}</h2>
+        <Icon className="w-4 h-4" style={{ color: 'var(--pm-steel)' }} />
+        <h2 className="pm-body-sm-bold">{title}</h2>
       </div>
       {!hideCount && count > 0 && (
-        <span className="text-[11px] font-medium text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-md portal-mono">
+        <span
+          className="pm-caption-bold"
+          style={{
+            background: 'var(--pm-surface-soft)',
+            color: 'var(--pm-slate)',
+            padding: '2px 8px',
+            borderRadius: 'var(--pm-rounded-full)',
+            fontFamily: 'var(--pm-font-mono)',
+          }}
+        >
           {count}
         </span>
       )}
@@ -810,21 +816,21 @@ function SectionHeader({
 function VisitStatusBadge({ status }: { status: Visit["status"] }) {
   if (status === "Activa") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-        <span className="status-dot bg-emerald-500 animate-pulse" />
+      <span className="pm-badge pm-badge-success" style={{ fontSize: '11px', padding: '2px 8px' }}>
+        <span className="pm-dot pm-dot-success animate-pulse" style={{ width: '6px', height: '6px' }} />
         Activa
       </span>
     )
   }
   if (status === "Programada") {
     return (
-      <span className="inline-flex items-center text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+      <span className="pm-badge" style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--pm-primary-soft)', color: 'var(--pm-primary)' }}>
         Programada
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center text-[10px] font-medium text-neutral-400 bg-neutral-50 border border-neutral-100 px-2 py-0.5 rounded-md">
+    <span className="pm-badge pm-badge-neutral" style={{ fontSize: '11px', padding: '2px 8px' }}>
       Completada
     </span>
   )
@@ -843,30 +849,40 @@ function ErrorState({
 }) {
   const styles = {
     amber: {
-      wrapper: "border-amber-100 bg-amber-50",
-      icon: "text-amber-500",
-      title: "text-amber-800",
-      desc: "text-amber-600",
+      bg: "rgba(217,119,6,0.06)",
+      border: "rgba(217,119,6,0.15)",
+      icon: "var(--pm-attention)",
+      title: "var(--pm-attention)",
+      desc: "var(--pm-slate)",
     },
     red: {
-      wrapper: "border-red-100 bg-red-50",
-      icon: "text-red-500",
-      title: "text-red-800",
-      desc: "text-red-500",
+      bg: "rgba(220,38,38,0.06)",
+      border: "rgba(220,38,38,0.15)",
+      icon: "var(--pm-critical)",
+      title: "var(--pm-critical)",
+      desc: "var(--pm-slate)",
     },
   }
   const s = styles[color]
   return (
-    <div className="flex items-center justify-center min-h-[60vh] px-4">
+    <div className="flex items-center justify-center" style={{ minHeight: '60vh', padding: '0 var(--pm-base)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={`rounded-2xl border ${s.wrapper} p-6 flex gap-3.5 items-start max-w-md w-full`}
+        className="pm-card flex gap-3 items-start"
+        style={{
+          maxWidth: '420px',
+          width: '100%',
+          background: s.bg,
+          borderColor: s.border,
+          borderRadius: 'var(--pm-rounded-xxl)',
+          padding: 'var(--pm-xl)',
+        }}
       >
-        <Icon className={`w-5 h-5 ${s.icon} shrink-0 mt-0.5`} />
+        <Icon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: s.icon }} />
         <div>
-          <p className={`font-semibold text-[14px] ${s.title}`}>{title}</p>
-          <p className={`text-[12px] ${s.desc} mt-1 leading-relaxed`}>{description}</p>
+          <p className="pm-subtitle-lg" style={{ color: s.title, fontSize: '14px' }}>{title}</p>
+          <p className="pm-body-sm" style={{ color: s.desc, marginTop: '4px' }}>{description}</p>
         </div>
       </motion.div>
     </div>
