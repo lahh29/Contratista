@@ -230,17 +230,17 @@ const PAGINAS = [
 
         {/* Clasificación */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-lg border border-neutral-700 bg-neutral-800/50 p-3 space-y-1">
-            <p className="text-xs font-bold text-neutral-100 uppercase tracking-wide">a) Residuos No Peligrosos</p>
-            <ul className="text-xs text-neutral-300 space-y-0.5 list-disc list-inside">
+          <div className="rounded-lg border border-neutral-700 dark:border-neutral-300 bg-black dark:bg-white p-3 space-y-1">
+            <p className="text-xs font-bold text-white dark:text-black uppercase tracking-wide">a) Residuos No Peligrosos</p>
+            <ul className="text-xs text-white dark:text-black space-y-0.5 list-disc list-inside">
               {["Papel", "Cartón", "PET", "Inorgánicos", "Plástico", "Maderas", "Latas de aluminio"].map(r => (
                 <li key={r}>{r}</li>
               ))}
             </ul>
           </div>
-          <div className="rounded-lg border border-red-800 bg-red-950/50 p-3 space-y-1">
-            <p className="text-xs font-bold text-red-400 uppercase tracking-wide">b) Residuos Peligrosos</p>
-            <p className="text-xs text-red-300/80">Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
+          <div className="rounded-lg border border-neutral-700 dark:border-neutral-300 bg-black dark:bg-white p-3 space-y-1">
+            <p className="text-xs font-bold text-red-400 dark:text-red-600 uppercase tracking-wide">b) Residuos Peligrosos</p>
+            <p className="text-xs text-white dark:text-black">Requieren recipientes específicos identificados con el nombre del residuo. Notificar al contacto en Viñoplastic para autorización de ingreso al almacén de residuos peligrosos.</p>
           </div>
         </div>
 
