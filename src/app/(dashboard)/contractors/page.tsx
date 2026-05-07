@@ -7,6 +7,7 @@ import {
   MoreVertical,
   ShieldCheck,
   ShieldAlert,
+  ShieldOff,
   Building2,
   QrCode,
   Phone,
@@ -86,7 +87,8 @@ function SuaBadge({ sua }: { sua?: { status?: string; validUntil?: string } }) {
   )
 }
 
-function CompanyActions({ onAction }: { onAction: (type: ActiveDialog) => void }) {
+function CompanyActions({ company, onAction }: { company: Company; onAction: (type: ActiveDialog) => void }) {
+  const isBlocked = company.status === 'Blocked'
   return (
     <div className="flex items-center justify-end gap-1">
       <Button
@@ -120,10 +122,11 @@ function CompanyActions({ onAction }: { onAction: (type: ActiveDialog) => void }
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-orange-600 focus:text-orange-600"
+            className={isBlocked ? "text-green-600 focus:text-green-600" : "text-orange-600 focus:text-orange-600"}
             onClick={() => onAction('block')}
           >
-            Bloquear Acceso
+            {isBlocked ? <ShieldOff className="w-4 h-4 mr-2" /> : null}
+            {isBlocked ? 'Desbloquear Acceso' : 'Bloquear Acceso'}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
@@ -176,20 +179,29 @@ export default function ContractorsPage() {
   async function handleBlock() {
     if (!db || !selectedCompany) return
     const companyRef = doc(db, "companies", selectedCompany.id)
-    const updateData = { status: "Blocked" }
+    const isBlocked = selectedCompany.status === 'Blocked'
+    const newStatus = isBlocked ? 'Active' : 'Blocked'
+    const updateData = { status: newStatus }
     try {
       await updateDoc(companyRef, updateData)
+      const undoStatus = isBlocked ? 'Blocked' : 'Active'
       toastWithUndo(
-        "Acceso bloqueado",
+        isBlocked ? "Acceso desbloqueado" : "Acceso bloqueado",
         async () => {
-          await updateDoc(companyRef, { status: "Active" })
-          sendNotification({ type: 'unblocked_contractor', companyName: selectedCompany.name }).catch(() => { })
+          await updateDoc(companyRef, { status: undoStatus })
+          if (isBlocked) {
+            sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id }).catch(() => { })
+          } else {
+            sendNotification({ type: 'unblocked_contractor', companyName: selectedCompany.name }).catch(() => { })
+          }
           fetchCompanies()
         },
-        `${selectedCompany.name} ha sido bloqueada.`,
+        isBlocked
+          ? `${selectedCompany.name} ha sido desbloqueada.`
+          : `${selectedCompany.name} ha sido bloqueada.`,
       )
       logAudit({
-        action: 'company.blocked',
+        action: isBlocked ? 'company.unblocked' : 'company.blocked',
         actorUid: appUser?.uid ?? '',
         actorName: appUser?.name ?? appUser?.email ?? 'Admin',
         actorRole: appUser?.role ?? 'admin',
@@ -197,7 +209,11 @@ export default function ContractorsPage() {
         targetId: selectedCompany.id,
         targetName: selectedCompany.name,
       })
-      sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id }).catch(() => { })
+      if (isBlocked) {
+        sendNotification({ type: 'unblocked_contractor', companyName: selectedCompany.name }).catch(() => { })
+      } else {
+        sendNotification({ type: 'blocked_contractor', companyName: selectedCompany.name, companyId: selectedCompany.id }).catch(() => { })
+      }
       fetchCompanies()
     } catch {
       const permissionError = new FirestorePermissionError({
@@ -287,7 +303,7 @@ export default function ContractorsPage() {
                         <SuaBadge sua={company.sua} />
                       </div>
                     </div>
-                    <CompanyActions onAction={(type) => openAction(company, type)} />
+                    <CompanyActions company={company} onAction={(type) => openAction(company, type)} />
                   </div>
                 ))}
               </div>
@@ -344,7 +360,7 @@ export default function ContractorsPage() {
                           {company.sua?.validUntil || 'N/A'}
                         </TableCell>
                         <TableCell className="text-right">
-                          <CompanyActions onAction={(type) => openAction(company, type)} />
+                          <CompanyActions company={company} onAction={(type) => openAction(company, type)} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -389,19 +405,27 @@ export default function ContractorsPage() {
         <AlertDialog open onOpenChange={(open) => { if (!open) closeDialog() }}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>¿Bloquear acceso?</AlertDialogTitle>
+              <AlertDialogTitle>
+                {selectedCompany.status === 'Blocked' ? '¿Desbloquear acceso?' : '¿Bloquear acceso?'}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                La empresa <strong>{selectedCompany.name}</strong> será marcada como bloqueada y no podrá
-                registrar nuevas visitas. Esta acción se puede revertir editando la empresa.
+                {selectedCompany.status === 'Blocked' ? (
+                  <>La empresa <strong>{selectedCompany.name}</strong> será desbloqueada y podrá registrar visitas nuevamente.</>
+                ) : (
+                  <>La empresa <strong>{selectedCompany.name}</strong> será marcada como bloqueada y no podrá registrar nuevas visitas. Esta acción se puede revertir.</>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction
-                className="bg-orange-600 text-white hover:bg-orange-700"
+                className={selectedCompany.status === 'Blocked'
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-orange-600 text-white hover:bg-orange-700"
+                }
                 onClick={handleBlock}
               >
-                Sí, bloquear
+                {selectedCompany.status === 'Blocked' ? 'Sí, desbloquear' : 'Sí, bloquear'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
