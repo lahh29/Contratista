@@ -205,6 +205,7 @@ async function generateSmokingExcel(records: any[]) {
     { header: 'Puesto',       key: 'puesto',        width: 18 },
     { header: 'Departamento', key: 'departamento',  width: 18 },
     { header: 'Turno',        key: 'turno',         width: 12 },
+    { header: 'Destino',      key: 'destino',       width: 20 },
     { header: 'Fecha',        key: 'fecha',         width: 14 },
     { header: 'Salida',       key: 'salida',        width: 10 },
     { header: 'Regreso',      key: 'regreso',       width: 10 },
@@ -218,6 +219,7 @@ async function generateSmokingExcel(records: any[]) {
       puesto:       r.puesto       || '—',
       departamento: r.departamento || '—',
       turno:        r.turno        || '—',
+      destino:      r.destino      || 'Área de fumadores',
       fecha:        r.date         || '—',
       salida:       r.exitTime?.toDate   ? format(r.exitTime.toDate(),   'HH:mm') : '—',
       regreso:      r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—',
@@ -251,7 +253,7 @@ async function generateSmokingPDF(records: any[]) {
 
   autoTable(doc, {
     startY: 40,
-    head: [['Empleado', 'Puesto', 'Departamento', 'Turno', 'Fecha', 'Salida', 'Regreso', 'Duración', 'Estado']],
+    head: [['Empleado', 'Puesto', 'Departamento', 'Turno', 'Destino', 'Fecha', 'Salida', 'Regreso', 'Duración', 'Estado']],
     body: records.map(r => {
       const mins = calcDurationMins(r.exitTime, r.returnTime)
       return [
@@ -259,6 +261,7 @@ async function generateSmokingPDF(records: any[]) {
         r.puesto        || '—',
         r.departamento  || '—',
         r.turno         || '—',
+        r.destino       || 'Área de fumadores',
         r.date          || '—',
         r.exitTime?.toDate   ? format(r.exitTime.toDate(),  'HH:mm') : '—',
         r.returnTime?.toDate ? format(r.returnTime.toDate(), 'HH:mm') : '—',
@@ -986,6 +989,7 @@ export default function ReportsPage() {
                         <TableHead className="font-semibold">Empleado</TableHead>
                         <TableHead className="font-semibold">Departamento</TableHead>
                         <TableHead className="font-semibold">Turno</TableHead>
+                        <TableHead className="font-semibold">Destino</TableHead>
                         <TableHead className="font-semibold">Fecha</TableHead>
                         <TableHead className="font-semibold">Salida</TableHead>
                         <TableHead className="font-semibold">Regreso</TableHead>
@@ -1005,6 +1009,7 @@ export default function ReportsPage() {
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{r.departamento}</TableCell>
                             <TableCell className="text-muted-foreground text-sm">{r.turno}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{r.destino || 'Área de fumadores'}</TableCell>
                             <TableCell className="text-muted-foreground text-xs font-mono">{r.date}</TableCell>
                             <TableCell className="font-mono text-sm tabular-nums">
                               {r.exitTime?.toDate ? format(r.exitTime.toDate(), 'HH:mm') : '—'}
@@ -1128,6 +1133,12 @@ export default function ReportsPage() {
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Turno</label>
                   <p className="text-sm text-muted-foreground">{smokeDetailRecord.turno}</p>
+                </div>
+
+                {/* Destino */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Destino</label>
+                  <p className="text-sm text-muted-foreground">{smokeDetailRecord.destino || 'Área de fumadores'}</p>
                 </div>
 
                 {/* Fecha */}

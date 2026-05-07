@@ -38,6 +38,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useFirestore } from "@/firebase"
 import {
   collection,
@@ -89,6 +96,7 @@ interface SmokingRecord {
   date: string
   status: "out" | "returned"
   inMealTime?: boolean
+  destino?: string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -162,6 +170,7 @@ export default function FumadoresPage() {
   const [employee, setEmployee] = React.useState<Employee | null>(null)
   const [searching, setSearching] = React.useState(false)
   const [searchError, setSearchError] = React.useState<string | null>(null)
+  const [destino, setDestino] = React.useState("Área de fumadores")
 
   // In-session employee cache — evita releer Firebase si el guardia
   // busca el mismo empleado varias veces en el mismo turno.
@@ -322,6 +331,7 @@ export default function FumadoresPage() {
         status: "out",
         registeredBy: appUser.uid,
         inMealTime: currentlyInMeal ?? true,
+        destino,
       })
       toast({
         title: "Salida registrada",
@@ -567,7 +577,17 @@ export default function FumadoresPage() {
                   </p>
                 </div>
               ) : (
-                <div className="pt-3">
+                <div className="pt-3 space-y-3">
+                  <Select value={destino} onValueChange={setDestino}>
+                    <SelectTrigger className="w-full h-11 bg-background text-sm">
+                      <SelectValue placeholder="Destino" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Área de fumadores">Área de fumadores</SelectItem>
+                      <SelectItem value="Oxxo">Oxxo</SelectItem>
+                      <SelectItem value="Comer fuera de planta">Comer fuera de planta</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button onClick={handleExit} disabled={actionLoading} variant="outline" className="gap-2 w-full h-11 text-sm">
                     <LogOut className="w-4 h-4" />
                     Registrar salida
@@ -660,7 +680,7 @@ export default function FumadoresPage() {
                         <div className="min-w-0">
                           <p className="font-semibold text-sm leading-tight truncate">{displayName}</p>
                           <p className="text-xs text-muted-foreground truncate mt-0.5">
-                            {record.departamento} · T{record.turno}
+                            {record.departamento} · T{record.turno} {record.destino ? `· ${record.destino}` : ""}
                           </p>
                         </div>
                         {isOut ? (
@@ -711,6 +731,7 @@ export default function FumadoresPage() {
                     <TableHead className="pl-6">Empleado</TableHead>
                     <TableHead>Departamento</TableHead>
                     <TableHead>Turno</TableHead>
+                    <TableHead>Destino</TableHead>
                     <TableHead className="tabular-nums">Salida</TableHead>
                     <TableHead className="tabular-nums">Regreso / Duración</TableHead>
                     <TableHead>Comida</TableHead>
@@ -732,6 +753,7 @@ export default function FumadoresPage() {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{record.departamento}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{record.turno}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{record.destino || "Área de fumadores"}</TableCell>
                         <TableCell className="text-sm font-mono tabular-nums">{fmtTime(record.exitTime)}</TableCell>
                         <TableCell className="text-sm font-mono tabular-nums">
                           {isOut
