@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import {
-  ArrowLeft, CheckCircle2, Loader2, Trash2, ChevronLeft, ChevronRight, FileText,
+  ArrowLeft, CheckCircle2, Loader2, Trash2, ChevronLeft, ChevronRight, FileText, Download,
 } from "lucide-react"
 import {
   doc, getDoc, setDoc, collection, addDoc, serverTimestamp,
@@ -375,6 +375,7 @@ export default function ContratoPage() {
         firmadoPor: appUser.uid,
       })
 
+      setSignatureImg(dataURL)
       setStatus('firmado')
       setFechaFirma(new Date())
     } catch (err) {
@@ -401,9 +402,23 @@ export default function ContratoPage() {
         <div className="flex items-center gap-3 print:hidden">
           <BackButton />
           <div className="flex-1" />
-          <button className="pm-btn-primary" style={{ padding: '10px 20px', fontSize: '13px' }} onClick={() => window.print()}>
-            <CheckCircle2 className="w-4 h-4" />
-            Imprimir / Guardar PDF
+          <button
+            className="pm-btn-primary"
+            style={{ padding: '10px 20px', fontSize: '13px' }}
+            onClick={async () => {
+              const el = document.getElementById('contrato-print')
+              if (!el) return
+              const html2canvas = (await import('html2canvas')).default
+              const { jsPDF } = await import('jspdf')
+              const canvas = await html2canvas(el, { scale: 2, useCORS: true })
+              const imgData = canvas.toDataURL('image/png')
+              const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] })
+              pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+              pdf.save(`reglamento-${(companyName || 'contratista').replace(/\s+/g, '_')}.pdf`)
+            }}
+          >
+            <Download className="w-4 h-4" />
+            Guardar PDF
           </button>
         </div>
 
