@@ -778,6 +778,26 @@
   gap: 12px;
 }
 
+/* ── Layout Height ────────────────────────────────────────── */
+.portal-meta .pm-layout {
+  min-height: calc(100vh - 64px);
+}
+@media (min-width: 1024px) {
+  .portal-meta .pm-layout {
+    height: calc(100vh - 64px);
+    min-height: auto;
+  }
+}
+
+/* ── Tablet 2-col: Contacto + Acciones ───────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .portal-meta .pm-sidebar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--pm-xl);
+  }
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1023px) {
   .portal-meta .pm-sidebar {
@@ -785,6 +805,7 @@
     border-right: none;
     border-bottom: 1px solid var(--pm-hairline-soft);
     padding: var(--pm-xl);
+    overflow-y: visible;
   }
   .portal-meta .pm-main {
     padding: var(--pm-xl);
