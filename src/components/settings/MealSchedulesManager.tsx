@@ -96,6 +96,15 @@ interface GroupDoc extends EmployeeGroup {
   id: string
 }
 
+/** Horarios por día para Turno 4 */
+interface Turno4Schedule {
+  domingo: { start: string; end: string } | null
+  lunes: { start: string; end: string } | null
+  martes: { start: string; end: string } | null
+  miercoles: { start: string; end: string } | null
+  jueves: { start: string; end: string } | null
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const TURNOS = ["1", "2", "3", "4", "MIXTO"]
@@ -367,7 +376,18 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
   const [employees, setEmployees] = React.useState("")
   const [start, setStart] = React.useState("")
   const [end, setEnd] = React.useState("")
+
+  // Horarios por día para Turno 4
+  const [turno4Schedule, setTurno4Schedule] = React.useState<Turno4Schedule>({
+    domingo: { start: "", end: "" },
+    lunes: { start: "", end: "" },
+    martes: { start: "", end: "" },
+    miercoles: { start: "", end: "" },
+    jueves: { start: "", end: "" },
+  })
+
   const [saving, setSaving] = React.useState(false)
+  const isTurno4 = turno === "4"
 
   // Populate when editing
   React.useEffect(() => {
@@ -382,7 +402,8 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
   }, [open, initial])
 
   const handleSave = async () => {
-    if (!db || !dept.trim() || !turno || !grupo.trim() || !start || !end) return
+    if (!db || !dept.trim() || !turno || !grupo.trim()) return
+    if (turno !== "4" && (!start || !end)) return
     setSaving(true)
     try {
       const ids = employees
@@ -415,7 +436,7 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
     }
   }
 
-  const canSave = dept.trim() && turno && grupo.trim() && start && end
+  const canSave = dept.trim() && turno && grupo.trim() && (turno === "4" || (start && end))
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>

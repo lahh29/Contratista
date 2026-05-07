@@ -18,7 +18,7 @@ const TZ = "America/Mexico_City"
 
 export interface MealWindow {
   start: string  // "HH:mm" 24 h
-  end:   string  // "HH:mm" 24 h
+  end: string  // "HH:mm" 24 h
   label: string  // texto para la UI
 }
 
@@ -27,13 +27,13 @@ export interface MealWindow {
  * Puede pertenecer a cualquier departamento (no solo Producción).
  */
 export interface EmployeeGroup {
-  id?:          string      // ID del documento en Firestore (omitir en datos estáticos)
+  id?: string      // ID del documento en Firestore (omitir en datos estáticos)
   departamento: string      // Ej. "PRODUCCIÓN", "CALIDAD"
-  turno:        string      // "1", "2", "3", "MIXTO"
-  grupo:        string      // Número de grupo: "1", "2", …
-  label:        string      // Texto para la UI
-  employees:    string[]    // Array de employeeId (como string)
-  meal:         MealWindow
+  turno: string      // "1", "2", "3", "MIXTO"
+  grupo: string      // Número de grupo: "1", "2", …
+  label: string      // Texto para la UI
+  employees: string[]    // Array de employeeId (como string)
+  meal: MealWindow
 }
 
 /**
@@ -44,65 +44,67 @@ export interface MealConfig {
   /** Horarios fijos por departamento+turno. Clave = "DEPT|TURNO" en mayúsculas. */
   schedules: Record<string, MealWindow>
   /** Grupos de empleados con ventanas específicas (cualquier departamento). */
-  groups:    EmployeeGroup[]
+  groups: EmployeeGroup[]
 }
 
 // ─── Configuración estática (fallback mientras Firestore no tiene datos) ───────
 
 export const STATIC_CONFIG: MealConfig = {
   schedules: {
-    "CALIDAD|1":              { start: "11:00", end: "11:30", label: "11:00 – 11:30" },
-    "CALIDAD|2":              { start: "18:00", end: "18:30", label: "18:00 – 18:30" },
-    "ALMACÉN|1":              { start: "12:00", end: "12:30", label: "12:00 – 12:30" },
-    "ALMACÉN|2":              { start: "18:00", end: "18:30", label: "18:00 – 18:30" },
-    "METROLOGÍA|1":           { start: "12:00", end: "12:30", label: "12:00 – 12:30" },
-    "METROLOGÍA|2":           { start: "19:00", end: "19:30", label: "19:00 – 19:30" },
-    "METROLOGÍA|3":           { start: "04:30", end: "05:00", label: "04:30 – 05:00" },
-    "METROLOGÍA|MIXTO":       { start: "12:00", end: "12:30", label: "12:00 – 12:30" },
-    "TALLER DE MOLDES|1":     { start: "11:30", end: "12:00", label: "11:30 – 12:00" },
-    "TALLER DE MOLDES|2":     { start: "19:00", end: "19:30", label: "19:00 – 19:30" },
+    "CALIDAD|1": { start: "11:00", end: "11:30", label: "11:00 – 11:30" },
+    "CALIDAD|2": { start: "18:00", end: "18:30", label: "18:00 – 18:30" },
+    "CALIDAD ADMTVO|MIXTO": { start: "15:00", end: "16:00", label: "15:00 – 16:00" },
+    "ALMACÉN|1": { start: "12:00", end: "12:30", label: "12:00 – 12:30" },
+    "ALMACÉN|2": { start: "18:00", end: "18:30", label: "18:00 – 18:30" },
+    "ALMACÉN|MIXTO": { start: "15:00", end: "16:00", label: "15:00 – 16:00" },
+    "METROLOGÍA|1": { start: "12:00", end: "12:30", label: "12:00 – 12:30" },
+    "METROLOGÍA|2": { start: "19:00", end: "19:30", label: "19:00 – 19:30" },
+    "METROLOGÍA|3": { start: "04:30", end: "05:00", label: "04:30 – 05:00" },
+    "METROLOGÍA|MIXTO": { start: "12:00", end: "12:30", label: "12:00 – 12:30" },
+    "TALLER DE MOLDES|1": { start: "11:30", end: "12:00", label: "11:30 – 12:00" },
+    "TALLER DE MOLDES|2": { start: "19:00", end: "19:30", label: "19:00 – 19:30" },
     "TALLER DE MOLDES|MIXTO": { start: "13:00", end: "14:00", label: "13:00 – 14:00" },
     "RECURSOS HUMANOS|MIXTO": { start: "15:00", end: "16:00", label: "15:00 – 16:00" },
-    "RECURSOS HUMANOS|1":     { start: "11:30", end: "12:00", label: "11:30 – 12:00" },
-    "RECURSOS HUMANOS|2":     { start: "15:30", end: "16:00", label: "15:30 – 16:00" },
-    "RECURSOS HUMANOS|3":     { start: "03:30", end: "04:00", label: "03:30 – 04:00" },
+    "RECURSOS HUMANOS|1": { start: "11:30", end: "12:00", label: "11:30 – 12:00" },
+    "RECURSOS HUMANOS|2": { start: "15:30", end: "16:00", label: "15:30 – 16:00" },
+    "RECURSOS HUMANOS|3": { start: "03:30", end: "04:00", label: "03:30 – 04:00" },
   },
   groups: [
     {
       departamento: "PRODUCCIÓN", turno: "1", grupo: "1",
-      label:     "Grupo 1 – Turno 1 – Producción",
+      label: "Grupo 1 – Turno 1 – Producción",
       employees: ["1444", "1539", "2315", "2545", "2934", "3780"],
-      meal:      { start: "09:00", end: "09:30", label: "09:00 – 09:30" },
+      meal: { start: "09:00", end: "09:30", label: "09:00 – 09:30" },
     },
     {
       departamento: "PRODUCCIÓN", turno: "1", grupo: "2",
-      label:     "Grupo 2 – Turno 1 – Producción",
+      label: "Grupo 2 – Turno 1 – Producción",
       employees: ["1677", "3257", "3593", "3669", "3734", "3773"],
-      meal:      { start: "09:30", end: "10:00", label: "09:30 – 10:00" },
+      meal: { start: "09:30", end: "10:00", label: "09:30 – 10:00" },
     },
     {
       departamento: "PRODUCCIÓN", turno: "1", grupo: "3",
-      label:     "Grupo 3 – Turno 1 – Producción",
+      label: "Grupo 3 – Turno 1 – Producción",
       employees: ["645", "3118", "3316", "3396", "3524", "3698"],
-      meal:      { start: "10:00", end: "10:30", label: "10:00 – 10:30" },
+      meal: { start: "10:00", end: "10:30", label: "10:00 – 10:30" },
     },
     {
       departamento: "PRODUCCIÓN", turno: "1", grupo: "4",
-      label:     "Grupo 4 – Turno 1 – Producción",
+      label: "Grupo 4 – Turno 1 – Producción",
       employees: ["2154", "3538", "3600", "3883", "3954", "3965"],
-      meal:      { start: "10:30", end: "11:00", label: "10:30 – 11:00" },
+      meal: { start: "10:30", end: "11:00", label: "10:30 – 11:00" },
     },
     {
       departamento: "PRODUCCIÓN", turno: "1", grupo: "5",
-      label:     "Grupo 5 – Turno 1 – Producción",
+      label: "Grupo 5 – Turno 1 – Producción",
       employees: ["3663", "3776", "3882", "3945", "3951", "4000"],
-      meal:      { start: "11:00", end: "11:30", label: "11:00 – 11:30" },
+      meal: { start: "11:00", end: "11:30", label: "11:00 – 11:30" },
     },
     {
       departamento: "PRODUCCIÓN", turno: "1", grupo: "6",
-      label:     "Grupo 6 – Turno 1 – Producción",
+      label: "Grupo 6 – Turno 1 – Producción",
       employees: ["2365", "3983"],
-      meal:      { start: "11:30", end: "12:00", label: "11:30 – 12:00" },
+      meal: { start: "11:30", end: "12:00", label: "11:30 – 12:00" },
     },
   ],
 }
@@ -119,7 +121,7 @@ function mexicoMinutes(date: Date): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ, hour: "numeric", minute: "numeric", hour12: false,
   }).formatToParts(date)
-  const h = parseInt(parts.find(p => p.type === "hour")?.value   ?? "0", 10)
+  const h = parseInt(parts.find(p => p.type === "hour")?.value ?? "0", 10)
   const m = parseInt(parts.find(p => p.type === "minute")?.value ?? "0", 10)
   return h * 60 + m
 }
@@ -136,33 +138,46 @@ function windowContains(schedule: MealWindow, totalMin: number): boolean {
 /** Ventana de turno genérica (para deptos sin horario específico). */
 function turnoWindow(turno: string): MealWindow | null {
   switch (turno) {
-    case "1":     return { start: "06:00", end: "14:00", label: "06:00 – 14:00" }
-    case "2":     return { start: "14:00", end: "22:00", label: "14:00 – 22:00" }
-    case "3":     return { start: "22:00", end: "06:00", label: "22:00 – 06:00" }
+    case "1": return { start: "06:00", end: "14:00", label: "06:00 – 14:00" }
+    case "2": return { start: "14:00", end: "22:00", label: "14:00 – 22:00" }
+    case "3": return { start: "22:00", end: "06:00", label: "22:00 – 06:00" }
     case "MIXTO": return { start: "08:00", end: "18:00", label: "08:00 – 18:00" }
-    default:      return null
+    default: return null
   }
 }
 
-/** Turno 4 rota: el horario depende del día y la hora exacta. */
+/** Turno 4 rota: el horario depende del día y la hora exacta.
+ * - Lunes y Martes: Turno 2 (14:00 a 22:00)
+ * - Miércoles y Jueves: Turno 3 (22:00 a 6:00)
+ * - Domingo: Turno 1 (6:00 a 14:00)
+ */
 function turno4Window(date: Date): MealWindow | null {
-  const dow      = date.getDay()
+  const dow = date.getDay()
   const totalMin = mexicoMinutes(date)
 
-  if (dow === 1) {
-    if (windowContains({ start: "06:00", end: "14:00", label: "" }, totalMin)) return turnoWindow("1")
-    if (windowContains({ start: "14:00", end: "22:00", label: "" }, totalMin)) return turnoWindow("2")
-  }
+  // Domingo (0): Turno 1 (06:00-14:00)
+  if (dow === 0 && windowContains({ start: "06:00", end: "14:00", label: "" }, totalMin)) return turnoWindow("1")
+
+  // Lunes (1): Turno 2 (14:00-22:00)
+  if (dow === 1 && windowContains({ start: "14:00", end: "22:00", label: "" }, totalMin)) return turnoWindow("2")
+
+  // Martes (2): Turno 2 (14:00-22:00)
   if (dow === 2 && windowContains({ start: "14:00", end: "22:00", label: "" }, totalMin)) return turnoWindow("2")
-  if ((dow === 3 || dow === 4) && windowContains({ start: "22:00", end: "06:00", label: "" }, totalMin)) return turnoWindow("3")
+
+  // Miércoles (3): Turno 3 (22:00-06:00)
+  if (dow === 3 && windowContains({ start: "22:00", end: "06:00", label: "" }, totalMin)) return turnoWindow("3")
+
+  // Jueves (4): Turno 3 (22:00-06:00)
+  if (dow === 4 && windowContains({ start: "22:00", end: "06:00", label: "" }, totalMin)) return turnoWindow("3")
+
   return null
 }
 
 // Días activos por turno (dow: 0=dom … 6=sáb)
 const TURNO_DAYS: Record<string, number[]> = {
-  "1":     [1, 2, 3, 4, 5, 6],
-  "2":     [3, 4, 5, 6, 0],
-  "3":     [5, 6, 0, 1, 2, 3],
+  "1": [1, 2, 3, 4, 5, 6],
+  "2": [3, 4, 5, 6, 0],
+  "3": [5, 6, 0, 1, 2, 3],
   "MIXTO": [1, 2, 3, 4, 5],
 }
 
@@ -194,20 +209,20 @@ export function isInShift(turno: string, date = new Date()): boolean | null {
  * Retorna `null` si no hay horario configurado.
  */
 export function getMealWindow(
-  employeeId:   string,
+  employeeId: string,
   departamento: string,
-  turno:        string,
-  date          = new Date(),
-  config?:      MealConfig,
+  turno: string,
+  date = new Date(),
+  config?: MealConfig,
 ): MealWindow | null {
-  const cfg  = config ?? STATIC_CONFIG
+  const cfg = config ?? STATIC_CONFIG
   const dept = departamento.toUpperCase().trim()
-  const t    = turno.toUpperCase().trim()
+  const t = turno.toUpperCase().trim()
 
   // 1) Grupo específico (cualquier departamento)
   const group = cfg.groups.find(g =>
     g.departamento.toUpperCase() === dept &&
-    g.turno.toUpperCase()        === t    &&
+    g.turno.toUpperCase() === t &&
     g.employees.includes(String(employeeId))
   )
   if (group) return group.meal
@@ -227,10 +242,10 @@ export function getMealWindow(
  * Retorna `null` si no tiene horario configurado.
  */
 export function isInMealTime(
-  employeeId:   string,
+  employeeId: string,
   departamento: string,
-  turno:        string,
-  config?:      MealConfig,
+  turno: string,
+  config?: MealConfig,
 ): boolean | null {
   const schedule = getMealWindow(employeeId, departamento, turno, new Date(), config)
   if (!schedule) return null
@@ -242,14 +257,14 @@ export function isInMealTime(
  * Acepta Firestore Timestamp o Date. Retorna `null` si no hay horario o timestamp inválido.
  */
 export function wasInMealTime(
-  employeeId:   string,
+  employeeId: string,
   departamento: string,
-  turno:        string,
-  timestamp:    any,
-  config?:      MealConfig,
+  turno: string,
+  timestamp: any,
+  config?: MealConfig,
 ): boolean | null {
   let date: Date | null = null
-  if (timestamp?.toDate)          date = timestamp.toDate()
+  if (timestamp?.toDate) date = timestamp.toDate()
   else if (timestamp instanceof Date) date = timestamp
   if (!date) return null
 

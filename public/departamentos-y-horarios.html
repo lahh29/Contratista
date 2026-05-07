@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departamentos y Horarios de Comida</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-code {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-firebase {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-fallback {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748b;
+            background: #f8fafc;
+        }
+
+        td {
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        .dept-name {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .turno-badge {
+            display: inline-block;
+            padding: 0.125rem 0.375rem;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .source-info {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .source-info h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .source-info ul {
+            margin-left: 1.25rem;
+            font-size: 0.875rem;
+        }
+
+        .source-info li {
+            margin-bottom: 0.25rem;
+        }
+
+        .note {
+            background: #fef9c3;
+            border-left: 4px solid #eab308;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .note-title {
+            font-weight: 600;
+            color: #854d0e;
+            margin-bottom: 0.25rem;
+        }
+
+        .note-text {
+            font-size: 0.875rem;
+            color: #854d0e;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>📋 Departamentos y Horarios de Comida</h1>
+        <p class="subtitle">Información sobre qué datos vienen del código y qué datos se gestionan desde Firebase</p>
+
+        <!-- Sección de Departamentos/Áreas -->
+        <div class="section">
+            <h2>🏢 Departamentos (Áreas)</h2>
+            <span class="badge badge-firebase">Firebase Firestore</span>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Departamento</th>
+                        <th>Encargado</th>
+                        <th>Restringida</th>
+                        <th>Origen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="dept-name">PRODUCCIÓN</td>
+                        <td>-</td>
+                        <td>No</td>
+                        <td><span class="badge badge-firebase">Firestore</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">CALIDAD</td>
+                        <td>-</td>
+                        <td>No</td>
+                        <td><span class="badge badge-firebase">Firestore</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">ALMACÉN</td>
+                        <td>-</td>
+                        <td>No</td>
+                        <td><span class="badge badge-firebase">Firestore</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">METROLOGÍA</td>
+                        <td>-</td>
+                        <td>No</td>
+                        <td><span class="badge badge-firebase">Firestore</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">TALLER DE MOLDES</td>
+                        <td>-</td>
+                        <td>No</td>
+                        <td><span class="badge badge-firebase">Firestore</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">RECURSOS HUMANOS</td>
+                        <td>-</td>
+                        <td>No</td>
+                        <td><span class="badge badge-firebase">Firestore</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sección de Horarios por Departamento -->
+        <div class="section">
+            <h2>🍽️ Horarios de Comida por Departamento</h2>
+            <span class="badge badge-firebase">Firebase Firestore</span>
+            <span class="badge badge-code" style="margin-left: 0.5rem;">Código (Fallback)</span>
+
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
+                La aplicación busca primero en Firestore. Si no encuentra datos, usa los valores por defecto del código.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Departamento</th>
+                        <th>Turno</th>
+                        <th>Horario</th>
+                        <th>Origen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="dept-name">CALIDAD</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>11:00 – 11:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">CALIDAD</td>
+                        <td><span class="turno-badge">2</span></td>
+                        <td>18:00 – 18:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">ALMACÉN</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>12:00 – 12:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">ALMACÉN</td>
+                        <td><span class="turno-badge">2</span></td>
+                        <td>18:00 – 18:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">METROLOGÍA</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>12:00 – 12:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">METROLOGÍA</td>
+                        <td><span class="turno-badge">2</span></td>
+                        <td>19:00 – 19:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">METROLOGÍA</td>
+                        <td><span class="turno-badge">3</span></td>
+                        <td>04:30 – 05:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">METROLOGÍA</td>
+                        <td><span class="turno-badge">MIXTO</span></td>
+                        <td>12:00 – 12:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">TALLER DE MOLDES</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>11:30 – 12:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">TALLER DE MOLDES</td>
+                        <td><span class="turno-badge">2</span></td>
+                        <td>19:00 – 19:30</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">TALLER DE MOLDES</td>
+                        <td><span class="turno-badge">MIXTO</span></td>
+                        <td>13:00 – 14:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">RECURSOS HUMANOS</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>11:30 – 12:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">RECURSOS HUMANOS</td>
+                        <td><span class="turno-badge">2</span></td>
+                        <td>15:30 – 16:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">RECURSOS HUMANOS</td>
+                        <td><span class="turno-badge">3</span></td>
+                        <td>03:30 – 04:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">RECURSOS HUMANOS</td>
+                        <td><span class="turno-badge">MIXTO</span></td>
+                        <td>15:00 – 16:00</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sección de Grupos de Empleados -->
+        <div class="section">
+            <h2>👥 Grupos de Empleados (Producción Turno 1)</h2>
+            <span class="badge badge-firebase">Firebase Firestore</span>
+            <span class="badge badge-code" style="margin-left: 0.5rem;">Código (Fallback)</span>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Grupo</th>
+                        <th>Turno</th>
+                        <th>Horario</th>
+                        <th>Empleados</th>
+                        <th>Origen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="dept-name">Grupo 1</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>09:00 – 09:30</td>
+                        <td>1444, 1539, 2315, 2545, 2934, 3780</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">Grupo 2</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>09:30 – 10:00</td>
+                        <td>1677, 3257, 3593, 3669, 3734, 3773</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">Grupo 3</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>10:00 – 10:30</td>
+                        <td>645, 3118, 3316, 3396, 3524, 3698</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">Grupo 4</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>10:30 – 11:00</td>
+                        <td>2154, 3538, 3600, 3883, 3954, 3965</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">Grupo 5</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>11:00 – 11:30</td>
+                        <td>3663, 3776, 3882, 3945, 3951, 4000</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                    <tr>
+                        <td class="dept-name">Grupo 6</td>
+                        <td><span class="turno-badge">1</span></td>
+                        <td>11:30 – 12:00</td>
+                        <td>2365, 3983</td>
+                        <td><span class="badge badge-code">Código</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Información de Origen de Datos -->
+        <div class="source-info">
+            <h3>📊 Resumen de Origen de Datos</h3>
+            <ul>
+                <li><strong>Departamentos/Áreas:</strong> Se gestionan desde Firebase Firestore (colección
+                    <code>areas</code>)</li>
+                <li><strong>Horarios por Departamento:</strong> Se buscan primero en Firestore (colección
+                    <code>mealSchedules</code>), si no existen se usa el código como fallback</li>
+                <li><strong>Grupos de Empleados:</strong> Se buscan primero en Firestore (colección
+                    <code>employeeGroups</code>), si no existen se usa el código como fallback</li>
+                <li><strong>Colecciones en Firebase:</strong>
+                    <ul>
+                        <li><code>areas</code> - Departamentos/Áreas</li>
+                        <li><code>mealSchedules</code> - Horarios fijos por departamento+turno</li>
+                        <li><code>employeeGroups</code> - Grupos de empleados con horario específico</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <div class="note-title">📝 Nota Importante</div>
+            <div class="note-text">
+                Los datos se cargan desde Firestore. Mientras no haya datos en Firestore, se usan los valores de
+                <code>STATIC_CONFIG</code> en el código como fallback.
+                Desde el panel de administración en "Ajustes → Horarios de Comida", puedes:
+                <ul style="margin-top: 0.5rem;">
+                    <li>Agregar/editar/eliminar horarios por departamento</li>
+                    <li>Agregar/editar/eliminar grupos de empleados</li>
+                    <li>Inicializar desde los datos predeterminados del código</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
