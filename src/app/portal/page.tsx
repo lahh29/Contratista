@@ -75,7 +75,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 
 function PortalSkeleton() {
   return (
-    <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="pm-layout flex flex-col lg:flex-row">
       <div className="pm-sidebar space-y-6">
         <Skeleton className="h-12 w-40" />
         <Skeleton className="h-36 w-full" />
@@ -250,7 +250,7 @@ export default function PortalPage() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 64px)' }}>
+      <div className="pm-layout flex flex-col lg:flex-row">
 
         {/* ══════════════════════════════════════════
               SIDEBAR — Meta design: clean, minimal
@@ -411,36 +411,36 @@ export default function PortalPage() {
 
             <hr className="pm-separator" />
 
-            {/* Contact */}
-            <motion.div variants={fadeUp}>
-              <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Contacto</p>
-              <div className="space-y-0">
-                <SidebarInfoRow icon={User} label="Representante" value={company.contact} />
-                <SidebarInfoRow icon={Phone} label="Teléfono" value={company.phone} />
-                <SidebarInfoRow icon={Hash} label="No. SUA" value={company.sua?.number} mono />
-              </div>
-            </motion.div>
+            <div className="pm-sidebar-grid">
+              {/* Contact */}
+              <motion.div variants={fadeUp}>
+                <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Contacto</p>
+                <div className="space-y-0">
+                  <SidebarInfoRow icon={User} label="Representante" value={company.contact} />
+                  <SidebarInfoRow icon={Phone} label="Teléfono" value={company.phone} />
+                  <SidebarInfoRow icon={Hash} label="No. SUA" value={company.sua?.number} mono />
+                </div>
+              </motion.div>
 
-            <hr className="pm-separator" />
-
-            {/* Actions */}
-            <motion.div variants={fadeUp}>
-              <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Acciones</p>
-              <div className="space-y-2">
-                <ActionButton icon={QrCode} label="Mi código QR" onClick={() => setQrOpen(true)} />
-                <Link href="/portal/contrato" className="block">
-                  <ActionButton icon={FileText} label="Reglamento" />
-                </Link>
-                {supported && (
-                  <ActionButton
-                    icon={permission === "granted" ? Bell : BellOff}
-                    label={permission === "granted" ? "Alertas activas" : "Activar alertas push"}
-                    onClick={permission !== "granted" ? requestPermission : undefined}
-                    active={permission === "granted"}
-                  />
-                )}
-              </div>
-            </motion.div>
+              {/* Actions */}
+              <motion.div variants={fadeUp}>
+                <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Acciones</p>
+                <div className="space-y-2">
+                  <ActionButton icon={QrCode} label="Mi código QR" onClick={() => setQrOpen(true)} />
+                  <Link href="/portal/contrato" className="block">
+                    <ActionButton icon={FileText} label="Reglamento" />
+                  </Link>
+                  {supported && (
+                    <ActionButton
+                      icon={permission === "granted" ? Bell : BellOff}
+                      label={permission === "granted" ? "Alertas activas" : "Activar alertas push"}
+                      onClick={permission !== "granted" ? requestPermission : undefined}
+                      active={permission === "granted"}
+                    />
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </motion.aside>
 
