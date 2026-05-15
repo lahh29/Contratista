@@ -57,26 +57,13 @@ const DEFAULT_STEPS: TutorialStep[] = [
     imageAlt: "Formulario de contraseña",
   },
   {
-    title: "Confirma tu empresa",
-    description:
-      "Verás el nombre de la empresa asociada a tu correo. Revisa que sea correcto antes de continuar.",
-    image: "/imagenes-login/imagen-4.png",
-    imageAlt: "Confirmación de empresa proveedora",
-  },
-  {
     title: "Finaliza el registro",
     description:
       "Al confirmar, tu cuenta queda lista para acceder al portal y gestionar a tu personal.",
     image: "/imagenes-login/imagen-5.png",
     imageAlt: "Pantalla de éxito al registrarse",
   },
-  {
-    title: "Inicia sesión",
-    description:
-      "Vuelve al login con tu correo y contraseña recién creados.",
-    image: "/imagenes-login/imagen-6.png",
-    imageAlt: "Login después del registro",
-  },
+
 ]
 
 const transition: Transition = { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -115,7 +102,7 @@ export const ProviderRegistrationTutorial = React.forwardRef<
   {
     steps = DEFAULT_STEPS,
     className,
-    label = "¿Cómo registrarme?",
+    label = "!Hey! Click aquí",
     hintText = "¿Primera vez? Mira la guía",
   },
   ref
@@ -419,23 +406,20 @@ interface ProviderTutorialLinkProps
 export function ProviderTutorialLink({
   onOpen,
   className,
-  children = "¿Primera vez? Ver guía paso a paso",
+  children = "Guia para proveedores <-",
   ...props
 }: ProviderTutorialLinkProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="sm"
       onClick={onOpen}
-      className={cn(
-        "inline-flex items-center justify-center gap-1.5",
-        "text-xs text-muted-foreground hover:text-foreground transition-colors",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded",
-        className
-      )}
+      className={cn("text-xs text-muted-foreground gap-1.5", className)}
       {...props}
     >
       <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-      <span>{children}</span>
-    </button>
+      {children}
+    </Button>
   )
 }
