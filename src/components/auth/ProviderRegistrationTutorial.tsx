@@ -20,18 +20,30 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import {
+  OpenRegisterScene,
+  EmailTypingScene,
+  PasswordScene,
+  FinalizeScene,
+} from "@/components/auth/ProviderTutorialAnimations"
 
 /**
  * Cada paso del tutorial.
- * `image` es opcional — si no se define se muestra un placeholder.
- * Para agregar una imagen, colócala en `/public/imagenes-login/`
- * y referencia la ruta con `image: "/imagenes-login/imagen-1.png"`.
+ *
+ * Prioridad de renderizado:
+ *  1. `animation` — escena JSX animada (`React.ReactNode` o callback `({active}) => node`).
+ *  2. `image`     — captura estática en `/public/...`.
+ *  3. placeholder con ícono.
+ *
+ * `alt` describe el contenido para a11y (anuncia el canvas al lector de pantalla).
  */
 export type TutorialStep = {
   title: string
   description: string
+  animation?: React.ReactNode | ((opts: { active: boolean }) => React.ReactNode)
   image?: string
   imageAlt?: string
+  alt?: string
 }
 
 const DEFAULT_STEPS: TutorialStep[] = [
@@ -39,6 +51,8 @@ const DEFAULT_STEPS: TutorialStep[] = [
     title: "Abre el registro",
     description:
       "Desde la pantalla de inicio de sesión, toca el botón “Registrarse como proveedor”.",
+    animation: ({ active }) => <OpenRegisterScene active={active} />,
+    alt: "Animación: cursor toca el botón Registrarse como proveedor",
     image: "/imagenes-login/imagen-1.png",
     imageAlt: "Botón de registro en la pantalla de login",
   },
@@ -46,6 +60,8 @@ const DEFAULT_STEPS: TutorialStep[] = [
     title: "Ingresa tu correo",
     description:
       "Usa el correo corporativo de tu empresa proveedora. Verificaremos que esté autorizada.",
+    animation: ({ active }) => <EmailTypingScene active={active} />,
+    alt: "Animación: campo de correo escribiéndose y validándose",
     image: "/imagenes-login/imagen-2.png",
     imageAlt: "Campo de correo del registro",
   },
@@ -53,6 +69,8 @@ const DEFAULT_STEPS: TutorialStep[] = [
     title: "Crea tu contraseña",
     description:
       "Mínimo 6 caracteres. Confírmala para evitar errores de tipeo.",
+    animation: ({ active }) => <PasswordScene active={active} />,
+    alt: "Animación: dos campos de contraseña con bullets y toggle de visibilidad",
     image: "/imagenes-login/imagen-3.png",
     imageAlt: "Formulario de contraseña",
   },
@@ -60,10 +78,11 @@ const DEFAULT_STEPS: TutorialStep[] = [
     title: "Finaliza el registro",
     description:
       "Al confirmar, tu cuenta queda lista para acceder al portal y gestionar a tu personal.",
+    animation: ({ active }) => <FinalizeScene active={active} />,
+    alt: "Animación: confirmación de cuenta creada con check verde",
     image: "/imagenes-login/imagen-5.png",
     imageAlt: "Pantalla de éxito al registrarse",
   },
-
 ]
 
 const transition: Transition = { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }
@@ -275,18 +294,26 @@ export const ProviderRegistrationTutorial = React.forwardRef<
 
           {/* Body */}
           <div className="px-6 py-5 space-y-4">
-            {/* Imagen */}
-            <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted/40 border border-border">
+            {/* Canvas: animación > imagen > placeholder */}
+            <div
+              role="img"
+              aria-label={step.alt ?? step.imageAlt ?? step.title}
+              className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted/40 border border-border"
+            >
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={`img-${index}`}
+                  key={`canvas-${index}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={transition}
                   className="absolute inset-0"
                 >
-                  {step.image ? (
+                  {step.animation ? (
+                    typeof step.animation === "function"
+                      ? step.animation({ active: open })
+                      : step.animation
+                  ) : step.image ? (
                     <Image
                       src={step.image}
                       alt={step.imageAlt ?? step.title}
