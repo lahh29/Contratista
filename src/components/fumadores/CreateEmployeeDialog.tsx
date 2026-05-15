@@ -33,6 +33,7 @@ import { useFirestore } from "@/firebase"
 import { doc, setDoc, getDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 
+import { toastError } from "@/lib/toast-helpers"
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
@@ -154,11 +155,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onCreated }: CreateEm
       })
       onOpenChange(false)
     } catch {
-      toast({
-        title: "Error",
-        description: "No se pudo registrar el empleado.",
-        variant: "destructive",
-      })
+      toastError("Error", "No se pudo registrar el empleado.")
     } finally {
       setSaving(false)
     }

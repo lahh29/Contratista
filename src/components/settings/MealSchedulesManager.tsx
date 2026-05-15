@@ -81,6 +81,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useConfirm } from "@/hooks/use-confirm"
 import { SkeletonList } from "@/components/ui/skeletons"
 
+import { toastError } from "@/lib/toast-helpers"
 // ─── Types locales ────────────────────────────────────────────────────────────
 
 interface ScheduleDoc {
@@ -159,7 +160,7 @@ function ScheduleDialog({ open, initial, onClose, onSaved }: ScheduleDialogProps
       onSaved()
       onClose()
     } catch {
-      toast({ variant: "destructive", title: "Error al guardar" })
+      toastError("Error al guardar")
     } finally {
       setSaving(false)
     }
@@ -261,7 +262,7 @@ const HorariosTab = React.forwardRef<HorariosTabHandle>(function HorariosTab(_pr
       docs.sort((a, b) => a.departamento.localeCompare(b.departamento) || a.turno.localeCompare(b.turno))
       setItems(docs)
     } catch {
-      toast({ variant: "destructive", title: "Error al cargar horarios" })
+      toastError("Error al cargar horarios")
       setItems([])
     } finally {
       setLoading(false)
@@ -291,7 +292,7 @@ const HorariosTab = React.forwardRef<HorariosTabHandle>(function HorariosTab(_pr
       toast({ title: "Horario eliminado" })
       load()
     } catch {
-      toast({ variant: "destructive", title: "Error al eliminar" })
+      toastError("Error al eliminar")
     }
   }
 
@@ -430,7 +431,7 @@ function GroupSheet({ open, initial, onClose, onSaved }: GroupSheetProps) {
       onSaved()
       onClose()
     } catch {
-      toast({ variant: "destructive", title: "Error al guardar el grupo" })
+      toastError("Error al guardar el grupo")
     } finally {
       setSaving(false)
     }
@@ -578,7 +579,7 @@ const GruposTab = React.forwardRef<GruposTabHandle>(function GruposTab(_props, r
       )
       setItems(docs)
     } catch {
-      toast({ variant: "destructive", title: "Error al cargar grupos" })
+      toastError("Error al cargar grupos")
       setItems([])
     } finally {
       setLoading(false)
@@ -608,7 +609,7 @@ const GruposTab = React.forwardRef<GruposTabHandle>(function GruposTab(_props, r
       toast({ title: "Grupo eliminado" })
       load()
     } catch {
-      toast({ variant: "destructive", title: "Error al eliminar" })
+      toastError("Error al eliminar")
     }
   }
 
@@ -740,7 +741,7 @@ export function MealSchedulesManager() {
 
       toast({ title: "Horarios inicializados correctamente" })
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error al inicializar", description: err?.message })
+      toastError("Error al inicializar", err?.message)
     } finally {
       setSeeding(false)
     }

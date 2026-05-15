@@ -59,6 +59,7 @@ import { logAudit } from '@/app/actions/audit'
 import { useAppUser } from '@/hooks/use-app-user'
 import { useCompanies } from '@/hooks/use-companies'
 
+import { toastError } from "@/lib/toast-helpers"
 // Verifica si el SUA está vencido considerando la fecha real (timezone Querétaro)
 function isSuaExpired(company: any): boolean {
   if (!company) return false
@@ -350,11 +351,7 @@ export function VisitWizard({ visit, onClose }: VisitWizardProps) {
       onClose()
     } catch (e) {
       console.error(e)
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No se pudo guardar la visita.',
-      })
+      toastError('Error', 'No se pudo guardar la visita.')
     } finally {
       setSubmitting(false)
     }

@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { useToast } from '@/hooks/use-toast';
 
+import { toastError } from "@/lib/toast-helpers"
 export const FirebaseErrorListener = () => {
   const { toast } = useToast();
 
@@ -12,11 +13,7 @@ export const FirebaseErrorListener = () => {
       console.error('Firebase Permission Error:', error);
       
       // Mostrar toast informativo del error de permisos
-      toast({
-        variant: 'destructive',
-        title: 'Error de Acceso',
-        description: 'No tienes permisos suficientes para ver o modificar esta información. Asegúrate de haber iniciado sesión correctamente.',
-      });
+      toastError('Error de Acceso', 'No tienes permisos suficientes para ver o modificar esta información. Asegúrate de haber iniciado sesión correctamente.');
     };
 
     errorEmitter.on('permission-error', handleError);

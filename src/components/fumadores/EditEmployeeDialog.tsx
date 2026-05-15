@@ -34,6 +34,7 @@ import { doc, updateDoc, deleteDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import { useConfirm } from "@/hooks/use-confirm"
 
+import { toastError } from "@/lib/toast-helpers"
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
@@ -154,11 +155,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, onUpdated, on
       onUpdated?.()
       onOpenChange(false)
     } catch {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el empleado.",
-        variant: "destructive",
-      })
+      toastError("Error", "No se pudo actualizar el empleado.")
     } finally {
       setSaving(false)
     }
@@ -185,11 +182,7 @@ export function EditEmployeeDialog({ open, onOpenChange, employee, onUpdated, on
       onDeleted?.()
       onOpenChange(false)
     } catch {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el empleado.",
-        variant: "destructive",
-      })
+      toastError("Error", "No se pudo eliminar el empleado.")
     } finally {
       setDeleting(false)
     }

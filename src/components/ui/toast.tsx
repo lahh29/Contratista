@@ -27,10 +27,17 @@ const ToastViewport = React.forwardRef<
 ))
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
+/**
+ * Variantes alineadas al diseño del login:
+ * — card limpia (bg-background), borde sutil, jerarquía tipográfica del login
+ * — el "tono" de la variante se expresa solo en el ícono (lado izquierdo),
+ *   no en todo el fondo (excepto destructive que conserva fondo rojizo suave).
+ */
 const toastVariants = cva(
   cn(
     "group pointer-events-auto relative w-full overflow-hidden",
-    "rounded-2xl px-4 py-3 shadow-2xl",
+    "rounded-xl border shadow-sm",
+    "px-3.5 py-3",
     "transition-all",
     // Animaciones desde abajo
     "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -45,16 +52,13 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: cn(
-          // Colores invertidos: oscuro en light, claro en dark — máximo contraste en ambos temas
-          "bg-foreground/95 text-background",
-          "border border-foreground/10",
-          "backdrop-blur-sm",
-        ),
+        default: "bg-background border-border text-foreground",
+        success: "bg-background border-border text-foreground",
         destructive: cn(
-          "bg-destructive text-destructive-foreground",
-          "border border-destructive/20",
+          "bg-destructive/5 border-destructive/20 text-foreground",
         ),
+        warning: "bg-background border-border text-foreground",
+        info: "bg-background border-border text-foreground",
       },
     },
     defaultVariants: { variant: "default" },
@@ -81,11 +85,10 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-background/20",
-      "bg-transparent px-3 text-xs font-medium transition-colors",
-      "hover:bg-background/10 focus:outline-none focus:ring-1 focus:ring-background/30",
+      "inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-border",
+      "bg-transparent px-3 text-xs font-medium text-foreground transition-colors",
+      "hover:bg-muted/60 focus:outline-none focus:ring-1 focus:ring-ring",
       "disabled:pointer-events-none disabled:opacity-50",
-      "group-[.destructive]:border-white/20 group-[.destructive]:hover:bg-white/10",
       className
     )}
     {...props}
@@ -100,9 +103,8 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "shrink-0 rounded-full p-1 opacity-60 transition-opacity",
-      "hover:opacity-100 focus:outline-none focus:ring-1 focus:ring-background/30",
-      "text-background group-[.destructive]:text-white",
+      "shrink-0 rounded-full p-1 text-muted-foreground opacity-60 transition-opacity",
+      "hover:opacity-100 hover:text-foreground focus:outline-none focus:ring-1 focus:ring-ring",
       className
     )}
     toast-close=""
@@ -119,7 +121,7 @@ const ToastTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
-    className={cn("text-sm font-semibold leading-snug", className)}
+    className={cn("text-sm font-medium leading-snug", className)}
     {...props}
   />
 ))
@@ -131,7 +133,7 @@ const ToastDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
-    className={cn("text-xs opacity-80 leading-snug mt-0.5", className)}
+    className={cn("text-xs text-muted-foreground leading-snug mt-0.5", className)}
     {...props}
   />
 ))
@@ -139,10 +141,12 @@ ToastDescription.displayName = ToastPrimitives.Description.displayName
 
 type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 type ToastActionElement = React.ReactElement<typeof ToastAction>
+type ToastVariant = NonNullable<VariantProps<typeof toastVariants>["variant"]>
 
 export {
   type ToastProps,
   type ToastActionElement,
+  type ToastVariant,
   ToastProvider,
   ToastViewport,
   Toast,

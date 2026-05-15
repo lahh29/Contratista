@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useAuth, useFirestore } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
-
+import { toastError } from "@/lib/toast-helpers"
 type Step = "email" | "password" | "success"
 
 export default function RegisterPage() {
@@ -88,14 +88,9 @@ export default function RegisterPage() {
       }, 2000)
     } catch (err: any) {
       const code = err?.code ?? ""
-      toast({
-        variant: "destructive",
-        title: "Error al registrarse",
-        description:
-          code === "auth/email-already-in-use"
-            ? "Este correo ya tiene una cuenta. Inicia sesión."
-            : "Ocurrió un error. Intenta de nuevo.",
-      })
+      toastError("Error al registrarse", code === "auth/email-already-in-use"
+        ? "Este correo ya tiene una cuenta. Inicia sesión."
+        : "Ocurrió un error. Intenta de nuevo.")
     } finally {
       setLoading(false)
     }

@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast"
 import { cn, splitName } from "@/lib/utils"
 import { sendNotification } from "@/app/actions/notify"
 
+import { toastError } from "@/lib/toast-helpers"
 interface Baja {
   id: string
   noEmpleado: string
@@ -98,7 +99,7 @@ export default function BajasPage() {
       setForm(EMPTY_FORM)
       await fetchBajas()
     } catch {
-      toast({ title: 'Error al guardar', variant: 'destructive' })
+      toastError('Error al guardar')
     } finally {
       setSaving(false)
     }
@@ -112,7 +113,7 @@ export default function BajasPage() {
       setToDelete(null)
       await fetchBajas()
     } catch {
-      toast({ title: 'Error al eliminar', variant: 'destructive' })
+      toastError('Error al eliminar')
     }
   }
 

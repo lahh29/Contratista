@@ -15,6 +15,7 @@ import { useConfirm } from "@/hooks/use-confirm"
 import { SkeletonList } from "@/components/ui/skeletons"
 import { truncStr, shortName } from "./helpers"
 
+import { toastError } from "@/lib/toast-helpers"
 interface AreaManagerProps {
   db: Firestore | null
   areas: DocumentData[] | null | undefined
@@ -53,7 +54,7 @@ export function AreaManager({ db, areas, supervisors, loading, onRefresh }: Area
       toast({ title: "Área agregada" })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al agregar" })
+      toastError("Error al agregar")
     }
   }
 
@@ -63,7 +64,7 @@ export function AreaManager({ db, areas, supervisors, loading, onRefresh }: Area
       await updateDoc(doc(db, "areas", id), { restricted: !current })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al actualizar" })
+      toastError("Error al actualizar")
     }
   }
 
@@ -82,7 +83,7 @@ export function AreaManager({ db, areas, supervisors, loading, onRefresh }: Area
       toast({ title: "Eliminado correctamente" })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al eliminar" })
+      toastError("Error al eliminar")
     }
   }
 
@@ -98,7 +99,7 @@ export function AreaManager({ db, areas, supervisors, loading, onRefresh }: Area
       toast({ title: "Actualizado correctamente" })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al actualizar" })
+      toastError("Error al actualizar")
     }
   }
 

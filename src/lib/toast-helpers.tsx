@@ -11,7 +11,7 @@ import { ToastAction } from "@/components/ui/toast"
 
 /** Plain success toast */
 export function toastSuccess(title: string, description?: string) {
-  return toast({ title, description })
+  return toast({ title, description, variant: "success" })
 }
 
 /** Destructive error toast, with optional retry action */
@@ -30,6 +30,16 @@ export function toastError(title: string, description?: string, onRetry?: () => 
   })
 }
 
+/** Warning toast (advertencia, validación blanda, etc.) */
+export function toastWarning(title: string, description?: string) {
+  return toast({ title, description, variant: "warning" })
+}
+
+/** Informational toast */
+export function toastInfo(title: string, description?: string) {
+  return toast({ title, description, variant: "info" })
+}
+
 /**
  * Toast with an "Deshacer" action.
  * Ideal for reversible operations (block, soft-delete, status change).
@@ -45,6 +55,7 @@ export function toastWithUndo(title: string, onUndo: () => void, description?: s
   const result = toast({
     title,
     description,
+    variant: "success",
     action: (
       <ToastAction
         altText="Deshacer"

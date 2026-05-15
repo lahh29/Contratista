@@ -32,6 +32,7 @@ import { useFirestore } from "@/firebase"
 import { doc, writeBatch } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 
+import { toastError } from "@/lib/toast-helpers"
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface EmployeeRecord {
@@ -178,11 +179,7 @@ export function JsonImporterSheet({ open, onOpenChange }: JsonImporterSheetProps
       setJsonText("")
       setParsed(null)
     } catch (err: any) {
-      toast({
-        title: "Error al subir",
-        description: err?.message ?? "Intenta de nuevo.",
-        variant: "destructive",
-      })
+      toastError("Error al subir", err?.message ?? "Intenta de nuevo.")
     } finally {
       setUploading(false)
     }

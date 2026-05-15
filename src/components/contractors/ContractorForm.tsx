@@ -32,6 +32,7 @@ import { sendNotification } from "@/app/actions/notify"
 import { logAudit } from "@/app/actions/audit"
 import { useAppUser } from "@/hooks/use-app-user"
 
+import { toastError } from "@/lib/toast-helpers"
 /** "DD/MM/AAAA" → "YYYY-MM-DD" para Firestore */
 function toISODate(val: string): string {
   const [d, m, y] = val.split("/")
@@ -173,7 +174,7 @@ export function ContractorForm() {
           if (result.policyNumber) form.setValue("policyNumber", result.policyNumber)
           toast({ title: "Verificación completada", description: "Datos extraídos por Vertx IA." })
         } catch {
-          toast({ variant: "destructive", title: "Error", description: "No se pudo leer el documento." })
+          toastError("Error", "No se pudo leer el documento.")
         } finally {
           setIsAnalyzing(false)
         }

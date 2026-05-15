@@ -18,6 +18,7 @@ import { doc, updateDoc } from "firebase/firestore"
 import { useToast } from "@/hooks/use-toast"
 import type { Company } from "@/types"
 
+import { toastError } from "@/lib/toast-helpers"
 interface EditProfileSheetProps {
   company: Company
   open: boolean
@@ -46,7 +47,7 @@ export function EditProfileSheet({ company, open, onOpenChange }: EditProfileShe
       toast({ title: "Perfil actualizado", description: "Tus datos de contacto fueron guardados." })
       onOpenChange(false)
     } catch {
-      toast({ variant: "destructive", title: "Error al guardar los cambios" })
+      toastError("Error al guardar los cambios")
     } finally {
       setSaving(false)
     }

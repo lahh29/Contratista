@@ -43,6 +43,7 @@ import { logAudit } from '@/app/actions/audit'
 import { useAppUser } from '@/hooks/use-app-user'
 import { useCompanies } from '@/hooks/use-companies'
 
+import { toastError } from "@/lib/toast-helpers"
 // ── LocalStorage helpers ───────────────────────────────────────────────────
 
 const HISTORY_KEY = 'scanner_history_v1'
@@ -227,7 +228,7 @@ export default function ScannerPage() {
       const companySnap = await getDoc(companyRef)
 
       if (!companySnap.exists()) {
-        toast({ variant: 'destructive', title: 'QR no reconocido', description: 'No se encontró ninguna empresa con este código.' })
+        toastError('QR no reconocido', 'No se encontró ninguna empresa con este código.')
         setIsProcessing(false)
         return
       }
@@ -235,7 +236,7 @@ export default function ScannerPage() {
       const company = { id: companySnap.id, ...companySnap.data() } as import('@/types').Company
 
       if (company.status === 'Blocked') {
-        toast({ variant: 'destructive', title: 'Acceso bloqueado', description: `${company.name} no tiene autorización para ingresar a planta.` })
+        toastError('Acceso bloqueado', `${company.name} no tiene autorización para ingresar a planta.`)
         return
       }
 
@@ -284,7 +285,7 @@ export default function ScannerPage() {
       }
       setMode('VERIFYING')
     } catch {
-      toast({ variant: 'destructive', title: 'Error al buscar empresa' })
+      toastError('Error al buscar empresa')
     } finally {
       setIsProcessing(false)
     }
@@ -357,7 +358,7 @@ export default function ScannerPage() {
       if ((area as any)?.restricted)
         sendNotification({ type: 'restricted_area', companyName: currentCompany.name, areaName: area?.name || '—' }).catch(() => { })
     } catch {
-      toast({ variant: 'destructive', title: 'Error al registrar entrada' })
+      toastError('Error al registrar entrada')
     } finally {
       setIsProcessing(false)
     }
@@ -387,7 +388,7 @@ export default function ScannerPage() {
       sendNotification({ type: 'exit', companyName: currentCompany?.name || '—', areaName: activeVisit.areaName || '—', personnelCount: activeVisit.personnelCount }).catch(() => { })
       resetScanner()
     } catch {
-      toast({ variant: 'destructive', title: 'Error al registrar salida' })
+      toastError('Error al registrar salida')
     } finally {
       setIsProcessing(false)
     }

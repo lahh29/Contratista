@@ -14,6 +14,7 @@ import { useConfirm } from "@/hooks/use-confirm"
 import { SkeletonList } from "@/components/ui/skeletons"
 import { truncStr, shortName } from "./helpers"
 
+import { toastError } from "@/lib/toast-helpers"
 interface CollectionManagerProps {
   title: string
   description: string
@@ -49,7 +50,7 @@ export function CollectionManager({ title, description, icon: Icon, collectionNa
       toast({ title: "Agregado correctamente" })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al agregar" })
+      toastError("Error al agregar")
     }
   }
 
@@ -68,7 +69,7 @@ export function CollectionManager({ title, description, icon: Icon, collectionNa
       toast({ title: "Eliminado correctamente" })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al eliminar" })
+      toastError("Error al eliminar")
     }
   }
 
@@ -81,7 +82,7 @@ export function CollectionManager({ title, description, icon: Icon, collectionNa
       toast({ title: "Actualizado correctamente" })
       onRefresh?.()
     } catch {
-      toast({ variant: "destructive", title: "Error al actualizar" })
+      toastError("Error al actualizar")
     }
   }
 

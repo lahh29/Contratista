@@ -70,6 +70,7 @@ import { getMealWindow, isInMealTime, wasInMealTime, isInShift } from "@/lib/mea
 import { useMealConfig } from "@/hooks/use-meal-config"
 
 
+import { toastError } from "@/lib/toast-helpers"
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Employee {
@@ -347,11 +348,7 @@ export default function FumadoresPage() {
       }).catch(() => { })
       await loadRecords()
     } catch {
-      toast({
-        title: "Error",
-        description: "No se pudo registrar la salida.",
-        variant: "destructive",
-      })
+      toastError("Error", "No se pudo registrar la salida.")
     } finally {
       setActionLoading(false)
     }
@@ -385,11 +382,7 @@ export default function FumadoresPage() {
       }).catch(() => { })
       await loadRecords()
     } catch {
-      toast({
-        title: "Error",
-        description: "No se pudo registrar el regreso.",
-        variant: "destructive",
-      })
+      toastError("Error", "No se pudo registrar el regreso.")
     } finally {
       setActionLoading(false)
     }

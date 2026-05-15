@@ -11,84 +11,65 @@ import { generateVoucherPDF } from "@/lib/generate-voucher"
 import { ContractorQRDialog } from "@/components/contractors/ContractorQRDialog"
 import Link from "next/link"
 import {
-  ShieldCheck,
-  ShieldAlert,
-  ShieldX,
-  Bell,
-  BellOff,
-  Clock,
-  Download,
-  MapPin,
-  Users,
-  FileText,
-  QrCode,
-  Ban,
-  CalendarClock,
-  RefreshCw,
-  CheckCheck,
-  Phone,
-  User,
-  Hash,
-  AlertTriangle,
-  Loader2,
-  Building2,
-  ArrowRight,
-  Activity,
-  ChevronRight,
+  ShieldCheck, ShieldAlert, ShieldX, Bell, BellOff, Clock, Download,
+  MapPin, Users, FileText, QrCode, Ban, CalendarClock, RefreshCw,
+  CheckCheck, Phone, User, Hash, AlertTriangle, Loader2, ArrowRight,
+  Activity, ChevronRight,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import type { Company, Visit } from "@/types"
 import { sendNotification } from "@/app/actions/notify"
+import { cn } from "@/lib/utils"
 
 // ─────────────────────────────────────────────────────────────
-// Animation config
+// Animation config (igual que login: ease + duración)
 // ─────────────────────────────────────────────────────────────
 
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
 }
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    opacity: 1, y: 0,
+    transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   },
 }
 
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.4 } },
-}
-
 // ─────────────────────────────────────────────────────────────
-// Skeleton
+// SUA status — chips tipo login (success / destructive / warning)
 // ─────────────────────────────────────────────────────────────
 
-function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-2xl ${className}`} style={{ background: 'var(--pm-surface-soft, #f5f5f7)' }} />
-}
-
-function PortalSkeleton() {
-  return (
-    <div className="pm-layout flex flex-col lg:flex-row">
-      <div className="pm-sidebar space-y-6">
-        <Skeleton className="h-12 w-40" />
-        <Skeleton className="h-36 w-full" />
-        <Skeleton className="h-28 w-full" />
-        <Skeleton className="h-20 w-full" />
-      </div>
-      <div className="pm-main space-y-6">
-        <Skeleton className="h-8 w-52" />
-        <Skeleton className="h-72 w-full" />
-      </div>
-    </div>
-  )
-}
+const SUA_CONFIG = {
+  Valid: {
+    label: "Vigente",
+    Icon: ShieldCheck,
+    bg: "bg-emerald-50 dark:bg-emerald-950",
+    fg: "text-emerald-600 dark:text-emerald-400",
+    bar: "bg-emerald-500",
+    chip: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900",
+  },
+  Expired: {
+    label: "Vencido",
+    Icon: ShieldX,
+    bg: "bg-destructive/10",
+    fg: "text-destructive",
+    bar: "bg-destructive",
+    chip: "bg-destructive/5 text-destructive border-destructive/20",
+  },
+  Pending: {
+    label: "Pendiente",
+    Icon: ShieldAlert,
+    bg: "bg-amber-50 dark:bg-amber-950",
+    fg: "text-amber-600 dark:text-amber-400",
+    bar: "bg-amber-500",
+    chip: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-amber-100 dark:border-amber-900",
+  },
+} as const
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -101,33 +82,30 @@ function visitDuration(entry: Date, exit: Date) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
-// ─────────────────────────────────────────────────────────────
-// SUA status config
-// ─────────────────────────────────────────────────────────────
+function Skel({ className = "" }: { className?: string }) {
+  return <div className={cn("animate-pulse rounded-xl bg-muted/60", className)} />
+}
 
-const SUA_CONFIG = {
-  Valid: {
-    accent: "var(--pm-success)",
-    accentLight: "color-mix(in srgb, var(--pm-success) 8%, var(--pm-canvas))",
-    accentBorder: "color-mix(in srgb, var(--pm-success) 18%, transparent)",
-    label: "Vigente",
-    icon: ShieldCheck,
-  },
-  Expired: {
-    accent: "var(--pm-critical)",
-    accentLight: "color-mix(in srgb, var(--pm-critical) 8%, var(--pm-canvas))",
-    accentBorder: "color-mix(in srgb, var(--pm-critical) 18%, transparent)",
-    label: "Vencido",
-    icon: ShieldX,
-  },
-  Pending: {
-    accent: "var(--pm-attention)",
-    accentLight: "color-mix(in srgb, var(--pm-attention) 8%, var(--pm-canvas))",
-    accentBorder: "color-mix(in srgb, var(--pm-attention) 18%, transparent)",
-    label: "Pendiente",
-    icon: ShieldAlert,
-  },
-} as const
+function PortalSkeleton() {
+  return (
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+      <div className="rounded-xl border border-border overflow-hidden">
+        <div className="grid lg:grid-cols-[280px_1fr]">
+          <aside className="border-b lg:border-b-0 lg:border-r border-border bg-muted/40 p-6 space-y-5">
+            <Skel className="h-6 w-40" />
+            <Skel className="h-32 w-full" />
+            <Skel className="h-24 w-full" />
+            <Skel className="h-20 w-full" />
+          </aside>
+          <div className="p-6 space-y-5">
+            <Skel className="h-6 w-52" />
+            <Skel className="h-64 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ─────────────────────────────────────────────────────────────
 // Main page
@@ -205,10 +183,10 @@ export default function PortalPage() {
   if (!appUser?.companyId) {
     return (
       <ErrorState
-        icon={AlertTriangle}
+        Icon={AlertTriangle}
         title="Sin empresa asignada"
-        description="Tu cuenta no está vinculada a ninguna empresa. Contacta al administrador de VinoPlastic."
-        color="amber"
+        description="Tu cuenta no está vinculada a ninguna empresa. Contacta al administrador de ViñoPlastic."
+        tone="warning"
       />
     )
   }
@@ -216,10 +194,10 @@ export default function PortalPage() {
   if (!company) {
     return (
       <ErrorState
-        icon={ShieldAlert}
+        Icon={ShieldAlert}
         title="Empresa no encontrada"
         description="No se pudo cargar la información de tu empresa. Intenta más tarde."
-        color="red"
+        tone="destructive"
       />
     )
   }
@@ -245,311 +223,242 @@ export default function PortalPage() {
     : null
 
   const sua = SUA_CONFIG[suaStatus]
-  const SuaIcon = sua.icon
+  const SuaIcon = sua.Icon
   const progressPercent = daysLeft !== null ? Math.max(0, Math.min(100, (daysLeft / 365) * 100)) : 50
 
   return (
     <>
-      <div className="pm-layout flex flex-col lg:flex-row">
-
-        {/* ══════════════════════════════════════════
-              SIDEBAR — Meta design: clean, minimal
-              ══════════════════════════════════════════ */}
-        <motion.aside
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
+        {/* ── Card raíz: misma estructura del login (rounded-xl border shadow-sm + sidebar/main) ── */}
+        <motion.div
           variants={stagger}
           initial="hidden"
           animate="visible"
-          className="pm-sidebar"
+          className="rounded-xl border border-border bg-background shadow-sm overflow-hidden"
         >
-          <div className="space-y-6">
-            {/* Company identity */}
-            <motion.div variants={fadeUp}>
-              <div className="min-w-0">
-                <h1
-                  className="pm-subtitle-lg font-semibold truncate"
-                  style={{ fontSize: 'clamp(15px, 2.5vw, 19px)', letterSpacing: '-0.01em', lineHeight: 1.25 }}
-                >
+          <div className="grid lg:grid-cols-[280px_1fr]">
+
+            {/* ══════════════════════════════════════════
+                  SIDEBAR
+                  ══════════════════════════════════════════ */}
+            <aside className="border-b lg:border-b-0 lg:border-r border-border bg-muted/40 p-6 space-y-6">
+              {/* Identidad de empresa */}
+              <motion.div variants={fadeUp}>
+                <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
+                  Empresa
+                </p>
+                <p className="mt-1.5 text-sm font-medium text-foreground truncate">
                   {company.name}
-                </h1>
+                </p>
                 {company.type && (
-                  <p
-                    className="pm-caption capitalize truncate"
-                    style={{ marginTop: '3px', opacity: 0.65 }}
-                  >
+                  <p className="text-xs text-muted-foreground capitalize mt-0.5 truncate">
                     {company.type}
                   </p>
                 )}
-              </div>
-            </motion.div>
+              </motion.div>
 
-            <hr className="pm-separator" />
+              <div className="border-t border-border" />
 
-            {/* SUA Status */}
-            <motion.div variants={fadeUp}>
-              <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Estado SUA</p>
+              {/* SUA Status — card tipo "error/success" del login */}
+              <motion.div variants={fadeUp} className="space-y-2">
+                <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
+                  Estado SUA
+                </p>
 
-              <div
-                className="pm-sua-card"
-                style={{
-                  background: sua.accentLight,
-                  color: sua.accent,
-                  border: `1px solid ${sua.accentBorder}`,
-                }}
-              >
-                <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
-                  <div className="flex items-center gap-2">
-                    <SuaIcon className="w-4 h-4" style={{ color: sua.accent }} />
-                    <span className="pm-body-sm-bold" style={{ color: sua.accent }}>
-                      {sua.label}
-                    </span>
+                <div className={cn("rounded-lg border p-3 space-y-3", sua.chip)}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <SuaIcon className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">{sua.label}</span>
+                    </div>
+                    {validUntil && (
+                      <span className="text-[10px] font-mono tracking-wide opacity-80">
+                        {validUntil}
+                      </span>
+                    )}
                   </div>
-                  {validUntil && (
-                    <span
-                      className="pm-caption-bold"
-                      style={{
-                        background: sua.accentBorder,
-                        color: sua.accent,
-                        padding: '2px 8px',
-                        borderRadius: 'var(--pm-rounded-full)',
-                      }}
+
+                  {/* Progress */}
+                  <div className="h-1 w-full rounded-full bg-foreground/10 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.2 }}
+                      className={cn("h-full rounded-full", sua.bar)}
+                    />
+                  </div>
+
+                  {daysLeft !== null && (
+                    <p className="text-[11px] flex items-center gap-1 opacity-80">
+                      <Clock className="w-3 h-3" />
+                      {daysLeft > 0
+                        ? `Vence en ${daysLeft} día${daysLeft !== 1 ? "s" : ""}`
+                        : daysLeft === 0
+                          ? "Vence hoy"
+                          : `Venció hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) !== 1 ? "s" : ""}`}
+                    </p>
+                  )}
+
+                  {renewalSent ? (
+                    <div className="flex items-center gap-1.5 text-[11px] pt-2 border-t border-current/15">
+                      <CheckCheck className="w-3 h-3" />
+                      Solicitud enviada
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleRenewalRequest}
+                      disabled={sendingRenewal}
+                      className="w-full flex items-center justify-center gap-1.5 text-[11px] font-medium pt-2 border-t border-current/15 hover:opacity-80 transition-opacity disabled:opacity-50"
                     >
-                      {validUntil}
-                    </span>
+                      <RefreshCw className={cn("w-3 h-3", sendingRenewal && "animate-spin")} />
+                      Solicitar renovación
+                      {!sendingRenewal && <ArrowRight className="w-3 h-3 opacity-60" />}
+                    </button>
                   )}
                 </div>
 
-                {/* Progress track */}
-                <div
-                  style={{
-                    height: '4px',
-                    width: '100%',
-                    borderRadius: 'var(--pm-rounded-full)',
-                    background: 'var(--pm-surface-soft)',
-                    overflow: 'hidden',
-                    marginBottom: '12px',
-                  }}
-                >
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercent}%` }}
-                    transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-                    style={{
-                      height: '100%',
-                      borderRadius: 'var(--pm-rounded-full)',
-                      background: sua.accent,
-                    }}
-                  />
-                </div>
-
-                {daysLeft !== null && (
-                  <p className="pm-caption flex items-center gap-1.5" style={{ color: 'var(--pm-slate)', marginBottom: '12px' }}>
-                    <Clock className="w-3 h-3" />
-                    {daysLeft > 0
-                      ? `Vence en ${daysLeft} día${daysLeft !== 1 ? "s" : ""}`
-                      : daysLeft === 0
-                        ? "Vence hoy"
-                        : `Venció hace ${Math.abs(daysLeft)} día${Math.abs(daysLeft) !== 1 ? "s" : ""}`}
-                  </p>
-                )}
-
-                {renewalSent ? (
-                  <div
-                    className="flex items-center gap-1.5 pm-caption"
-                    style={{
-                      color: 'var(--pm-success)',
-                      paddingTop: '12px',
-                      borderTop: '1px solid var(--pm-hairline)',
-                    }}
-                  >
-                    <CheckCheck className="w-3.5 h-3.5" />
-                    Solicitud enviada
+                {/* Banner bloqueado — chip de error del login */}
+                {company.status === "Blocked" && (
+                  <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-lg px-3 py-2">
+                    <Ban className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Acceso bloqueado</p>
+                      <p className="opacity-80 text-[11px] mt-0.5">Contacta al administrador.</p>
+                    </div>
                   </div>
-                ) : (
-                  <button
-                    onClick={handleRenewalRequest}
-                    disabled={sendingRenewal}
-                    className="w-full flex items-center justify-center gap-1.5 pm-caption-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      color: sua.accent,
-                      paddingTop: '12px',
-                      borderTop: '1px solid var(--pm-hairline)',
-                      background: 'none',
-                      border: 'none',
-                      borderTopStyle: 'solid',
-                      borderTopWidth: '1px',
-                      borderTopColor: 'var(--pm-hairline)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <RefreshCw className={`w-3 h-3 ${sendingRenewal ? "animate-spin" : ""}`} />
-                    Solicitar renovación
-                    {!sendingRenewal && <ArrowRight className="w-3 h-3 ml-0.5 opacity-60" />}
-                  </button>
                 )}
-              </div>
+              </motion.div>
 
-              {/* Blocked banner */}
-              {company.status === "Blocked" && (
-                <motion.div
-                  variants={fadeUp}
-                  className="pm-card flex items-start gap-3"
-                  style={{
-                    marginTop: '12px',
-                    background: 'color-mix(in srgb, var(--pm-critical) 6%, var(--pm-canvas))',
-                    borderColor: 'color-mix(in srgb, var(--pm-critical) 18%, transparent)',
-                    padding: 'var(--pm-base)',
-                  }}
-                >
-                  <Ban className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--pm-critical)' }} />
-                  <div>
-                    <p className="pm-body-sm-bold" style={{ color: 'var(--pm-critical)' }}>Acceso bloqueado</p>
-                    <p className="pm-caption" style={{ color: 'var(--pm-critical)', marginTop: '2px' }}>Contacta al administrador.</p>
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
+              <div className="border-t border-border" />
 
-            <hr className="pm-separator" />
-
-            <div className="pm-sidebar-grid">
-              {/* Contact */}
-              <motion.div variants={fadeUp}>
-                <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Contacto</p>
-                <div className="space-y-0">
-                  <SidebarInfoRow icon={User} label="Representante" value={company.contact} />
-                  <SidebarInfoRow icon={Phone} label="Teléfono" value={company.phone} />
-                  <SidebarInfoRow icon={Hash} label="No. SUA" value={company.sua?.number} mono />
+              {/* Contacto */}
+              <motion.div variants={fadeUp} className="space-y-2">
+                <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
+                  Contacto
+                </p>
+                <div className="space-y-2">
+                  <SidebarInfoRow Icon={User} label="Representante" value={company.contact} />
+                  <SidebarInfoRow Icon={Phone} label="Teléfono" value={company.phone} />
+                  <SidebarInfoRow Icon={Hash} label="No. SUA" value={company.sua?.number} mono />
                 </div>
               </motion.div>
 
-              {/* Actions */}
-              <motion.div variants={fadeUp}>
-                <p className="pm-divider-label" style={{ marginBottom: '12px' }}>Acciones</p>
-                <div className="space-y-2">
-                  <ActionButton icon={QrCode} label="Mi código QR" onClick={() => setQrOpen(true)} />
+              <div className="border-t border-border" />
+
+              {/* Acciones */}
+              <motion.div variants={fadeUp} className="space-y-2">
+                <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
+                  Acciones
+                </p>
+                <div className="space-y-1.5">
+                  <ActionButton Icon={QrCode} label="Mi código QR" onClick={() => setQrOpen(true)} />
                   <Link href="/portal/contrato" className="block">
-                    <ActionButton icon={FileText} label="Reglamento" />
+                    <ActionButton Icon={FileText} label="Reglamento" />
                   </Link>
                   {supported && (
                     <ActionButton
-                      icon={permission === "granted" ? Bell : BellOff}
-                      label={permission === "granted" ? "Alertas activas" : "Activar alertas push"}
+                      Icon={permission === "granted" ? Bell : BellOff}
+                      label={permission === "granted" ? "Alertas activas" : "Activar alertas"}
                       onClick={permission !== "granted" ? requestPermission : undefined}
                       active={permission === "granted"}
                     />
                   )}
                 </div>
               </motion.div>
-            </div>
-          </div>
-        </motion.aside>
+            </aside>
 
-        {/* ══════════════════════════════════════════
-              MAIN — visits panel
-              ══════════════════════════════════════════ */}
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="visible"
-          className="pm-main"
-        >
-          <div className="max-w-5xl space-y-8">
-
-            {/* Page header */}
-            <motion.div variants={fadeUp} className="flex items-end justify-between">
-              <div>
-                <h2 className="pm-heading-sm">Portal</h2>
-                <p className="pm-body-sm" style={{ color: 'var(--pm-steel)', marginTop: '4px' }}>
-                  Historial de registros y accesos
-                </p>
-              </div>
-              {activeVisit && (
-                <div
-                  className="hidden sm:flex items-center gap-2 pm-badge-success"
-                  style={{ borderRadius: 'var(--pm-rounded-full)' }}
-                >
-                  <span className="pm-dot pm-dot-success animate-pulse" />
-                  <span className="pm-caption-bold" style={{ color: 'inherit' }}>En planta ahora</span>
+            {/* ══════════════════════════════════════════
+                  MAIN — visitas
+                  ══════════════════════════════════════════ */}
+            <div className="p-6 sm:p-8 space-y-6">
+              {/* Header */}
+              <motion.div variants={fadeUp} className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Portal</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Historial de registros y accesos
+                  </p>
                 </div>
-              )}
-            </motion.div>
+                {activeVisit && (
+                  <div className="hidden sm:flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 border border-emerald-100 dark:border-emerald-900 rounded-full px-2.5 py-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[11px] font-medium">En planta ahora</span>
+                  </div>
+                )}
+              </motion.div>
 
-            {/* Upcoming visits */}
-            {upcomingVisits && upcomingVisits.length > 0 && (
-              <motion.section variants={fadeUp}>
-                <SectionHeader icon={CalendarClock} title="Próximas visitas" count={upcomingVisits.length} />
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 mt-4">
-                  {upcomingVisits.slice(0, 6).map((visit, i) => (
-                    <motion.div
-                      key={visit.id}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 + 0.2, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                      className="pm-card"
-                      style={{ padding: 'var(--pm-base) var(--pm-lg)' }}
-                    >
-                      <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
-                        {visit.scheduledDate
-                          ? new Date(visit.scheduledDate + "T12:00:00").toLocaleDateString("es-MX", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "short",
-                          })
-                          : "—"}
-                      </p>
-                      {(visit as any).scheduledTime && (
-                        <p className="pm-caption" style={{ marginTop: '4px', fontFamily: 'var(--pm-font-mono)' }}>
-                          {(visit as any).scheduledTime}
+              {/* Próximas visitas */}
+              {upcomingVisits && upcomingVisits.length > 0 && (
+                <motion.section variants={fadeUp} className="space-y-3">
+                  <SectionHeader Icon={CalendarClock} title="Próximas visitas" count={upcomingVisits.length} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                    {upcomingVisits.slice(0, 6).map((visit, i) => (
+                      <motion.div
+                        key={visit.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 + 0.1, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="rounded-lg border border-border p-3 bg-background hover:bg-muted/30 transition-colors"
+                      >
+                        <p className="text-xs font-medium text-foreground">
+                          {visit.scheduledDate
+                            ? new Date(visit.scheduledDate + "T12:00:00").toLocaleDateString("es-MX", {
+                              weekday: "long", day: "numeric", month: "short",
+                            })
+                            : "—"}
                         </p>
-                      )}
-                      <div className="flex items-center gap-3 mt-2 pm-caption" style={{ color: 'var(--pm-steel)' }}>
-                        {visit.areaName && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {visit.areaName}
-                          </span>
+                        {(visit as any).scheduledTime && (
+                          <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                            {(visit as any).scheduledTime}
+                          </p>
                         )}
-                        {visit.personnelCount && (
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {visit.personnelCount}
-                          </span>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.section>
-            )}
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                          {visit.areaName && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {visit.areaName}
+                            </span>
+                          )}
+                          {visit.personnelCount && (
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {visit.personnelCount}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.section>
+              )}
 
-            {/* Visit history */}
-            <motion.section variants={fadeUp}>
-              <SectionHeader
-                icon={Activity}
-                title="Historial de visitas"
-                count={visits?.length ?? 0}
-                hideCount={!visits?.length}
-              />
+              {/* Historial */}
+              <motion.section variants={fadeUp} className="space-y-3">
+                <SectionHeader
+                  Icon={Activity}
+                  title="Historial de visitas"
+                  count={visits?.length ?? 0}
+                  hideCount={!visits?.length}
+                />
 
-              <div className="mt-4">
                 {visitsLoading ? (
-                  <div className="pm-card flex justify-center" style={{ padding: '64px 0' }}>
-                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--pm-stone)' }} />
+                  <div className="rounded-lg border border-border flex justify-center py-12">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   </div>
                 ) : visits && visits.length > 0 ? (
                   <>
-                    {/* Desktop table */}
-                    <div className="hidden md:block pm-card" style={{ padding: 0, overflow: 'hidden' }}>
-                      <table className="pm-table">
-                        <thead>
-                          <tr>
-                            <th>Fecha</th>
-                            <th>Área</th>
-                            <th>Entrada</th>
-                            <th>Salida</th>
-                            <th>Duración</th>
-                            <th>Estado</th>
-                            <th style={{ textAlign: 'right' }}>PDF</th>
+                    {/* Tabla desktop */}
+                    <div className="hidden md:block rounded-lg border border-border overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/40">
+                          <tr className="text-left">
+                            <Th>Fecha</Th>
+                            <Th>Área</Th>
+                            <Th>Entrada</Th>
+                            <Th>Salida</Th>
+                            <Th>Duración</Th>
+                            <Th>Estado</Th>
+                            <Th className="text-right">PDF</Th>
                           </tr>
                         </thead>
                         <tbody>
@@ -557,38 +466,28 @@ export default function PortalPage() {
                             const entryDate = visit.entryTime?.toDate()
                             const exitDate = visit.exitTime?.toDate()
                             return (
-                              <tr key={visit.id}>
-                                <td className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
-                                  {entryDate?.toLocaleDateString("es-MX", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  }) ?? "—"}
-                                </td>
-                                <td className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
-                                  {visit.areaName ?? "—"}
-                                </td>
-                                <td style={{ fontFamily: 'var(--pm-font-mono)', fontSize: '12px', color: 'var(--pm-slate)' }}>
+                              <tr key={visit.id} className="border-t border-border">
+                                <Td className="text-foreground font-medium">
+                                  {entryDate?.toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) ?? "—"}
+                                </Td>
+                                <Td>{visit.areaName ?? "—"}</Td>
+                                <Td className="font-mono text-[12px]">
                                   {entryDate?.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) ?? "—"}
-                                </td>
-                                <td style={{ fontFamily: 'var(--pm-font-mono)', fontSize: '12px', color: 'var(--pm-slate)' }}>
+                                </Td>
+                                <Td className="font-mono text-[12px]">
                                   {exitDate?.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) ?? "—"}
-                                </td>
-                                <td className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
-                                  {entryDate && exitDate ? visitDuration(entryDate, exitDate) : "—"}
-                                </td>
-                                <td>
-                                  <VisitStatusBadge status={visit.status} />
-                                </td>
-                                <td style={{ textAlign: 'right' }}>
+                                </Td>
+                                <Td>{entryDate && exitDate ? visitDuration(entryDate, exitDate) : "—"}</Td>
+                                <Td><VisitStatusBadge status={visit.status} /></Td>
+                                <Td className="text-right">
                                   <button
                                     onClick={() => generateVoucherPDF(visit, company)}
-                                    className="pm-btn-icon"
-                                    style={{ width: '32px', height: '32px', marginLeft: 'auto' }}
+                                    aria-label="Descargar PDF"
+                                    className="inline-flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                                   >
                                     <Download className="w-3.5 h-3.5" />
                                   </button>
-                                </td>
+                                </Td>
                               </tr>
                             )
                           })}
@@ -596,21 +495,21 @@ export default function PortalPage() {
                       </table>
                     </div>
 
-                    {/* Mobile cards */}
+                    {/* Cards mobile */}
                     <div className="md:hidden space-y-2">
                       {visits.map((visit) => {
                         const entryDate = visit.entryTime?.toDate()
                         const exitDate = visit.exitTime?.toDate()
                         return (
-                          <div key={visit.id} className="pm-visit-card">
+                          <div key={visit.id} className="rounded-lg border border-border p-3 flex items-center gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>
+                                <p className="text-xs font-medium text-foreground">
                                   {entryDate?.toLocaleDateString("es-MX", { day: "2-digit", month: "short" }) ?? "—"}
                                 </p>
                                 <VisitStatusBadge status={visit.status} />
                               </div>
-                              <div className="flex items-center gap-3 mt-1 pm-caption" style={{ color: 'var(--pm-steel)' }}>
+                              <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
                                 {visit.areaName && (
                                   <span className="flex items-center gap-1">
                                     <MapPin className="w-3 h-3" />
@@ -627,8 +526,8 @@ export default function PortalPage() {
                             </div>
                             <button
                               onClick={() => generateVoucherPDF(visit, company)}
-                              className="pm-btn-icon shrink-0"
-                              style={{ width: '36px', height: '36px' }}
+                              aria-label="Descargar PDF"
+                              className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                             >
                               <Download className="w-4 h-4" />
                             </button>
@@ -638,49 +537,38 @@ export default function PortalPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="pm-card text-center" style={{ padding: '80px var(--pm-xxl)' }}>
-                    <div
-                      className="flex items-center justify-center mx-auto"
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: 'var(--pm-rounded-xxl)',
-                        background: 'var(--pm-surface-soft)',
-                        marginBottom: '12px',
-                      }}
-                    >
-                      <CalendarClock className="w-5 h-5" style={{ color: 'var(--pm-stone)' }} />
+                  // Estado vacío — círculo tonal del login
+                  <div className="rounded-lg border border-border py-16 px-6 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
+                      <CalendarClock className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <p className="pm-body-sm" style={{ color: 'var(--pm-slate)' }}>
-                      No hay visitas registradas aún.
-                    </p>
-                    <p className="pm-caption" style={{ marginTop: '4px' }}>
-                      Las visitas aparecerán aquí una vez registradas.
+                    <p className="text-sm font-medium text-foreground">Sin visitas registradas</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-[280px] leading-relaxed">
+                      Las visitas aparecerán aquí una vez que se registren.
                     </p>
                   </div>
                 )}
-              </div>
-            </motion.section>
-
+              </motion.section>
+            </div>
           </div>
         </motion.div>
       </div>
 
-      {/* ── Active visit floating pill ── */}
+      {/* Pill de visita activa flotante */}
       <AnimatePresence>
         {activeVisit && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-auto md:max-w-sm z-50"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-auto md:max-w-sm z-40"
           >
-            <div className="pm-floating-pill">
-              <span className="pm-dot pm-dot-success animate-pulse" />
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background shadow-md px-3.5 py-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="pm-body-sm-bold" style={{ color: 'var(--pm-ink-deep)' }}>Visita activa</p>
-                <div className="flex items-center gap-2 pm-caption" style={{ color: 'var(--pm-steel)', marginTop: '2px' }}>
+                <p className="text-xs font-medium text-foreground">Visita activa</p>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                   {activeVisit.areaName && (
                     <span className="flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
@@ -688,9 +576,7 @@ export default function PortalPage() {
                     </span>
                   )}
                   {activeVisit.entryTime && (
-                    <span>
-                      · {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}
-                    </span>
+                    <span>· {formatDistanceToNow(activeVisit.entryTime.toDate(), { locale: es, addSuffix: true })}</span>
                   )}
                 </div>
               </div>
@@ -712,37 +598,23 @@ export default function PortalPage() {
 // ─────────────────────────────────────────────────────────────
 
 function SidebarInfoRow({
-  icon: Icon,
-  label,
-  value,
-  mono = false,
+  Icon, label, value, mono = false,
 }: {
-  icon: React.ElementType
+  Icon: React.ElementType
   label: string
   value?: string | null
   mono?: boolean
 }) {
   if (!value) return null
   return (
-    <div
-      className="flex items-start gap-3"
-      style={{
-        padding: '10px 0',
-        borderBottom: '1px solid var(--pm-hairline-soft)',
-      }}
-    >
-      <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: 'var(--pm-stone)' }} />
+    <div className="flex items-start gap-2.5">
+      <Icon className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground" />
       <div className="min-w-0 flex-1">
-        <p className="pm-divider-label">{label}</p>
-        <p
-          className="pm-body-sm-bold truncate"
-          style={{
-            color: 'var(--pm-ink-deep)',
-            marginTop: '2px',
-            fontFamily: mono ? 'var(--pm-font-mono)' : undefined,
-            fontSize: mono ? '12px' : undefined,
-          }}
-        >
+        <p className="text-[10px] tracking-[0.08em] uppercase text-muted-foreground/80">{label}</p>
+        <p className={cn(
+          "text-xs font-medium text-foreground truncate mt-0.5",
+          mono && "font-mono",
+        )}>
           {value}
         </p>
       </div>
@@ -751,12 +623,9 @@ function SidebarInfoRow({
 }
 
 function ActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  active = false,
+  Icon, label, onClick, active = false,
 }: {
-  icon: React.ElementType
+  Icon: React.ElementType
   label: string
   onClick?: () => void
   active?: boolean
@@ -764,28 +633,24 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="pm-action-row w-full"
-      style={{
-        background: active ? 'rgba(22,163,74,0.05)' : 'var(--pm-canvas)',
-        borderColor: active ? 'rgba(22,163,74,0.15)' : undefined,
-      }}
+      className={cn(
+        "w-full flex items-center gap-2.5 rounded-lg border px-3 h-10 text-xs font-medium transition-colors",
+        active
+          ? "bg-emerald-50 dark:bg-emerald-950 border-emerald-100 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400"
+          : "bg-background border-border text-foreground hover:bg-muted/40",
+      )}
     >
-      <Icon className="w-4 h-4 shrink-0" style={{ color: active ? 'var(--pm-success)' : 'var(--pm-steel)' }} />
-      <span className="pm-body-sm-bold flex-1 text-left" style={{ color: active ? 'var(--pm-success)' : 'var(--pm-ink)' }}>
-        {label}
-      </span>
-      {!active && <ChevronRight className="w-4 h-4" style={{ color: 'var(--pm-stone)' }} />}
+      <Icon className={cn("w-3.5 h-3.5 shrink-0", active ? "" : "text-muted-foreground")} />
+      <span className="flex-1 text-left">{label}</span>
+      {!active && <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
     </button>
   )
 }
 
 function SectionHeader({
-  icon: Icon,
-  title,
-  count,
-  hideCount = false,
+  Icon, title, count, hideCount = false,
 }: {
-  icon: React.ElementType
+  Icon: React.ElementType
   title: string
   count: number
   hideCount?: boolean
@@ -793,20 +658,11 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4" style={{ color: 'var(--pm-steel)' }} />
-        <h2 className="pm-body-sm-bold">{title}</h2>
+        <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+        <p className="text-xs font-medium text-foreground">{title}</p>
       </div>
       {!hideCount && count > 0 && (
-        <span
-          className="pm-caption-bold"
-          style={{
-            background: 'var(--pm-surface-soft)',
-            color: 'var(--pm-slate)',
-            padding: '2px 8px',
-            borderRadius: 'var(--pm-rounded-full)',
-            fontFamily: 'var(--pm-font-mono)',
-          }}
-        >
+        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
           {count}
         </span>
       )}
@@ -817,74 +673,68 @@ function SectionHeader({
 function VisitStatusBadge({ status }: { status: Visit["status"] }) {
   if (status === "Activa") {
     return (
-      <span className="pm-badge pm-badge-success" style={{ fontSize: '11px', padding: '2px 8px' }}>
-        <span className="pm-dot pm-dot-success animate-pulse" style={{ width: '6px', height: '6px' }} />
+      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900">
+        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
         Activa
       </span>
     )
   }
   if (status === "Programada") {
     return (
-      <span className="pm-badge" style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--pm-primary-soft)', color: 'var(--pm-primary)' }}>
+      <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-400 border border-sky-100 dark:border-sky-900">
         Programada
       </span>
     )
   }
   return (
-    <span className="pm-badge pm-badge-neutral" style={{ fontSize: '11px', padding: '2px 8px' }}>
+    <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
       Completada
     </span>
   )
 }
 
+function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <th className={cn("px-3 py-2 text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground", className)}>
+      {children}
+    </th>
+  )
+}
+
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <td className={cn("px-3 py-2.5 text-xs text-muted-foreground", className)}>
+      {children}
+    </td>
+  )
+}
+
 function ErrorState({
-  icon: Icon,
-  title,
-  description,
-  color,
+  Icon, title, description, tone,
 }: {
-  icon: React.ElementType
+  Icon: React.ElementType
   title: string
   description: string
-  color: "amber" | "red"
+  tone: "destructive" | "warning"
 }) {
   const styles = {
-    amber: {
-      bg: "rgba(217,119,6,0.06)",
-      border: "rgba(217,119,6,0.15)",
-      icon: "var(--pm-attention)",
-      title: "var(--pm-attention)",
-      desc: "var(--pm-slate)",
-    },
-    red: {
-      bg: "rgba(220,38,38,0.06)",
-      border: "rgba(220,38,38,0.15)",
-      icon: "var(--pm-critical)",
-      title: "var(--pm-critical)",
-      desc: "var(--pm-slate)",
-    },
+    destructive: { bg: "bg-destructive/10", fg: "text-destructive" },
+    warning: { bg: "bg-amber-50 dark:bg-amber-950", fg: "text-amber-600 dark:text-amber-400" },
   }
-  const s = styles[color]
+  const s = styles[tone]
   return (
-    <div className="flex items-center justify-center" style={{ minHeight: '60vh', padding: '0 var(--pm-base)' }}>
+    <div className="min-h-[60vh] flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="pm-card flex gap-3 items-start"
-        style={{
-          maxWidth: '420px',
-          width: '100%',
-          background: s.bg,
-          borderColor: s.border,
-          borderRadius: 'var(--pm-rounded-xxl)',
-          padding: 'var(--pm-xl)',
-        }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="w-full max-w-[420px] rounded-xl border border-border bg-background shadow-sm px-8 py-10 flex flex-col items-center text-center"
       >
-        <Icon className="w-5 h-5 shrink-0 mt-0.5" style={{ color: s.icon }} />
-        <div>
-          <p className="pm-subtitle-lg" style={{ color: s.title, fontSize: '14px' }}>{title}</p>
-          <p className="pm-body-sm" style={{ color: s.desc, marginTop: '4px' }}>{description}</p>
+        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mb-4", s.bg, s.fg)}>
+          <Icon className="w-5 h-5" />
         </div>
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-2 max-w-[300px] leading-relaxed">{description}</p>
       </motion.div>
     </div>
   )

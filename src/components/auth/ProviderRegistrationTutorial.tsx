@@ -29,7 +29,7 @@ export type TutorialStep = {
 
 const DEFAULT_STEPS: TutorialStep[] = [
   {
-    title: "Abre el registro",
+    title: "Bienvenido",
     description:
       "Desde la pantalla de inicio de sesión, toca el botón “Registrarse como proveedor”.",
     image: "/imagenes-login/imagen-1.png",
@@ -48,13 +48,6 @@ const DEFAULT_STEPS: TutorialStep[] = [
       "Mínimo 6 caracteres. Confírmala para evitar errores de tipeo.",
     image: "/imagenes-login/imagen-3.png",
     imageAlt: "Formulario de contraseña",
-  },
-  {
-    title: "Confirma tu empresa",
-    description:
-      "Verás el nombre de la empresa asociada a tu correo. Revisa que sea correcto antes de continuar.",
-    image: "/imagenes-login/imagen-4.png",
-    imageAlt: "Confirmación de empresa proveedora",
   },
   {
     title: "Finaliza el registro",
@@ -133,13 +126,13 @@ export function ProviderRegistrationTutorial({
 
       {/* ── Dialog ───────────────────────────────────────── */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-[92vw] sm:max-w-lg p-0 overflow-hidden gap-0">
+        <DialogContent className="max-w-[92vw] sm:max-w-xl p-0 overflow-hidden gap-0">
           {/* Header */}
           <div className="px-6 pt-6 pb-4 border-b border-border">
-            <DialogTitle className="text-sm font-medium text-foreground">
+            <DialogTitle className="text-lg font-bold text-foreground">
               Cómo registrarte como proveedor
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground mt-1">
+            <DialogDescription className="text-xm text-muted-foreground mt-1">
               Sigue estos pasos para crear tu cuenta y acceder al portal.
             </DialogDescription>
           </div>
@@ -188,13 +181,13 @@ export function ProviderRegistrationTutorial({
                 transition={transition}
                 className="space-y-1"
               >
-                <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
+                <p className="text-xs font-medium tracking-[0.08em] uppercase text-muted-foreground">
                   Paso {index + 1} de {total}
                 </p>
-                <p className="text-sm font-medium text-foreground">
+                <p className="text-base font-medium text-foreground">
                   {step.title}
                 </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {step.description}
                 </p>
               </motion.div>

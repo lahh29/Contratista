@@ -44,6 +44,7 @@ import { formatDistanceToNow, format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useToast } from "@/hooks/use-toast"
 
+import { toastError } from "@/lib/toast-helpers"
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(ts: any) {
@@ -364,7 +365,7 @@ export default function ReportsPage() {
     if (!filteredVisits.length) return toast({ title: 'Sin datos para exportar' })
     setGenXlsx(true)
     try { await generateExcel(filteredVisits); toast({ title: 'Excel descargado' }) }
-    catch { toast({ variant: 'destructive', title: 'Error al generar Excel' }) }
+    catch { toastError('Error al generar Excel') }
     finally { setGenXlsx(false) }
   }
 
@@ -372,7 +373,7 @@ export default function ReportsPage() {
     if (!filteredVisits.length) return toast({ title: 'Sin datos para exportar' })
     setGenPdf(true)
     try { await generatePDF(filteredVisits); toast({ title: 'PDF descargado' }) }
-    catch { toast({ variant: 'destructive', title: 'Error al generar PDF' }) }
+    catch { toastError('Error al generar PDF') }
     finally { setGenPdf(false) }
   }
 
@@ -383,14 +384,14 @@ export default function ReportsPage() {
       await generateExcel(filteredVisits)
       await generatePDF(filteredVisits)
       toast({ title: 'Archivos descargados', description: 'Excel y PDF generados correctamente.' })
-    } catch { toast({ variant: 'destructive', title: 'Error al generar archivos' }) }
+    } catch { toastError('Error al generar archivos') }
     finally { setGenAll(false) }
   }
 
   const handleRowPDF = async (visit: any) => {
     setGenRow(visit.id)
     try { await generateVisitPDF(visit); toast({ title: 'Comprobante descargado' }) }
-    catch { toast({ variant: 'destructive', title: 'Error al generar comprobante' }) }
+    catch { toastError('Error al generar comprobante') }
     finally { setGenRow(null) }
   }
 
@@ -459,7 +460,7 @@ export default function ReportsPage() {
     if (!filteredSmoking.length) return toast({ title: 'Sin datos para exportar' })
     setGenSmokeXlsx(true)
     try { await generateSmokingExcel(filteredSmoking); toast({ title: 'Excel descargado' }) }
-    catch { toast({ variant: 'destructive', title: 'Error al generar Excel' }) }
+    catch { toastError('Error al generar Excel') }
     finally { setGenSmokeXlsx(false) }
   }
 
@@ -467,7 +468,7 @@ export default function ReportsPage() {
     if (!filteredSmoking.length) return toast({ title: 'Sin datos para exportar' })
     setGenSmokePdf(true)
     try { await generateSmokingPDF(filteredSmoking); toast({ title: 'PDF descargado' }) }
-    catch { toast({ variant: 'destructive', title: 'Error al generar PDF' }) }
+    catch { toastError('Error al generar PDF') }
     finally { setGenSmokePdf(false) }
   }
 
