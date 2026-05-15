@@ -15,6 +15,7 @@ import { useAuth } from "@/firebase"
 import { useUser } from "@/firebase/auth/use-user"
 import Link from "next/link"
 import { logAudit } from "@/app/actions/audit"
+import { ProviderRegistrationTutorial } from "@/components/auth/ProviderRegistrationTutorial"
 
 const schema = z.object({
   email: z.string().email("Correo inválido"),
@@ -347,6 +348,9 @@ export default function LoginPage() {
 
         </main>
       </div>
+
+      {/* Tutorial flotante de registro de proveedor */}
+      <ProviderRegistrationTutorial />
     </div>
   )
 }
