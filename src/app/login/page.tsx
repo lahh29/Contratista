@@ -15,7 +15,11 @@ import { useAuth } from "@/firebase"
 import { useUser } from "@/firebase/auth/use-user"
 import Link from "next/link"
 import { logAudit } from "@/app/actions/audit"
-import { ProviderRegistrationTutorial } from "@/components/auth/ProviderRegistrationTutorial"
+import {
+  ProviderRegistrationTutorial,
+  ProviderTutorialLink,
+  type ProviderRegistrationTutorialHandle,
+} from "@/components/auth/ProviderRegistrationTutorial"
 
 const schema = z.object({
   email: z.string().email("Correo inválido"),
@@ -36,6 +40,8 @@ export default function LoginPage() {
   const auth = useAuth()
   const router = useRouter()
   const { user, loading: authLoading } = useUser()
+  const tutorialRef = React.useRef<ProviderRegistrationTutorialHandle>(null)
+  const openTutorial = React.useCallback(() => tutorialRef.current?.open(), [])
 
   React.useEffect(() => {
     if (!authLoading && user) {
@@ -342,6 +348,11 @@ export default function LoginPage() {
                   <UserPlus className="w-4 h-4" />
                   Registrarse como proveedor
                 </Link>
+
+                {/* Inline trigger del tutorial (C) */}
+                <div className="flex justify-center">
+                  <ProviderTutorialLink onOpen={openTutorial} />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -350,7 +361,7 @@ export default function LoginPage() {
       </div>
 
       {/* Tutorial flotante de registro de proveedor */}
-      <ProviderRegistrationTutorial />
+      <ProviderRegistrationTutorial ref={tutorialRef} />
     </div>
   )
 }

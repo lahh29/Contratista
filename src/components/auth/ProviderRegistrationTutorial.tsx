@@ -3,7 +3,14 @@
 import * as React from "react"
 import Image from "next/image"
 import { AnimatePresence, motion, type Transition } from "framer-motion"
-import { HelpCircle, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react"
+import {
+  HelpCircle,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  Sparkles,
+  X,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -29,7 +36,7 @@ export type TutorialStep = {
 
 const DEFAULT_STEPS: TutorialStep[] = [
   {
-    title: "Bienvenido",
+    title: "Abre el registro",
     description:
       "Desde la pantalla de inicio de sesión, toca el botón “Registrarse como proveedor”.",
     image: "/imagenes-login/imagen-1.png",
@@ -50,6 +57,13 @@ const DEFAULT_STEPS: TutorialStep[] = [
     imageAlt: "Formulario de contraseña",
   },
   {
+    title: "Confirma tu empresa",
+    description:
+      "Verás el nombre de la empresa asociada a tu correo. Revisa que sea correcto antes de continuar.",
+    image: "/imagenes-login/imagen-4.png",
+    imageAlt: "Confirmación de empresa proveedora",
+  },
+  {
     title: "Finaliza el registro",
     description:
       "Al confirmar, tu cuenta queda lista para acceder al portal y gestionar a tu personal.",
@@ -67,24 +81,84 @@ const DEFAULT_STEPS: TutorialStep[] = [
 
 const transition: Transition = { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }
 
+const HINT_STORAGE_KEY = "provider-tutorial-hint-dismissed"
+
+/* ────────────────────────────────────────────────────────────── */
+/* Tipos imperativos                                              */
+/* ────────────────────────────────────────────────────────────── */
+
+export type ProviderRegistrationTutorialHandle = {
+  open: () => void
+  close: () => void
+  toggle: () => void
+}
+
 interface ProviderRegistrationTutorialProps {
   /** Pasos del tutorial. Si se omite, se usan los pasos por defecto. */
   steps?: TutorialStep[]
   /** Clase opcional para reposicionar el FAB. */
   className?: string
+  /** Texto visible junto al ícono en desktop. */
+  label?: string
+  /** Texto del hint flotante (tooltip) que aparece la primera vez. */
+  hintText?: string
 }
 
-export function ProviderRegistrationTutorial({
-  steps = DEFAULT_STEPS,
-  className,
-}: ProviderRegistrationTutorialProps) {
+/* ────────────────────────────────────────────────────────────── */
+/* Componente principal: FAB pill + hint + diálogo                */
+/* ────────────────────────────────────────────────────────────── */
+
+export const ProviderRegistrationTutorial = React.forwardRef<
+  ProviderRegistrationTutorialHandle,
+  ProviderRegistrationTutorialProps
+>(function ProviderRegistrationTutorial(
+  {
+    steps = DEFAULT_STEPS,
+    className,
+    label = "¿Cómo registrarme?",
+    hintText = "¿Primera vez? Mira la guía",
+  },
+  ref
+) {
   const [open, setOpen] = React.useState(false)
   const [index, setIndex] = React.useState(0)
+  const [hintVisible, setHintVisible] = React.useState(false)
 
-  const total = steps.length
-  const step = steps[index]
-  const isFirst = index === 0
-  const isLast = index === total - 1
+  // Exponer API imperativa
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      open: () => setOpen(true),
+      close: () => setOpen(false),
+      toggle: () => setOpen(v => !v),
+    }),
+    []
+  )
+
+  // Mostrar hint la primera vez (sessionStorage)
+  React.useEffect(() => {
+    if (typeof window === "undefined") return
+    const dismissed = window.sessionStorage.getItem(HINT_STORAGE_KEY)
+    if (dismissed) return
+    const t = window.setTimeout(() => setHintVisible(true), 1400)
+    return () => window.clearTimeout(t)
+  }, [])
+
+  // Auto-ocultar hint tras unos segundos
+  React.useEffect(() => {
+    if (!hintVisible) return
+    const t = window.setTimeout(() => dismissHint(), 7000)
+    return () => window.clearTimeout(t)
+  }, [hintVisible])
+
+  function dismissHint() {
+    setHintVisible(false)
+    try {
+      window.sessionStorage.setItem(HINT_STORAGE_KEY, "1")
+    } catch {
+      // ignore
+    }
+  }
 
   // Reinicia el paso al cerrar para que la próxima apertura empiece de cero.
   React.useEffect(() => {
@@ -94,6 +168,11 @@ export function ProviderRegistrationTutorial({
     }
   }, [open])
 
+  const total = steps.length
+  const step = steps[index]
+  const isFirst = index === 0
+  const isLast = index === total - 1
+
   const goNext = React.useCallback(() => {
     setIndex(i => Math.min(i + 1, total - 1))
   }, [total])
@@ -102,37 +181,107 @@ export function ProviderRegistrationTutorial({
     setIndex(i => Math.max(i - 1, 0))
   }, [])
 
+  function handleFabClick() {
+    dismissHint()
+    setOpen(true)
+  }
+
   return (
     <>
-      {/* ── Floating Action Button ──────────────────────── */}
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Ver tutorial de registro de proveedor"
+      {/* ── FAB pill + hint ──────────────────────────────────── */}
+      <div
         className={cn(
-          "fixed z-40 bottom-4 right-4 sm:bottom-6 sm:right-6",
-          "h-12 w-12 sm:h-14 sm:w-14 rounded-full",
-          "bg-foreground text-background",
-          "shadow-lg shadow-foreground/20",
-          "flex items-center justify-center",
-          "transition-transform hover:scale-105 active:scale-95",
-          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background",
+          "fixed z-40 bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-end gap-2",
           className
         )}
       >
-        <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
-        <span className="sr-only">Tutorial de registro</span>
-      </button>
+        {/* Hint (B) */}
+        <AnimatePresence>
+          {hintVisible && !open && (
+            <motion.div
+              key="hint"
+              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="relative"
+            >
+              <motion.div
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full bg-foreground text-background shadow-md shadow-foreground/20 text-xs font-medium"
+              >
+                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{hintText}</span>
+                <button
+                  type="button"
+                  onClick={dismissHint}
+                  aria-label="Cerrar sugerencia"
+                  className="ml-1 rounded-full p-0.5 hover:bg-background/20 transition-colors focus:outline-none focus:ring-2 focus:ring-background/40"
+                >
+                  <X className="w-3 h-3" aria-hidden="true" />
+                </button>
+              </motion.div>
+              {/* Punta del bubble */}
+              <span
+                aria-hidden="true"
+                className="absolute -bottom-1 right-6 w-2 h-2 rotate-45 bg-foreground"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* ── Dialog ───────────────────────────────────────── */}
+        {/* FAB */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.6, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 220, damping: 18 }}
+          className="relative"
+        >
+          {/* Glow ring pulsante (B) */}
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-0 rounded-full bg-foreground/15"
+            animate={{ scale: [1, 1.25, 1], opacity: [0.55, 0, 0.55] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.button
+            type="button"
+            onClick={handleFabClick}
+            aria-label="Ver tutorial de registro de proveedor"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            animate={open ? {} : { y: [0, -2.5, 0] }}
+            transition={{
+              y: { duration: 3.6, repeat: Infinity, ease: "easeInOut" },
+            }}
+            className={cn(
+              "relative inline-flex items-center justify-center gap-2",
+              "h-12 sm:h-12 rounded-full",
+              "px-3 sm:px-5",
+              "bg-foreground text-background",
+              "shadow-lg shadow-foreground/25",
+              "text-xs sm:text-sm font-medium tracking-wide",
+              "transition-colors focus:outline-none",
+              "focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            )}
+          >
+            <HelpCircle className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <span className="hidden sm:inline whitespace-nowrap">{label}</span>
+            <span className="sr-only sm:hidden">{label}</span>
+          </motion.button>
+        </motion.div>
+      </div>
+
+      {/* ── Dialog ───────────────────────────────────────────── */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-[92vw] sm:max-w-xl p-0 overflow-hidden gap-0">
           {/* Header */}
           <div className="px-6 pt-6 pb-4 border-b border-border">
-            <DialogTitle className="text-lg font-bold text-foreground">
+            <DialogTitle className="text-base font-semibold text-foreground">
               Cómo registrarte como proveedor
             </DialogTitle>
-            <DialogDescription className="text-xm text-muted-foreground mt-1">
+            <DialogDescription className="text-sm text-muted-foreground mt-1">
               Sigue estos pasos para crear tu cuenta y acceder al portal.
             </DialogDescription>
           </div>
@@ -155,14 +304,14 @@ export function ProviderRegistrationTutorial({
                       src={step.image}
                       alt={step.imageAlt ?? step.title}
                       fill
-                      sizes="(max-width: 640px) 92vw, 512px"
+                      sizes="(max-width: 640px) 92vw, 576px"
                       className="object-contain"
                       priority={index === 0}
                     />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground/60">
-                      <ImageIcon className="w-6 h-6" aria-hidden="true" />
-                      <p className="text-[11px] tracking-wide">
+                      <ImageIcon className="w-7 h-7" aria-hidden="true" />
+                      <p className="text-xs tracking-wide">
                         Imagen del paso {index + 1}
                       </p>
                     </div>
@@ -179,9 +328,9 @@ export function ProviderRegistrationTutorial({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={transition}
-                className="space-y-1"
+                className="space-y-1.5"
               >
-                <p className="text-xs font-medium tracking-[0.08em] uppercase text-muted-foreground">
+                <p className="text-[11px] font-medium tracking-[0.08em] uppercase text-muted-foreground">
                   Paso {index + 1} de {total}
                 </p>
                 <p className="text-base font-medium text-foreground">
@@ -222,18 +371,18 @@ export function ProviderRegistrationTutorial({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 rounded-lg text-xs"
+                className="h-9 rounded-lg text-sm"
                 onClick={goPrev}
                 disabled={isFirst}
               >
-                <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+                <ChevronLeft className="w-4 h-4 mr-1" />
                 Atrás
               </Button>
               {isLast ? (
                 <Button
                   type="button"
                   size="sm"
-                  className="h-8 rounded-lg text-xs"
+                  className="h-9 rounded-lg text-sm"
                   onClick={() => setOpen(false)}
                 >
                   Listo
@@ -242,11 +391,11 @@ export function ProviderRegistrationTutorial({
                 <Button
                   type="button"
                   size="sm"
-                  className="h-8 rounded-lg text-xs"
+                  className="h-9 rounded-lg text-sm"
                   onClick={goNext}
                 >
                   Siguiente
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
             </div>
@@ -254,5 +403,39 @@ export function ProviderRegistrationTutorial({
         </DialogContent>
       </Dialog>
     </>
+  )
+})
+
+/* ────────────────────────────────────────────────────────────── */
+/* Link inline reutilizable (C)                                   */
+/* ────────────────────────────────────────────────────────────── */
+
+interface ProviderTutorialLinkProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  onOpen: () => void
+  children?: React.ReactNode
+}
+
+export function ProviderTutorialLink({
+  onOpen,
+  className,
+  children = "¿Primera vez? Ver guía paso a paso",
+  ...props
+}: ProviderTutorialLinkProps) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5",
+        "text-xs text-muted-foreground hover:text-foreground transition-colors",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded",
+        className
+      )}
+      {...props}
+    >
+      <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+      <span>{children}</span>
+    </button>
   )
 }
